@@ -114,14 +114,11 @@ export default function WealthSimGame() {
           },
           render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
           dom: { createContainer: true },
-          scene: [
-            w.Boot,
-            w.PlayerSetup,
-            w.RetirementContext,
-            w.StartingQuestions,
-            w.GameScene,
-            w.ProfileScene,
-          ],
+          // Scene classes are top-level `class` declarations in classic
+          // scripts: they live in global lexical scope, not on window.
+          scene: new Function(
+            "return [Boot,PlayerSetup,RetirementContext,StartingQuestions,GameScene,ProfileScene]",
+          )(),
           audio: { disableWebAudio: false },
         });
         w.WS_game = game;
