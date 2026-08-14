@@ -20,21 +20,21 @@ interface VerdictData {
 }
 
 export class VerdictScene extends Phaser.Scene {
-  private data!: VerdictData;
+  private result!: VerdictData;
 
   constructor() {
     super("Verdict");
   }
 
   init(data: VerdictData) {
-    this.data = data;
+    this.result = data;
   }
 
   create() {
     const { width, height } = this.scale;
     skylineBackdrop(this, width, height);
 
-    const profile = buildProfile(this.data.decisions);
+    const profile = buildProfile(this.result.decisions);
     const persona = PERSONAS[assignPersona(profile)];
 
     // the finished skyline, pulled back and small
@@ -44,7 +44,7 @@ export class VerdictScene extends Phaser.Scene {
       const g = this.add.graphics();
       g.setPosition((i - 2) * 118, i % 2 === 0 ? 0 : 22);
       drawPlot(g, 96, 48, TONES[tone].glow, 0.16);
-      const units = this.data.city[tone] ?? 0;
+      const units = this.result.city[tone] ?? 0;
       const h = tone === "spend" ? Math.min(units * 3, 10) : units * 18;
       drawBox(g, 44, 22, h, TONES[tone]);
       city.add(g);
@@ -113,7 +113,7 @@ export class VerdictScene extends Phaser.Scene {
     });
 
     this.add
-      .text(width / 2, height - 118, `Simulated pot after eight decisions: €${this.data.pot.toLocaleString("de-DE")}`, {
+      .text(width / 2, height - 118, `Simulated pot after eight decisions: €${this.result.pot.toLocaleString("de-DE")}`, {
         fontFamily: "Inter, sans-serif",
         fontSize: "13px",
         color: "#5d7a94",
@@ -128,7 +128,7 @@ export class VerdictScene extends Phaser.Scene {
       width / 2 + 130,
       height - 66,
       "Replay this decade",
-      () => this.scene.start("World", { trackId: this.data.track }),
+      () => this.scene.start("World", { trackId: this.result.track }),
       { primary: false },
     );
   }
