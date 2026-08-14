@@ -66,15 +66,35 @@ function installGlobals() {
   }
 }
 
+// The Phaser instance is kept at module scope so React StrictMode's
+// double-invoked effects (and fast refresh) don't tear the game down.
+let gameInstance: any = null;
+let destroyTimer: ReturnType<typeof setTimeout> | null = null;
+let initPromise: Promise<void> | null = null;
+
 export default function WealthSimGame() {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    let destroyed = false;
-    let game: any = null;
+    let cancelled = false;
+    if (destroyTimer) {
+      clearTimeout(destroyTimer);
+      destroyTimer = null;
+    }
 
-    (async () => {
+    const adopt = () => {
+      const parent = containerRef.current;
+      if (!parent || !gameInstance) return;
+      const canvas = gameInstance.canvas as HTMLCanvasElement | undefined;
+      const domRoot = gameInstance.domContainer as HTMLElement | undefined;
+      if (canvas && canvas.parentElement !== parent) parent.appendChild(canvas);
+      if (domRoot && domRoot.parentElement !== parent) parent.appendChild(domRoot);
+      gameInstance.scale?.resize(parent.clientWidth, parent.clientHeight);
+      gameInstance.scale?.refresh();
+    };
+
+    const init = async () => {
       try {
         const Phaser = (await import("phaser")).default;
         const w = window as any;
@@ -100,9 +120,9 @@ export default function WealthSimGame() {
         };
 
         for (const src of SCRIPTS) await loadScript(src);
-        if (destroyed || !containerRef.current) return;
+        if (!containerRef.current || gameInstance) return;
 
-        game = new Phaser.Game({
+        gameInstance = new Phaser.Game({
           type: Phaser.AUTO,
           backgroundColor: "#0a1420",
           scale: {
@@ -121,18 +141,32 @@ export default function WealthSimGame() {
           )(),
           audio: { disableWebAudio: false },
         });
-        w.WS_game = game;
+        w.WS_game = gameInstance;
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
-    })();
+    };
+
+    if (gameInstance) {
+      adopt();
+    } else {
+      initPromise = (initPromise ?? Promise.resolve()).then(init);
+      void initPromise.then(() => {
+        if (!cancelled) adopt();
+      });
+    }
 
     return () => {
-      destroyed = true;
-      if (game) {
-        game.destroy(true);
-        (window as any).WS_game = null;
-      }
+      cancelled = true;
+      destroyTimer = setTimeout(() => {
+        destroyTimer = null;
+        if (gameInstance) {
+          gameInstance.destroy(true);
+          gameInstance = null;
+          initPromise = null;
+          (window as any).WS_game = null;
+        }
+      }, 200);
     };
   }, []);
 
