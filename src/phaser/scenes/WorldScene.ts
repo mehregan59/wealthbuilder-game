@@ -1,5 +1,5 @@
 import Phaser from "phaser";
-import { P, TONES, type ToneId } from "../palette";
+import { P, type ToneId } from "../palette";
 import { City, skylineBackdrop } from "../city";
 import { Road } from "../road";
 import { Mentor, type Mood } from "../mentor";
@@ -11,6 +11,7 @@ import type {
   BucketId,
   DecisionRecord,
   DialogueLevel,
+  RuleNote,
   Metric,
   Track,
   TrackId,
@@ -463,12 +464,12 @@ export class WorldScene extends Phaser.Scene {
 
   // ---------- reaction & advance ----------
 
-  private showReaction(insight: string, mood: Mood, rule: { status: never | string; text: string }) {
+  private showReaction(insight: string, mood: Mood, rule: RuleNote) {
     const { width } = this.scale;
     this.clearStage();
     this.mentor.say(insight, mood);
 
-    const sign = makeRuleSign(this, width - 480, 460, rule as never, 420);
+    const sign = makeRuleSign(this, width - 480, 460, rule, 420);
     this.stage.add(sign);
     fadeIn(this, sign, 200);
 
