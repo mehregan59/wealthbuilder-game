@@ -20,6 +20,14 @@
 
 @theme inline {
   --radius-sm: calc(var(--radius) - 4px);
+  --color-tone-spend: var(--tone-spend);
+  --color-tone-cash: var(--tone-cash);
+  --color-tone-guarantee: var(--tone-guarantee);
+  --color-tone-growth: var(--tone-growth);
+  --color-tone-hot: var(--tone-hot);
+  --color-status-law: var(--status-law);
+  --color-status-2027: var(--status-2027);
+  --color-status-proposal: var(--status-proposal);
   --radius-md: calc(var(--radius) - 2px);
   --radius-lg: var(--radius);
   --radius-xl: calc(var(--radius) + 4px);
