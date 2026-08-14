@@ -166,6 +166,15 @@ export class City {
   resetLabels() {
     for (const t of ORDER) this.districts[t].resetLabel();
   }
+
+  /** dim every district that is not playable this chapter */
+  setActiveTones(tones: ToneId[]) {
+    for (const t of ORDER) this.districts[t].setActive(tones.includes(t));
+  }
+
+  activateAll() {
+    for (const t of ORDER) this.districts[t].setActive(true);
+  }
 }
 
 export function skylineBackdrop(scene: Phaser.Scene, w: number, h: number) {
