@@ -165,6 +165,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.clearStage();
     this.city.resetLabels();
+    this.city.activateAll();
     this.chapterText.setText(level.chapter);
     this.paintDots();
     this.startedAt = this.time.now;
