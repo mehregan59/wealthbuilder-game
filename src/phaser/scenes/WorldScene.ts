@@ -165,6 +165,7 @@ export class WorldScene extends Phaser.Scene {
     }
     this.clearStage();
     this.city.resetLabels();
+    this.city.activateAll();
     this.chapterText.setText(level.chapter);
     this.paintDots();
     this.startedAt = this.time.now;
@@ -327,6 +328,7 @@ export class WorldScene extends Phaser.Scene {
       d.setHighlight(true);
       zones.push({ tone, bucket: b.id, x: d.container.x, y: d.container.y });
     }
+    this.city.setActiveTones(level.buckets.map((b) => b.tone as ToneId));
 
     const hint = this.add
       .text(width / 2, 512, "Drag each coin onto a district. The city reacts as you go.", {
@@ -378,9 +380,19 @@ export class WorldScene extends Phaser.Scene {
 
     const onDragEnd = (_p: Phaser.Input.Pointer, obj: Phaser.GameObjects.GameObject) => {
       const c = obj as Phaser.GameObjects.Container;
-      const hit = zones.find(
-        (z) => Math.abs(c.x - z.x) < 92 && Math.abs(c.y - z.y) < 74,
-      );
+      // nearest playable district within a generous radius
+      let hit: (typeof zones)[number] | undefined;
+      let best = Infinity;
+      for (const z of zones) {
+        const dx = Math.abs(c.x - z.x);
+        const dy = Math.abs(c.y - z.y);
+        if (dx > 110 || dy > 120) continue;
+        const d = dx * dx + dy * dy;
+        if (d < best) {
+          best = d;
+          hit = z;
+        }
+      }
       if (!hit) {
         redrags += 1;
         const home = c.getData("home") as { x: number; y: number };

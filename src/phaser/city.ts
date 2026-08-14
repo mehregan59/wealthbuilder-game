@@ -54,6 +54,10 @@ export class District {
     this.subText.setText("");
   }
 
+  setActive(on: boolean) {
+    this.container.setAlpha(on ? 1 : 0.22);
+  }
+
   setHighlight(on: boolean) {
     this.ring.clear();
     if (!on) return;
@@ -161,6 +165,15 @@ export class City {
 
   resetLabels() {
     for (const t of ORDER) this.districts[t].resetLabel();
+  }
+
+  /** dim every district that is not playable this chapter */
+  setActiveTones(tones: ToneId[]) {
+    for (const t of ORDER) this.districts[t].setActive(tones.includes(t));
+  }
+
+  activateAll() {
+    for (const t of ORDER) this.districts[t].setActive(true);
   }
 }
 
