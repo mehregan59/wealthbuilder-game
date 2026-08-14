@@ -54,6 +54,10 @@ export class District {
     this.subText.setText("");
   }
 
+  setActive(on: boolean) {
+    this.container.setAlpha(on ? 1 : 0.22);
+  }
+
   setHighlight(on: boolean) {
     this.ring.clear();
     if (!on) return;
