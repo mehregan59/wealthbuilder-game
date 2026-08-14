@@ -173,13 +173,16 @@ function dialogue(slot: number, t: DialogueText): DialogueLevel {
     character: t.character,
     lines: t.lines,
     rule: t.rule,
-    options: t.options.map((o) => ({
-      id: o.key,
-      text: o.text,
-      insight: o.insight,
-      traits: tones[o.key] ?? {},
-      potFactor: POT_FACTOR[o.key],
-    })),
+    options: t.options.map((o) => {
+      const factor = POT_FACTOR[o.key];
+      return {
+        id: o.key,
+        text: o.text,
+        insight: o.insight,
+        traits: tones[o.key] ?? {},
+        ...(factor !== undefined ? { potFactor: factor } : {}),
+      };
+    }),
   };
 }
 
