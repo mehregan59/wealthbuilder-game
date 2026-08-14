@@ -45,3 +45,7 @@ Define the state model the cards write into: statutory (Entgeltpunkte), occupati
 ## What I still need from you
 
 Whether cards should be authored German-first (with English translation) or English-first, and whether the life-course simulation (age 18-90) replaces the current 8-level city act or sits after it as the second act.
+
+many detailes I gave you you ignored are all saved in your memoory for hthis project. these are only for memory not for coding yet 
+
+&nbsp;
