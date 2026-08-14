@@ -33,6 +33,9 @@ export class VerdictScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     skylineBackdrop(this, width, height);
+    const scrim = this.add.graphics();
+    scrim.fillStyle(0x061019, 0.62);
+    scrim.fillRect(0, 0, width, height);
 
     const profile = buildProfile(this.result.decisions);
     const persona = PERSONAS[assignPersona(profile)];

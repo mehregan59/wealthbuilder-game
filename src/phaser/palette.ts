@@ -11,6 +11,36 @@ export const P = {
   dim: 0x4a6080,
 } as const;
 
+/** Daylight diorama environment colours (low-poly city look). */
+export const ENV = {
+  skyTop: 0x9fd2ef,
+  skyMid: 0xd7ecf7,
+  skyWarm: 0xf6e3c4,
+  hillFar: 0x8fb98f,
+  hillNear: 0x6ba36d,
+  grassTop: 0x7cc07a,
+  grassAlt: 0x6cb26c,
+  grassLeft: 0x4f8d55,
+  grassRight: 0x3f7346,
+  soil: 0x6a5340,
+  asphaltTop: 0x5b6672,
+  asphaltLeft: 0x424b56,
+  asphaltRight: 0x353d47,
+  roadLine: 0xf2f4f0,
+  sidewalk: 0xd9dcd6,
+  sidewalkSide: 0xa9aeaa,
+  treeTop: 0x4f9f5c,
+  treeMid: 0x3f8a4e,
+  treeDark: 0x2f6b3d,
+  trunk: 0x6b4b32,
+  shadow: 0x1e3324,
+  glass: 0xbfe4f2,
+  glassLit: 0xfff0c4,
+  roofRed: 0xc9584a,
+  roofGrey: 0x8b949c,
+  concrete: 0xeceee9,
+} as const;
+
 export type ToneId = "spend" | "cash" | "guarantee" | "growth" | "hot";
 
 export interface ToneColors {
