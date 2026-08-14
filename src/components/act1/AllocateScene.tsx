@@ -108,7 +108,7 @@ export function AllocateScene({
         {level.prompt}
       </p>
 
-      <div className="grid flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
+      <div className="grid max-h-[420px] flex-1 grid-cols-2 gap-3 sm:grid-cols-4">
         {level.buckets.map((b) => {
           const c = countIn(b.id);
           const pct = (c / level.tokens) * 100;
