@@ -54,7 +54,7 @@ export class WorldScene extends Phaser.Scene {
     const { width, height } = this.scale;
     skylineBackdrop(this, width, height);
 
-    this.city = new City(this, width / 2, 300);
+    this.city = new City(this, width / 2, 278);
     const [a0, a1] = START_AGE[this.track.id];
     this.road = new Road(this, {
       x0: 120,
