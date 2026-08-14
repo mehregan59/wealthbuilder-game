@@ -156,8 +156,19 @@ export default function WealthSimGame() {
       });
     }
 
+    // Keep the canvas matched to its container on any layout change.
+    const ro = new ResizeObserver(() => {
+      const el = containerRef.current;
+      if (el && gameInstance?.scale) {
+        gameInstance.scale.resize(el.clientWidth, el.clientHeight);
+        gameInstance.scale.refresh();
+      }
+    });
+    if (containerRef.current) ro.observe(containerRef.current);
+
     return () => {
       cancelled = true;
+      ro.disconnect();
       destroyTimer = setTimeout(() => {
         destroyTimer = null;
         if (gameInstance) {
