@@ -35,7 +35,7 @@ export function computeMetrics(
     guaranteeShare: share("guarantee"),
     spendShare: share("spend"),
     cashShare: share("cash"),
-    hotShare: share("hype"),
+    hotShare: share("hype") + share("expensive"),
     cheapShare: share("cheap"),
     diversity: spread,
     decisiveness,

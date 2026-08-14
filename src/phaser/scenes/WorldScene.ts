@@ -24,6 +24,16 @@ const START_AGE: Record<TrackId, [number, number]> = {
   T4: [48, 60],
 };
 
+const DEFAULT_BUCKET_BY_TONE: Record<ToneId, BucketId> = {
+  spend: "spend",
+  cash: "cash",
+  guarantee: "guarantee",
+  growth: "depot",
+  hot: "hype",
+};
+
+const ALL_TONES: ToneId[] = ["spend", "cash", "guarantee", "growth", "hot"];
+
 export class WorldScene extends Phaser.Scene {
   private track!: Track;
   private city!: City;
@@ -319,16 +329,25 @@ export class WorldScene extends Phaser.Scene {
       .setOrigin(0.5, 0);
     this.stage.add(prompt);
 
-    // label the districts for this chapter
+    // Every visible district remains playable. Chapter-specific districts keep
+    // their special labels and bucket IDs; the others use their normal role.
     const zones: { tone: ToneId; bucket: BucketId; x: number; y: number }[] = [];
-    for (const b of level.buckets) {
-      const tone = b.tone as ToneId;
+    const chapterBucketByTone = new Map(
+      level.buckets.map((bucket) => [bucket.tone as ToneId, bucket]),
+    );
+    for (const tone of ALL_TONES) {
       const d = this.city.get(tone);
-      d.setLabel(b.label, b.sub);
+      const chapterBucket = chapterBucketByTone.get(tone);
+      if (chapterBucket) d.setLabel(chapterBucket.label, chapterBucket.sub);
       d.setHighlight(true);
-      zones.push({ tone, bucket: b.id, x: d.container.x, y: d.container.y });
+      zones.push({
+        tone,
+        bucket: chapterBucket?.id ?? DEFAULT_BUCKET_BY_TONE[tone],
+        x: d.container.x,
+        y: d.container.y,
+      });
     }
-    this.city.setActiveTones(level.buckets.map((b) => b.tone as ToneId));
+    this.city.activateAll();
 
     const hint = this.add
       .text(width / 2, 512, "Drag each coin onto a district. The city reacts as you go.", {
