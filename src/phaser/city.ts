@@ -37,7 +37,7 @@ export class District {
       .text(0, TILE_H / 2 + 30, "", {
         fontFamily: "Inter, sans-serif",
         fontSize: "11px",
-        color: "#5d7governance".slice(0, 0) + "#5d7a94",
+        color: "#5d7a94",
       })
       .setOrigin(0.5, 0);
     this.container.add([this.ring, this.g, this.labelText, this.subText]);
