@@ -115,6 +115,7 @@ export function AllocateScene({
           return (
             <div
               key={b.id}
+              data-bucket={b.id}
               ref={(el) => {
                 zones.current[b.id] = el;
               }}
