@@ -26,5 +26,5 @@ export const TONES: Record<ToneId, ToneColors> = {
   guarantee: { top: 0x62b6de, left: 0x2f83ab, right: 0x1d5673, glow: 0x62b6de, label: "Guarantee" },
   cash: { top: 0x8fa3b8, left: 0x5b6f85, right: 0x3b4a5b, glow: 0x8fa3b8, label: "Cash" },
   spend: { top: 0xe07a6a, left: 0xb04a4a, right: 0x7a3030, glow: 0xe07a6a, label: "Spent" },
-  hot: { top: 0xf0a martial, left: 0xd06a2c, right: 0x8f461a, glow: 0xf0a45c, label: "Hype" },
+  hot: { top: 0xf0a45c, left: 0xd06a2c, right: 0x8f461a, glow: 0xf0a45c, label: "Hype" },
 };
