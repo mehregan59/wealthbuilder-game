@@ -1,7 +1,7 @@
 import { createFileRoute, ClientOnly } from "@tanstack/react-router";
 import { lazy, Suspense } from "react";
 
-const Act1Game = lazy(() => import("@/components/act1/Act1Game"));
+const Act1World = lazy(() => import("@/components/game/Act1World"));
 
 export const Route = createFileRoute("/play")({
   head: () => ({
@@ -37,7 +37,7 @@ function PlayPage() {
   return (
     <ClientOnly fallback={<Fallback />}>
       <Suspense fallback={<Fallback />}>
-        <Act1Game />
+        <Act1World />
       </Suspense>
     </ClientOnly>
   );
