@@ -54,13 +54,14 @@ export class TrackSelectScene extends Phaser.Scene {
     sky.setPosition(0, -40);
     const tones = ["growth", "guarantee", "cash"] as const;
     for (let i = 0; i < 3; i++) {
+      const tone = tones[i]!;
       const bx = -52 + i * 52;
       const bh = [70, 52, 34, 22][index]! * (1 - i * 0.22) + i * 6;
       sky.setPosition(0, -40);
       const gg = this.add.graphics();
       gg.setPosition(bx, -30);
-      drawPlot(gg, 60, 30, TONES[tones[i]].glow, 0.18);
-      drawBox(gg, 34, 17, bh, TONES[tones[i]]);
+      drawPlot(gg, 60, 30, TONES[tone].glow, 0.18);
+      drawBox(gg, 34, 17, bh, TONES[tone]);
       c.add(gg);
     }
 
