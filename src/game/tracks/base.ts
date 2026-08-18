@@ -79,28 +79,28 @@ const POT_FACTOR: Record<string, number> = {
 
 const BUCKETS: Record<number, BucketDef[]> = {
   2: [
-    { id: "spend", label: "Life now", sub: "gone by month's end", tone: "spend" },
-    { id: "cash", label: "Account", sub: "safe, shrinking with inflation", tone: "cash" },
-    { id: "guarantee", label: "Guarantee product", sub: "capital protected, slow", tone: "guarantee" },
-    { id: "depot", label: "Altersvorsorgedepot", sub: "market exposed, long horizon", tone: "growth" },
+    { id: "spend", label: "Leisure District", sub: "Enjoy It Now", tone: "spend" },
+    { id: "cash", label: "Storage Yard", sub: "Sits Still", tone: "cash" },
+    { id: "guarantee", label: "Housing District", sub: "Safe & Steady", tone: "guarantee" },
+    { id: "depot", label: "Transport District", sub: "Reliable Growth", tone: "growth" },
   ],
   4: [
-    { id: "hype", label: "The one everyone's in", sub: "+61% this year", tone: "hot" },
-    { id: "depot", label: "Broad market depot", sub: "boring, global", tone: "growth" },
-    { id: "guarantee", label: "Guarantee product", sub: "capital protected", tone: "guarantee" },
-    { id: "cash", label: "Account", sub: "waiting", tone: "cash" },
+    { id: "hype", label: "Technology District", sub: "+61% This Year", tone: "hot" },
+    { id: "depot", label: "Transport District", sub: "Reliable Growth", tone: "growth" },
+    { id: "guarantee", label: "Housing District", sub: "Safe & Steady", tone: "guarantee" },
+    { id: "cash", label: "Storage Yard", sub: "Waiting", tone: "cash" },
   ],
   6: [
-    { id: "cheap", label: "Standarddepot", sub: "cost capped at 1% p.a.", tone: "growth" },
-    { id: "expensive", label: "Advisor's product", sub: "2.3% p.a. all-in", tone: "hot" },
-    { id: "guarantee", label: "Guarantee product", sub: "capital protected", tone: "guarantee" },
-    { id: "cash", label: "Account", sub: "no fee, no growth", tone: "cash" },
+    { id: "cheap", label: "Transport District", sub: "Low Upkeep", tone: "growth" },
+    { id: "expensive", label: "Technology District", sub: "High Upkeep", tone: "hot" },
+    { id: "guarantee", label: "Housing District", sub: "Safe & Steady", tone: "guarantee" },
+    { id: "cash", label: "Storage Yard", sub: "Sits Still", tone: "cash" },
   ],
   8: [
-    { id: "depot", label: "Back into the depot", sub: "prices are down", tone: "growth" },
-    { id: "guarantee", label: "Guarantee product", sub: "capital protected", tone: "guarantee" },
-    { id: "cash", label: "Account", sub: "sit it out", tone: "cash" },
-    { id: "spend", label: "Take it out", sub: "spend it while it's still there", tone: "spend" },
+    { id: "depot", label: "Transport District", sub: "Rebuild Cheap", tone: "growth" },
+    { id: "guarantee", label: "Housing District", sub: "Safe & Steady", tone: "guarantee" },
+    { id: "cash", label: "Storage Yard", sub: "Sit It Out", tone: "cash" },
+    { id: "spend", label: "Leisure District", sub: "Take It Out", tone: "spend" },
   ],
 };
 
@@ -148,8 +148,8 @@ function insightFor(slot: number) {
         return `${pct(m.hotShare)} followed the crowd, the rest stayed where it was.`;
       case 6:
         if (m.cheapShare > 60)
-          return `You moved to the capped product. Over 40 years that gap is roughly €32,000.`;
-        return `Only ${pct(m.cheapShare)} went to the capped product. The 1.3% difference compounds against you every single year.`;
+          return `You picked the district with the lower upkeep. Over 40 years that gap is roughly €32,000.`;
+        return `Only ${pct(m.cheapShare)} went to the low-upkeep district. A 1.3% yearly difference compounds against you every single year.`;
       case 8:
         if (m.spendShare > 20)
           return `You took ${pct(m.spendShare)} out at the bottom. That part never recovers.`;
