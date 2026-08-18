@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { P, TONES } from "../palette";
 import { skylineBackdrop } from "../city";
+import { addAmbientLife } from "../ambient";
 import { drawBox, drawPlot } from "../iso";
 import { TRACKS } from "@/game/tracks";
 import type { Track } from "@/game/types";
@@ -13,6 +14,7 @@ export class TrackSelectScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     skylineBackdrop(this, width, height);
+    addAmbientLife(this, width, height);
     const scrim = this.add.graphics();
     scrim.fillStyle(0x061019, 0.42);
     scrim.fillRect(0, 0, width, height);
