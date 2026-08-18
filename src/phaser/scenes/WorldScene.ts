@@ -1,6 +1,7 @@
 import Phaser from "phaser";
 import { P, type ToneId } from "../palette";
 import { City, skylineBackdrop } from "../city";
+import { addAmbientLife } from "../ambient";
 import { Road } from "../road";
 import { Mentor, type Mood } from "../mentor";
 import { fadeIn, makeButton, makeRuleSign, panel } from "../ui";
@@ -63,6 +64,7 @@ export class WorldScene extends Phaser.Scene {
   create() {
     const { width, height } = this.scale;
     skylineBackdrop(this, width, height);
+    addAmbientLife(this, width, height);
 
     this.city = new City(this, width / 2, 278);
     const [a0, a1] = START_AGE[this.track.id];
