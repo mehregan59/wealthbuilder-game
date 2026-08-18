@@ -52,9 +52,39 @@ export interface ToneColors {
 }
 
 export const TONES: Record<ToneId, ToneColors> = {
-  growth: { top: 0x4fd39a, left: 0x2f9e6a, right: 0x1d6a48, glow: 0x4fd39a, label: "Growth" },
-  guarantee: { top: 0x62b6de, left: 0x2f83ab, right: 0x1d5673, glow: 0x62b6de, label: "Guarantee" },
-  cash: { top: 0x8fa3b8, left: 0x5b6f85, right: 0x3b4a5b, glow: 0x8fa3b8, label: "Cash" },
-  spend: { top: 0xe07a6a, left: 0xb04a4a, right: 0x7a3030, glow: 0xe07a6a, label: "Spent" },
-  hot: { top: 0xf0a45c, left: 0xd06a2c, right: 0x8f461a, glow: 0xf0a45c, label: "Hype" },
+  growth: {
+    top: 0x4fd39a,
+    left: 0x2f9e6a,
+    right: 0x1d6a48,
+    glow: 0x4fd39a,
+    label: "Transport District",
+  },
+  guarantee: {
+    top: 0x62b6de,
+    left: 0x2f83ab,
+    right: 0x1d5673,
+    glow: 0x62b6de,
+    label: "Housing District",
+  },
+  cash: {
+    top: 0x8fa3b8,
+    left: 0x5b6f85,
+    right: 0x3b4a5b,
+    glow: 0x8fa3b8,
+    label: "Storage Yard",
+  },
+  spend: {
+    top: 0xe07a6a,
+    left: 0xb04a4a,
+    right: 0x7a3030,
+    glow: 0xe07a6a,
+    label: "Leisure District",
+  },
+  hot: {
+    top: 0xf0a45c,
+    left: 0xd06a2c,
+    right: 0x8f461a,
+    glow: 0xf0a45c,
+    label: "Technology District",
+  },
 };
