@@ -115,7 +115,7 @@ export class WorldScene extends Phaser.Scene {
       })
       .setOrigin(1, 0);
     this.add
-      .text(width - 24, 42, "simulated pot", {
+      .text(width - 24, 42, "city funds", {
         fontFamily: "Inter, sans-serif",
         fontSize: "10px",
         color: "#5d7a94",

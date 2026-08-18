@@ -148,8 +148,8 @@ function insightFor(slot: number) {
         return `${pct(m.hotShare)} followed the crowd, the rest stayed where it was.`;
       case 6:
         if (m.cheapShare > 60)
-          return `You moved to the capped product. Over 40 years that gap is roughly €32,000.`;
-        return `Only ${pct(m.cheapShare)} went to the capped product. The 1.3% difference compounds against you every single year.`;
+          return `You picked the district with the lower upkeep. Over 40 years that gap is roughly €32,000.`;
+        return `Only ${pct(m.cheapShare)} went to the low-upkeep district. A 1.3% yearly difference compounds against you every single year.`;
       case 8:
         if (m.spendShare > 20)
           return `You took ${pct(m.spendShare)} out at the bottom. That part never recovers.`;
