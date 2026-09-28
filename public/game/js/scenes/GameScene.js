@@ -291,6 +291,26 @@ class GameScene extends Phaser.Scene {
     if(this.siteMarkers){ this.siteMarkers.forEach(m=>{try{this.tweens.killTweensOf(m);m.destroy();}catch(e){}}); this.siteMarkers=[]; }
   }
 
+  // A permanent mark on the map for something the player chose to build.
+  // Unlike site markers these are never cleared between levels: the city
+  // keeps a visible record of past decisions. Neutral styling on purpose —
+  // a landmark must never signal that a choice was the "right" one.
+  _addLandmark(district, icon, text, color) {
+    if(!this.landmarks) this.landmarks=[];
+    const y = district.subLabelY() + this.s(22) * this.landmarks.filter(l=>l._districtId===district.id).length;
+    const c=this.add.container(district.cx, y).setDepth(14);
+    const t=this.add.text(0,0,icon+'  '+text,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#eef5ff'}).setOrigin(0.5);
+    const w=t.width+this.s(18), h=this.s(21);
+    const bg=this.add.graphics();
+    bg.fillStyle(0x08131f,0.82); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
+    bg.lineStyle(1,color||0x8aa4c0,0.85); bg.strokeRoundedRect(-w/2,-h/2,w,h,h/2);
+    c.add([bg,t]); c._districtId=district.id;
+    c.setAlpha(0); this.tweens.add({targets:c,alpha:1,duration:500});
+    this.landmarks.push(c);
+    return c;
+  }
+
+
   _onLevel1Choice(d,v) {
     this._clearSiteMarkers(); this._clearPersistentMessage();
     this.districts.forEach(x=>x.setSelectable(false));
