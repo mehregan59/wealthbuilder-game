@@ -897,13 +897,13 @@ class GameScene extends Phaser.Scene {
     this.worldBtnTimer = this.time.delayedCall(1100,()=>{
       this.worldBtnTimer=null;
       const lbl=(typeof currentLang!=='undefined'&&currentLang==='de')?'Weiter →':'Continue →';
-      this.worldBtn=new WorldButton(this,cx,this.H-this.s(262),lbl,()=>{this.worldBtn=null;if(onContinue)onContinue();});
+      this.worldBtn=new WorldButton(this,cx,this.H-this.s(262),lbl,()=>{this.worldBtn=null;this._clearConsequence();if(onContinue)onContinue();});
     });
   }
   _clearConsequence(){ if(this.consequencePanel){this.tweens.killTweensOf(this.consequencePanel);this.consequencePanel.destroy();this.consequencePanel=null;} }
 
   _showDecisionPanel(options,cb){
-    this._clearDecisionPanel();
+    this._clearDecisionPanel(); this._clearConsequence();
     const cx=this._cx();
     const cols=options.length;
     const avail=this._availW();
