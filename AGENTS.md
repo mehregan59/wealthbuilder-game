@@ -11,3 +11,4 @@
 
 - Keep Phaser as WealthSim's rendering engine; visual quality comes from modular layered city assets, avoiding a risky rewrite of tested gameplay.
 - Centralize game palette and typography in `CityTheme`; the embedded app and standalone build must load identical city modules.
+- Keep the React home screen outside Phaser; start the existing game on demand and return through the `wealthsim:home` browser event so game logic stays unchanged.
