@@ -12,3 +12,4 @@
 - [ ] Verify the complete Level 1–10 results flow in the preview.
 - [x] Refine solar tilt/placement, station alignment, ship docking, and faster level openings.
 - [x] Add progression-linked day/night lighting and interactive district detail panels.
+- [x] Always open the landing page after refresh and keep Back to home visible on the final screen.
