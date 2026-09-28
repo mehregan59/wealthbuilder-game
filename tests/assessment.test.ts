@@ -148,3 +148,33 @@ describe("ScoringEngine", () => {
     S.reset(); expect(S.decisions).toHaveLength(0);
   });
 });
+
+describe('previously unwired beats', () => {
+  const A2 = A;
+  const base = [
+    { level: 6, value: 'accept' }, { level: 7, value: 'hold', elapsed: 8000 },
+    { level: 8, value: 'hold' }, { level: 4, value: 'university', phase: 'build' },
+  ];
+  it('level 2 news adjusts adaptability', () => {
+    const a = A2.computeScores([...base, { level: 2, value: 'cancel', phase: 'news' }], []);
+    const b = A2.computeScores([...base, { level: 2, value: 'invest_more', phase: 'news' }], []);
+    expect(a.learning - b.learning).toBe(20);
+  });
+  it('level 4 repair adjusts resilience, never patience', () => {
+    const a = A2.computeScores([...base, { level: 4, value: 'repair_now', phase: 'repair' }], []);
+    const b = A2.computeScores([...base, { level: 4, value: 'defer', phase: 'repair' }], []);
+    expect(a.patience).toBe(b.patience);
+    expect(a.resilience).toBeGreaterThan(b.resilience);
+  });
+  it('fast level 7 answer raises reaction to noise', () => {
+    const fast = A2.computeScores([...base.slice(0, 1), { level: 7, value: 'hold', elapsed: 1200 }, ...base.slice(2)], []);
+    const slow = A2.computeScores(base, []);
+    expect(fast.reactionToNoise - slow.reactionToNoise).toBe(10);
+  });
+  it('practice forecast counts 10% of overconfidence', () => {
+    const F = [1, 2, 3, 4].map(i => ({ level: 10, phase: 'forecast', pick: true, conf: 90, outcome: i % 2 === 0 }));
+    const without = A2.computeScores(F, []).overconfidence;
+    const withP = A2.computeScores([...F, { level: 10, phase: 'practice', pick: true, conf: 50, outcome: true }], []).overconfidence;
+    expect(withP).toBe(Math.round(without * 0.9));
+  });
+});

@@ -451,7 +451,7 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 4 ══
   // Beat A: an urgent repair. Spending cash on a genuine need is NOT
-  // impatience — this beat is recorded (phase:'repair') but never feeds the
+  // impatience — this beat (phase:'repair') adjusts RESILIENCE (+/-8) only, never the
   // patience score. Beat B (phase:'build') is the real delayed-reward test.
   _level4() {
     const housing=this.districts[0];
@@ -913,6 +913,7 @@ class GameScene extends Phaser.Scene {
   _clearConsequence(){ if(this.consequencePanel){this.tweens.killTweensOf(this.consequencePanel);this.consequencePanel.destroy();this.consequencePanel=null;} }
 
   _showDecisionPanel(options,cb){
+    if (typeof ScoringEngine!=='undefined') ScoringEngine.startTimer(); // deliberation time starts when choices appear
     this._clearDecisionPanel(); this._clearConsequence();
     const cx=this._cx();
     const cols=options.length;
