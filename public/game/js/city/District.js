@@ -95,13 +95,14 @@ class District {
     for(let i=0;i<Math.min(n,sp.length);i++){
       const gx=sp[i][0], gy=sp[i][1];
       const h=0.28+(this.health/100)*0.35;
-      this._box(gx,gy,0.42,0.42,h,0x6fbf7f,0x1d5a2a,0x2f8a42);
+      // Cream walls with terracotta roofs — warm homes, not green blocks.
+      this._box(gx,gy,0.42,0.42,h,0xf4e3c8,0xb08a64,0xdcc19a);
       const rz=h+0.22;
-      g.fillStyle(0x9c4a3a,0.95);
+      g.fillStyle(0xc2553f,0.95);
       g.beginPath(); g.moveTo(this.ix(gx,gy),this.iy(gx,gy,h));
       g.lineTo(this.ix(gx+0.21,gy+0.21),this.iy(gx+0.21,gy+0.21,rz));
       g.lineTo(this.ix(gx+0.42,gy),this.iy(gx+0.42,gy,h)); g.closePath(); g.fillPath();
-      g.fillStyle(0x7a3628,0.95);
+      g.fillStyle(0x94382a,0.95);
       g.beginPath(); g.moveTo(this.ix(gx,gy+0.42),this.iy(gx,gy+0.42,h));
       g.lineTo(this.ix(gx+0.21,gy+0.21),this.iy(gx+0.21,gy+0.21,rz));
       g.lineTo(this.ix(gx,gy),this.iy(gx,gy,h)); g.closePath(); g.fillPath();
@@ -111,11 +112,12 @@ class District {
     if(this.health>20){
       for(let i=0;i<3;i++){
         const tx=this.ix(0.1+i*0.8,1.72), ty=this.iy(0.1+i*0.8,1.72,0);
-        g.fillStyle(0x17431f,0.9); g.fillRect(tx-this.s(1.2),ty-this.s(6),this.s(2.4),this.s(7));
-        g.fillStyle(0x2f8a42,0.95); g.fillCircle(tx,ty-this.s(10),this.s(6.5));
-        g.fillStyle(0x46b45c,0.5);  g.fillCircle(tx-this.s(2),ty-this.s(12),this.s(3.5));
+        g.fillStyle(0x6b4a2a,0.9); g.fillRect(tx-this.s(1.2),ty-this.s(6),this.s(2.4),this.s(7));
+        g.fillStyle(0x5eb56a,0.95); g.fillCircle(tx,ty-this.s(10),this.s(6.5));
+        g.fillStyle(0x86d68f,0.55);  g.fillCircle(tx-this.s(2),ty-this.s(12),this.s(3.5));
       }
     }
+
   }
 
   _transport() {
