@@ -325,7 +325,7 @@ class ProfileScene extends Phaser.Scene {
     let best=null;
     keys.forEach(k=>{ const v=this.scores[k]; if(v!==null&&v!==undefined&&(best===null||v<this.scores[best])) best=k; });
     return best;
-  },
+  }
 
   _retirementLines(de) {
     const PC=typeof PensionContent!=='undefined'?PensionContent:null;
@@ -349,14 +349,14 @@ class ProfileScene extends Phaser.Scene {
     const badges=[PC.items.rentenniveau48,PC.items.fruhstartRente,PC.items.retirementAge,PC.items.target70]
       .map(i=>({status:PC.STATUS[i.status]||i.status}));
     return {body:parts.join('\n'),badges};
-  },
+  }
 
   _ctaLabel(de) {
     const PC=typeof PensionContent!=='undefined'?PensionContent:null;
     const emp=(window.playerInfo||{}).employment||'other';
     if(!PC) return de?'Meine Renteninformation lesen':'Read my pension information';
     return (PC.cta[emp]||PC.cta.other)[de?'de':'en'];
-  },
+  }
 
   _ctaBody(de) {
     const PC=typeof PensionContent!=='undefined'?PensionContent:null;
@@ -364,7 +364,7 @@ class ProfileScene extends Phaser.Scene {
     const lang=de?'de':'en';
     return [PC.items.rentenniveau48[lang],PC.items.fruhstartRente[lang],PC.items.retirementAge[lang],PC.items.target70[lang]].join('\n\n')
       + (de?'\n\nBildung, keine Produktempfehlung.':'\n\nEducation, not a product recommendation.');
-  },
+  }
 
   _traitInfo(de) {
     if (de) return {
