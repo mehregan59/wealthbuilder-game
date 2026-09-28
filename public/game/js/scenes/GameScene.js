@@ -69,24 +69,28 @@ class GameScene extends Phaser.Scene {
     const span = R - L;
     const px = f => Math.round(L + span * f);
     const baseY = this.s(470);
+    // Warmer, clearly distinct district palette: housing coral/cream,
+    // transport blue/teal, technology violet, energy amber. Icons and text
+    // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
-        color:0x2f8a42,darkColor:0x143d1c,accentColor:0x4aaa5c,cx:px(0.07),cy:baseY,health:45,scale:this.S,
+        color:0xd9775e,darkColor:0x6b3b2c,accentColor:0xf2a488,cx:px(0.07),cy:baseY,health:45,scale:this.S,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
       new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
-        color:0x33608f,darkColor:0x142a44,accentColor:0x5c8ab0,cx:px(0.36),cy:baseY-this.s(38),health:45,scale:this.S,
+        color:0x2f86a8,darkColor:0x14414f,accentColor:0x62c4dd,cx:px(0.36),cy:baseY-this.s(38),health:45,scale:this.S,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
-      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x6b3fae,darkColor:0x2a1450,accentColor:0x9966cc,cx:px(0.64),cy:baseY-this.s(38),health:45,scale:this.S,
+      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technologieviertel',labelDE:'Technologieviertel',
+        color:0x7a4fc9,darkColor:0x33206b,accentColor:0xa98bff,cx:px(0.64),cy:baseY-this.s(38),health:45,scale:this.S,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
-        color:0xa8850f,darkColor:0x5c4408,accentColor:0xddaa00,cx:px(0.93),cy:baseY+this.s(8),health:45,scale:this.S,
+        color:0xc79a1a,darkColor:0x6d5210,accentColor:0xf2c94c,cx:px(0.93),cy:baseY+this.s(8),health:45,scale:this.S,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
     ];
+
   }
 
   // One boundary drawn around all four districts. The name lives in the
