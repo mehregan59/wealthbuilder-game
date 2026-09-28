@@ -30,12 +30,26 @@ const ScoringEngine = {
     this.startingAnswers[questionIndex] = value;
   },
 
+  // assessment.js is the canonical scoring implementation. When it is loaded
+  // (it always is in the game), delegate so the 90/10 blend lives in exactly
+  // one place. The formulas below are a fallback for standalone use only.
+  _delegate(method, ...args) {
+    if (typeof Assessment !== 'undefined' && Assessment.computeScores) {
+      const s = Assessment.computeScores(this.decisions, this.startingAnswers);
+      const map = { riskPreference: 'riskPreference', lossAversion: 'lossAversion', patience: 'patience' };
+      if (map[method]) return s[map[method]] === null ? 50 : s[map[method]];
+    }
+    return null;
+  },
+
   scoreRiskPreference() {
     const d = this.decisions.find(d => d.level === 1);
     if (!d) return 50;
+    const del = this._delegate('riskPreference');
+    if (del !== null) return del;
     const gameScore = { safe: 20, balanced: 50, aggressive: 85 }[d.value] ?? 50;
     const startScore = { safe: 20, balanced: 50, aggressive: 85 }[this.startingAnswers[0]] ?? 50;
-    return Math.round(gameScore * 0.8 + startScore * 0.2);
+    return Math.round(gameScore * 0.9 + startScore * 0.1);
   },
 
   scoreLossAversion() {

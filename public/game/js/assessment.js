@@ -72,7 +72,11 @@ const Assessment = {
     const researched = n => D.some(d => d.level === n && d.value === 'research');
     const pickV = (map, v) => (v === undefined ? null : (map[v] !== undefined ? map[v] : null));
     const pick = (map, n, f) => pickV(map, finalOf(n, f));
-    const blend = (game, map, ans) => { if (game === null) return null; const st = map[ans]; return st === undefined ? game : Math.round(game * 0.8 + st * 0.2); };
+    // CANONICAL BLEND: 90% observed gameplay + 10% stated answer, for exactly
+    // three traits (risk, loss aversion, patience). Revealed preferences weigh
+    // more than stated ones — a design choice, not a validated optimum. All
+    // other traits are 100% gameplay. scoring.js must delegate here.
+    const blend = (game, map, ans) => { if (game === null) return null; const st = map[ans]; return st === undefined ? game : Math.round(game * 0.9 + st * 0.1); };
 
     const risk = blend(pick(M.risk, 1), M.riskStated, A[0]);
     const loss = blend(pick(M.loss, 2, d => !d.phase || d.phase === 'dip'), M.lossStated, A[2]);
