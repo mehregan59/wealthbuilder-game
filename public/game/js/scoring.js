@@ -80,15 +80,27 @@ const ScoringEngine = {
     const baseScore = { research: 85, accept: 65, independent: 55, decline: 40 }[d.value] ?? 50;
     const lossAversion = this.scoreLossAversion();
     const changeBehavior = lossAversion > 60 && d.value === 'research' ? 10 : 0;
-    return Math.min(100, Math.round(baseScore + changeBehavior));
+    // Level 2 "news" beat: did the player respond to clear bad fundamentals?
+    // Acting on real information (cancel/wait) shows signal discrimination;
+    // holding or doubling down on a district with confirmed bad news ignores it.
+    const news = this.decisions.find(x => x.level === 2 && x.phase === 'news');
+    const newsAdjust = !news ? 0
+      : ['cancel', 'wait'].includes(news.value) ? 10
+      : -10;
+    return Math.min(100, Math.max(0, Math.round(baseScore + changeBehavior + newsAdjust)));
   },
 
   scoreReactionToNoise() {
     const d = this.decisions.find(d => d.level === 7);
-    if (!d) return 50;
-    const gameScore = { sell: 90, reduce: 55, hold: 25, research: 10 }[d.value] ?? 50;
-    const speedPenalty = d.elapsed && d.elapsed < 4000 ? 10 : 0;
-    return Math.min(100, Math.round(gameScore * 0.8 + speedPenalty));
+    // Level 2 "dip" beat: reacting to a drop that carried no real
+    // information is the purest noise-reaction signal in the game.
+    const dip = this.decisions.find(x => x.level === 2 && x.phase === 'dip');
+    const dipScore = dip ? ({ cancel: 90, wait: 65, continue: 30, invest_more: 15 }[dip.value] ?? 50) : null;
+    if (!d && dipScore === null) return 50;
+    const gameScore = d ? ({ sell: 90, reduce: 55, hold: 25, research: 10 }[d.value] ?? 50) : 50;
+    const speedPenalty = d && d.elapsed && d.elapsed < 4000 ? 10 : 0;
+    const l7 = Math.min(100, Math.round(gameScore * 0.8 + speedPenalty));
+    return dipScore === null ? l7 : Math.round(l7 * 0.5 + dipScore * 0.5);
   },
 
   scoreEmotionalResilience() {
