@@ -1060,10 +1060,11 @@ class GameScene extends Phaser.Scene {
 
   update(time,delta){
     const night=this.ambient.isNightTime();
-    if(this.cityscape) this.cityscape.update(time,delta);
+    if(this.cityscape){ this.cityscape.setNight(night?1:0); this.cityscape.update(time,delta); }
     this.ambient.update(time,delta);
     this.weather.update(delta);
-    this.roads.update(delta,night);
+    if(!this.roads.quiet || this.roads.visitor) this.roads.update(delta,night);
+
     this.districts.forEach(d=>d.update(time,delta));
   }
 }
