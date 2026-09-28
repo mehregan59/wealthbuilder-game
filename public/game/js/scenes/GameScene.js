@@ -451,7 +451,7 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 4 ══
   // Beat A: an urgent repair. Spending cash on a genuine need is NOT
-  // impatience — this beat is recorded (phase:'repair') but never feeds the
+  // impatience — this beat (phase:'repair') adjusts RESILIENCE (+/-8) only, never the
   // patience score. Beat B (phase:'build') is the real delayed-reward test.
   _level4() {
     const housing=this.districts[0];
