@@ -629,7 +629,7 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 6 — a delegation drives in from the neighbouring city ══
   _level6() {
-    this._showPersistentMessage('A delegation is arriving from the neighbouring city...');
+    this._showPersistentMessage(this.metro?'A ship from the neighbouring city is sailing up the river with an investment offer...':'A delegation is arriving from the neighbouring city...');
     this.roads.sendVisitor(()=>{
       this._level6Decide(false);
     });
@@ -987,7 +987,8 @@ class GameScene extends Phaser.Scene {
       const go=()=>{ if(done) return; done=true; this.input.off('pointerdown',skip);
         if(this.worldBtnTimer){ this.worldBtnTimer.remove(false); this.worldBtnTimer=null; }
         if(onContinue) onContinue(); };
-      const skip=()=>{ if(this.consequencePanel) go(); };
+      const panel=this.consequencePanel;
+      const skip=()=>{ if(this.consequencePanel===panel) go(); else this.input.off('pointerdown',skip); };
       this.time.delayedCall(700,()=>{ if(!done) this.input.on('pointerdown',skip); });
       this.worldBtnTimer = this.time.delayedCall(opts.autoDelay||2600, go);
       return;
