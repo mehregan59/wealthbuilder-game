@@ -88,9 +88,20 @@ class GameScene extends Phaser.Scene {
       {x:this.W*.27,y:baseY}, {x:this.W*.72,y:baseY-this.s(22)},
       {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
     ] : null;
-    const at=(index,f,y)=>compactPoints ? {cx:compactPoints[index].x,cy:compactPoints[index].y} : {cx:px(f),cy:y};
+    // On the painted city each quarter sits on its real landmark: the old
+    // town by the river, the glass station, the office campus, the hills
+    // with solar panels and wind turbines.
+    const panoramaPoints = (this.hasPanorama && !this.isCompact) ? [
+      {x:this.PANEL+(this.W-this.PANEL)*0.11, y:this.H*0.74},
+      {x:this.PANEL+(this.W-this.PANEL)*0.36, y:this.H*0.68},
+      {x:this.PANEL+(this.W-this.PANEL)*0.63, y:this.H*0.70},
+      {x:this.PANEL+(this.W-this.PANEL)*0.88, y:this.H*0.76}
+    ] : null;
+    const pts = panoramaPoints || compactPoints;
+    const at=(index,f,y)=>pts ? {cx:pts[index].x,cy:pts[index].y} : {cx:px(f),cy:y};
     const p0=at(0,.12,baseY+this.s(18)),p1=at(1,.38,baseY-this.s(34));
     const p2=at(2,.62,baseY-this.s(34)),p3=at(3,.88,baseY+this.s(18));
+
     // Warmer, clearly distinct district palette: housing coral/cream,
     // transport blue/teal, technology violet, energy amber. Icons and text
     // labels carry the same meaning for anyone who cannot rely on colour.
