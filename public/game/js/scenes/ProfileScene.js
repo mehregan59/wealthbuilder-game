@@ -221,13 +221,13 @@ class ProfileScene extends Phaser.Scene {
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
-    const eduW=Math.min(this.s(360),W-this.s(40));
-    const eduX=Math.max(this.s(20),cx+gap/2);
+    const eduW=Math.min(this.s(520),W-this.s(40));
+    const eduX=cx-eduW/2, eduY=bY-this.s(62);
     const eduBg=this.add.graphics().setDepth(99).setAlpha(0);
-    eduBg.fillStyle(0xdce9df,1); eduBg.fillRoundedRect(eduX,bY,Math.min(eduW,W-eduX-this.s(20)),bH,this.s(8));
-    eduBg.lineStyle(1,0x7ca5a1,1); eduBg.strokeRoundedRect(eduX,bY,Math.min(eduW,W-eduX-this.s(20)),bH,this.s(8));
-    const eduTx=this.add.text(eduX+Math.min(eduW,W-eduX-this.s(20))/2,bY+bH/2,de?'Persönliche Vorsorgebildung starten — Demnächst':'Start personal retirement education — Coming soon',{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#173b40',fontStyle:'700',align:'center',wordWrap:{width:Math.min(eduW,W-eduX-this.s(20))-this.s(20)}
+    eduBg.fillStyle(0xdce9df,1); eduBg.fillRoundedRect(eduX,eduY,eduW,bH,this.s(8));
+    eduBg.lineStyle(1,0x7ca5a1,1); eduBg.strokeRoundedRect(eduX,eduY,eduW,bH,this.s(8));
+    const eduTx=this.add.text(cx,eduY+bH/2,de?'Persönliche Vorsorgebildung starten — Demnächst':'Start personal retirement education — Coming soon',{
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#173b40',fontStyle:'700',align:'center',wordWrap:{width:eduW-this.s(20)}
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[eduBg,eduTx],alpha:1,duration:800,delay:2500});
 
@@ -350,6 +350,10 @@ class ProfileScene extends Phaser.Scene {
       const mask=this.make.graphics({add:false}); mask.fillRect(bx,by+this.s(80),bw,bh-this.s(120));
       const gm=mask.createGeometryMask(); movable.forEach(o=>o.setMask(gm));
       this.input.on('wheel',(p,go,dx,dy)=>{ if(!this.details) return; off=Math.max(0,Math.min(maxScroll,off+dy*0.5)); movable.forEach((o,i)=>o.y=base[i]-off); });
+      let dragY=null;
+      ov.on('pointerdown',p=>{dragY=p.y;});
+      ov.on('pointermove',p=>{if(dragY===null)return;off=Math.max(0,Math.min(maxScroll,off+(dragY-p.y)));dragY=p.y;movable.forEach((o,i)=>o.y=base[i]-off);});
+      ov.on('pointerup',()=>{dragY=null;}); ov.on('pointerout',()=>{dragY=null;});
     }
     this.details=c;
   }

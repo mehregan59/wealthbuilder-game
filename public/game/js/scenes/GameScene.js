@@ -913,10 +913,8 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur||5000,yoyo:true,onComplete:()=>m.destroy()});
   }
 
-  // opts.auto: skip the clickable World Button entirely and auto-advance
-  // after opts.autoDelay ms. Currently unused (Level 8 was reverted back to
-  // the standard clickable flow), but left in place in case a future level
-  // wants a no-click ending.
+  // Consequences remain visible long enough to read, then advance without
+  // requiring a second acknowledgement click.
   _showConsequence(text,onContinue,opts){
     opts = Object.assign({auto:true,autoDelay:4200},opts||{});
     // Clearing any existing world button/timer here (not just on level
@@ -931,9 +929,9 @@ class GameScene extends Phaser.Scene {
     // stronger shade behind the message band, so the player can actually
     // see the consequence they caused instead of a black screen.
     const dim=this.add.graphics();
-    dim.fillStyle(0x02060c, 0.28);
+    dim.fillStyle(0x173b40, 0.12);
     dim.fillRect(0, 0, this.W, this.H);
-    dim.fillStyle(0x02060c, 0.55);
+    dim.fillStyle(0x173b40, 0.22);
     dim.fillRect(0, py-this.s(26), this.W, this.H-(py-this.s(26)));
 
 

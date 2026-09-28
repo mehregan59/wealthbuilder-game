@@ -3,6 +3,7 @@ import { lazy, Suspense, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { ArrowRight, Building2, ChartNoAxesCombined, ShieldCheck } from "lucide-react";
 import cityImage from "@/assets/wealthsim-eco-city.jpg";
+import { Button } from "@/components/ui/button";
 
 const WealthSimGame = lazy(() => import("@/components/game/WealthSimGame"));
 
@@ -50,9 +51,9 @@ function Index() {
             <p className="font-heading text-sm font-bold uppercase tracking-[0.18em] text-primary-foreground/80">Behavioral retirement education</p>
             <h1 className="mt-4 max-w-4xl font-heading text-5xl font-bold leading-[1.02] text-primary-foreground md:text-7xl">WealthSim</h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-primary-foreground/90 md:text-xl">Build a connected city. Navigate uncertainty. Discover how your decisions shape long-term planning.</p>
-            <button onClick={() => setPlaying(true)} className="mt-8 inline-flex h-14 items-center gap-3 rounded-md bg-card px-7 font-heading text-base font-bold text-card-foreground shadow-lg transition-transform hover:scale-[1.02] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
+            <Button onClick={() => setPlaying(true)} size="lg" variant="secondary" className="mt-8 h-14 gap-3 px-7 font-heading text-base font-bold shadow-lg transition-transform hover:scale-[1.02]">
               Start building <ArrowRight className="size-5" />
-            </button>
+            </Button>
           </div>
         </section>
         <section className="mx-auto grid max-w-7xl gap-8 px-6 py-12 md:grid-cols-3 md:px-10">
