@@ -100,12 +100,14 @@ class CityScape {
   }
 
   _buildWater() {
-    const W = this.W, H = this.H;
     this.ripples = [];
-    for (let i = 0; i < 26; i++) {
-      this.ripples.push({ x: Math.random() * W * 0.72, y: H * (0.80 + Math.random() * 0.19), w: this.s(14 + Math.random() * 40), ph: Math.random() * 6.28 });
+    for (let i = 0; i < 24; i++) {
+      const p = Math.random();
+      const pos = this._at('river', p);
+      this.ripples.push({ x: pos.x + (Math.random() - 0.5) * this.s(90), y: pos.y + (Math.random() - 0.5) * this.s(26), w: this.s(12 + Math.random() * 32), ph: Math.random() * 6.28 });
     }
   }
+
 
   // Windows that warm up when the scene turns to evening.
   _buildWindows() {
