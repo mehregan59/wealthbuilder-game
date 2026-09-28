@@ -14,7 +14,7 @@ class District {
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
-    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
+    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(this.scene.hasMetro?45:13);
     // High-contrast card: a busy drawn city behind it must never make the
     // district name hard to read.
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);
@@ -88,7 +88,7 @@ class District {
     }
   }
   _tree(gx,gy,scale){const g=this.gfx,x=this.ix(gx,gy),y=this.iy(gx,gy,0),s=scale||1;g.fillStyle(0x66533c,1);g.fillRect(x-this.s(1.4*s),y-this.s(8*s),this.s(2.8*s),this.s(9*s));g.fillStyle(0x39784e,1);g.fillCircle(x,y-this.s(12*s),this.s(7*s));g.fillStyle(0x77b66f,.9);g.fillCircle(x-this.s(3*s),y-this.s(15*s),this.s(4*s));}
-  _solar(gx,gy,n){const g=this.gfx;for(let i=0;i<n;i++){const x=this.ix(gx+i*.24,gy),y=this.iy(gx+i*.24,gy,.12);g.fillStyle(0x285d73,1);g.fillRoundedRect(x-this.s(7),y-this.s(3),this.s(13),this.s(6),1);g.lineStyle(1,0x8ed6df,.8);g.lineBetween(x,y-this.s(3),x,y+this.s(3));}}
+  _solar(gx,gy,n){const g=this.gfx;for(let i=0;i<n;i++){const a=gx+i*.24,x=this.ix(a,gy),y=this.iy(a,gy,.12),P=(u,v,z)=>({x:this.ix(u,v),y:this.iy(u,v,z)});const p=[P(a-.1,gy-.05,.04),P(a+.13,gy-.05,.04),P(a+.13,gy+.12,.22),P(a-.1,gy+.12,.22)];g.fillStyle(0x4d5a58,1);g.fillRect(x-this.s(1),y,this.s(2),this.s(6));this._poly(g,p,0x285d73,1);g.lineStyle(1,0x8ed6df,.8);g.lineBetween(p[0].x,p[0].y,p[2].x,p[2].y);}}
   _housing(){
     const st=this._stage(),lots=[[.1,.12],[.7,.15],[1.45,.2],[.22,1.38],[1.18,1.4],[1.72,.86]];
     for(let i=0;i<Math.min(2+st,lots.length);i++){const [x,y]=lots[i],tall=st>=4&&i<2,b=this._box(x,y,tall?.48:.38,tall?.5:.38,tall?1.05:.46,0xf3e8cf,0xc69572,0xddb891);this._windows(b,tall?2:1,tall?3:1,0xb7dce0);if(st>=3&&i%2===0)this._solar(x+.08,y+.1,1);}
@@ -195,7 +195,7 @@ class District {
     const st=this._stage(),g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
     // ground-mounted solar farm: fenced rows of panels on the grass
     const gr=this._grow(),rows=Math.min(2+st+gr,8);
-    for(let r=0;r<rows;r++){const gy=-.32+r*.24;for(let c=0;c<5;c++){const gx=-.05+c*.3;if(gx>1.1&&gy>.58)continue;
+    for(let r=0;r<rows;r++){const gy=-.47+r*.24;for(let c=0;c<5;c++){const gx=-.05+c*.3;if(gx>1.1&&gy>.58)continue;
       // tilted panel on two legs, sitting on grass inside the quarter
       g.fillStyle(0x4d5a58,1);const l1=P(gx+.04,gy+.14,0),l2=P(gx+.24,gy+.14,0);g.fillRect(l1.x-this.s(.8),l1.y-this.s(5),this.s(1.6),this.s(5));g.fillRect(l2.x-this.s(.8),l2.y-this.s(5),this.s(1.6),this.s(5));
       this._poly(g,[P(gx,gy,.05),P(gx+.28,gy,.05),P(gx+.28,gy+.14,.2),P(gx,gy+.14,.2)],0x24506a,1);
@@ -207,7 +207,7 @@ class District {
     this.chimneyPos=[P(1.7,1.4,1.3),P(2.0,1.4,1.3)];
     this.turbinePos=[];for(let i=0;i<Math.min(2+st+gr,8);i++){const gx=-.2+(i%4)*.6+(i>=4?.3:0),gy=i>=4?-.9:-.45,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
   }
-  _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.cx,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide();});this.hitZone.on('pointerdown',()=>{if(this.selectable&&this.onSelect)this.onSelect(this);});}
+  _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.cx,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide();});this.hitZone.on('pointerdown',()=>{if(this.selectable&&this.onSelect)this.onSelect(this);else if(this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.cx,this.labelBaseY-this.s(8));});}
   setSelectable(on,cb){this.selectable=on;this.onSelect=cb||null;if(on)this._pulseOn();else this._pulseOff();}
   _ringPts(){return [{x:this.ix(-.25,2.5),y:this.iy(-.25,2.5,0)},{x:this.ix(2.5,2.5),y:this.iy(2.5,2.5,0)},{x:this.ix(2.5,-.25),y:this.iy(2.5,-.25,0)},{x:this.ix(-.25,-.25),y:this.iy(-.25,-.25,0)}];}
   _showGlow(){this._glowOn();} _hideGlow(){this._glowOff();}
@@ -218,15 +218,16 @@ class District {
   _initCitizens(){for(let i=0;i<12;i++)this.citizens.push(this._newCitizen());}
   _newCitizen(){return {gx:.15+Math.random()*1.95,gy:.08+Math.random()*1.95,tgx:.15+Math.random()*1.95,tgy:.08+Math.random()*1.95,speed:.00012+Math.random()*.00016,bob:Math.random()*6.2,pause:0,skin:[0xe7b98f,0x9d6847,0x6f4938,0xf0c9a4][Phaser.Math.Between(0,3)],shirt:[0x296b72,0xe0a82e,0xc96b4b,0xf2e7c9][Phaser.Math.Between(0,3)]};}
   _updateCitizens(delta){const g=this.animGfx,active=Math.max(5,Math.min(12,this._stage()*2+3));this.citizens.forEach((c,i)=>{if(i>=active)return;if(c.pause>0)c.pause-=delta;else{const dx=c.tgx-c.gx,dy=c.tgy-c.gy,dist=Math.hypot(dx,dy);if(dist<.06){c.tgx=.15+Math.random()*1.95;c.tgy=.08+Math.random()*1.95;c.pause=180+Math.random()*600;}else{c.gx+=dx/dist*c.speed*delta;c.gy+=dy/dist*c.speed*delta;}}c.bob+=delta*.01;const x=this.ix(c.gx,c.gy),y=this.iy(c.gx,c.gy,0)-Math.abs(Math.sin(c.bob))*this.s(1.5);g.fillStyle(0x173b40,.2);g.fillEllipse(x,y+this.s(3),this.s(8),this.s(3));g.fillStyle(c.shirt,1);g.fillRoundedRect(x-this.s(2.7),y-this.s(9),this.s(5.4),this.s(8),1);g.fillStyle(c.skin,1);g.fillCircle(x,y-this.s(12),this.s(2.8));g.lineStyle(this.s(1.2),0x334f4d,.9);g.lineBetween(x-this.s(1),y-this.s(1),x-this.s(3),y+this.s(5));g.lineBetween(x+this.s(1),y-this.s(1),x+this.s(3),y+this.s(5));});}
-  receiveResource(a){this.resources+=a;this._animHealth(this.health,Math.min(100,this.health+a*9),850,'Back.easeOut');this._construction();this.scene.tweens.add({targets:this.labelContainer,scaleX:1.08,scaleY:1.08,duration:180,yoyo:true});}
-  takeDamage(a){this._animHealth(this.health,Math.max(6,this.health-a),950,'Power2.easeIn');this._cracks();}
+  receiveResource(a){this.resources+=a;this.lastEffect='Investment added capacity and improved district condition by '+Math.round(a*9)+' points.';this._animHealth(this.health,Math.min(100,this.health+a*9),850,'Back.easeOut');this._construction();this.scene.tweens.add({targets:this.labelContainer,scaleX:1.08,scaleY:1.08,duration:180,yoyo:true});}
+  takeDamage(a){this.lastEffect='A recent event reduced district condition by '+Math.round(a)+' points.';this._animHealth(this.health,Math.max(6,this.health-a),950,'Power2.easeIn');this._cracks();}
   _animHealth(from,to,dur,ease){const o={h:from};this.scene.tweens.add({targets:o,h:to,duration:dur,ease,onUpdate:()=>{this.health=o.h;this.draw();},onComplete:()=>{this.health=to;this.draw();if(this.scene.statsPanel)this.scene.statsPanel.refreshPerformance();}});}
   _construction(){if(this.scene.reducedMotion)return;const crane=this.scene.add.graphics().setDepth(20),x=this.cx+this.s(18),y=this.cy-this.s(20);crane.lineStyle(this.s(2),0xe0a82e,.9);crane.lineBetween(x,y,x,y-this.s(55));crane.lineBetween(x-this.s(24),y-this.s(48),x+this.s(30),y-this.s(48));crane.lineBetween(x+this.s(20),y-this.s(48),x+this.s(20),y-this.s(24));this.scene.tweens.add({targets:crane,alpha:0,duration:850,delay:450,onComplete:()=>crane.destroy()});}
   _cracks(){for(let i=0;i<3;i++){const c=this.scene.add.graphics().setDepth(20),x=this.cx+Phaser.Math.Between(-50,50),y=this.cy+Phaser.Math.Between(-12,30);c.lineStyle(this.s(2),0xc85848,.9);c.beginPath();c.moveTo(x,y);c.lineTo(x+Phaser.Math.Between(-12,12),y+this.s(15));c.strokePath();this.scene.tweens.add({targets:c,alpha:0,duration:2400,delay:500,onComplete:()=>c.destroy()});}}
   celebrate(){this._construction();}
   setStorm(on){this.scene.tweens.add({targets:[this.gfx,this.animGfx],alpha:on?.48:1,duration:1200});this.scene.tweens.add({targets:this.labelContainer,alpha:on?.65:1,duration:1200});}
-  update(time,delta){this.animTime+=delta;this.animGfx.clear();if(!(this.scene.hasMetro&&this.id==='energy'))this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
+  update(time,delta){this.animTime+=delta;this.animGfx.clear();if(!(this.scene.hasMetro&&this.id==='energy')&&(this.scene.nightStrength||0)<.6)this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
   _blades(delta){if(!this.turbinePos)return;this.turbineAngle+=delta*.0026;const g=this.animGfx;this.turbinePos.forEach((t,i)=>{const a0=this.turbineAngle+i*.6;g.fillStyle(0xf4f5ef,1);for(let b=0;b<3;b++){const a=a0+b*Math.PI*2/3;g.beginPath();g.moveTo(t.x,t.y);g.lineTo(t.x+Math.cos(a)*this.s(13),t.y+Math.sin(a)*this.s(13));g.lineTo(t.x+Math.cos(a+.27)*this.s(10),t.y+Math.sin(a+.27)*this.s(10));g.closePath();g.fillPath();}g.fillStyle(0x6f8786,1);g.fillCircle(t.x,t.y,this.s(2.2));});}
   getName(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.nameDE:this.name;}
   getTooltip(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.tooltipDE:this.tooltip;}
+  getPanelText(){const de=(typeof currentLang!=='undefined'&&currentLang==='de'),condition=Math.round(this.health),credits=Math.round(this.resources*100),effect=this.lastEffect||(de?'Noch keine direkte Auswirkung in diesem Stadtteil.':'No direct choice effect in this district yet.');return de?`${this.getTooltip()}\n\nZUSTAND  ${condition}/100\nINVESTITIONEN  ${credits} Credits\n\nLETZTE AUSWIRKUNG\n${effect}`:`${this.getTooltip()}\n\nCONDITION  ${condition}/100\nINVESTMENTS  ${credits} credits\n\nLATEST CHOICE EFFECT\n${effect}`;}
 }
