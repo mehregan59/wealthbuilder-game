@@ -70,7 +70,7 @@ class Metropolis {
       p(0.072, 0.580),  // Housing — west bank old town
       p(0.430, 0.345),  // Transport — around the terminal on the north avenue
       p(0.645, 0.720),  // Technology — south-east office quarter
-      p(0.828, 0.375),  // Energy — north-east hills
+      p(0.795, 0.380),  // Energy — north-east hills
     ];
 
 
