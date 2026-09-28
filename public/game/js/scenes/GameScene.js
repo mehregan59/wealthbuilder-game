@@ -5,7 +5,7 @@ class GameScene extends Phaser.Scene {
     this.W = this.scale.width;
     this.H = this.scale.height;
     this.S = Math.max(0.85, Math.min(1.9, this.H / 720));
-    this.PANEL = Math.round(Math.min(260, Math.max(190, this.W * 0.155)));
+    this.PANEL = Math.round(Math.min(232, Math.max(168, this.W * 0.14)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
 
@@ -18,9 +18,9 @@ class GameScene extends Phaser.Scene {
     const ground = this.add.graphics().setDepth(-5);
     // Warmer, lighter land so the city reads as a living place rather than
     // a dark board. Navy/gold stays for the HUD and framing only.
-    ground.fillStyle(0x3d6b43,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
-    ground.fillStyle(0x4b7d4f,1); ground.fillRect(0,groundY,this.W,this.s(9));
-    ground.fillStyle(0x30583a,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
+    ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
+    ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
 
 
     this.ambient = new AmbientSystem(this);
@@ -41,6 +41,7 @@ class GameScene extends Phaser.Scene {
 
     this._buildDistricts();
     this._drawCityBoundary();
+    this.fabric = new UrbanFabric(this, this.districts);
     this.roads = new RoadNetwork(this, this.districts);
     this.hud = new HUD(this);
     this.statsPanel = new StatsPanel(this);
@@ -67,29 +68,29 @@ class GameScene extends Phaser.Scene {
     // Extra margin off both the panel and the right edge of the screen,
     // and Housing/Energy pulled ~20% closer to their inner neighbours
     // (Transport/Technology) instead of sitting right at the outer bounds.
-    const L = this.PANEL + this.s(96);
-    const R = this.W - this.s(96);
+    const L = this.PANEL + this.s(112);
+    const R = this.W - this.s(108);
     const span = R - L;
     const px = f => Math.round(L + span * f);
-    const baseY = this.s(470);
+    const baseY = this.s(482);
     // Warmer, clearly distinct district palette: housing coral/cream,
     // transport blue/teal, technology violet, energy amber. Icons and text
     // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
-        color:0xd9775e,darkColor:0x6b3b2c,accentColor:0xf2a488,cx:px(0.07),cy:baseY,health:45,scale:this.S,
+        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:px(0.08),cy:baseY+this.s(10),health:45,scale:this.S,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
       new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
-        color:0x2f86a8,darkColor:0x14414f,accentColor:0x62c4dd,cx:px(0.36),cy:baseY-this.s(38),health:45,scale:this.S,
+        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:px(0.36),cy:baseY-this.s(42),health:45,scale:this.S,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
       new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x7a4fc9,darkColor:0x33206b,accentColor:0xa98bff,cx:px(0.64),cy:baseY-this.s(38),health:45,scale:this.S,
+        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:px(0.64),cy:baseY-this.s(42),health:45,scale:this.S,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
-        color:0xc79a1a,darkColor:0x6d5210,accentColor:0xf2c94c,cx:px(0.93),cy:baseY+this.s(8),health:45,scale:this.S,
+        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:px(0.92),cy:baseY+this.s(10),health:45,scale:this.S,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
     ];
@@ -159,17 +160,17 @@ class GameScene extends Phaser.Scene {
     const inner = clampGround(buildRing(rx, ry, 0.94));
 
     const g = this.add.graphics().setDepth(-4);
-    g.fillStyle(0xe2a840, 0.035);
+    g.fillStyle(CityTheme.colors.cream, 0.08);
     g.beginPath();
     g.moveTo(ring[0].x, ring[0].y);
     for (let i=1;i<=N;i++){ const p=ring[i%N]; g.lineTo(p.x,p.y); }
     g.closePath(); g.fillPath();
-    g.lineStyle(this.s(2.4), 0xe2a840, 0.42);
+    g.lineStyle(this.s(2.4), CityTheme.colors.teal, 0.28);
     g.strokePath();
 
     // A faint second, smaller ring just inside the border — reads like a
     // coastline/contour line rather than a single flat outline.
-    g.lineStyle(1, 0xe2a840, 0.18);
+    g.lineStyle(1, CityTheme.colors.cream, 0.42);
     g.beginPath();
     g.moveTo(inner[0].x, inner[0].y);
     for (let i=1;i<=N;i++){ const p=inner[i%N]; g.lineTo(p.x,p.y); }
@@ -178,11 +179,11 @@ class GameScene extends Phaser.Scene {
 
   _introSequence() {
     const fi=this.add.graphics().setDepth(200);
-    fi.fillStyle(0x000000,1); fi.fillRect(0,0,this.W,this.H);
+    fi.fillStyle(CityTheme.colors.sky,1); fi.fillRect(0,0,this.W,this.H);
     this.tweens.add({targets:fi,alpha:0,duration:2000,delay:300,onComplete:()=>{fi.destroy();this._startLevel(1);}});
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     const txt=this.add.text(this.W/2,this.H/2, de ? `${this.cityName} wartet.` : `${this.cityName} awaits.`,{
-      fontFamily:'Playfair Display, Georgia, serif', fontSize:this.s(32), color:'#e2a840'
+      fontFamily:CityTheme.heading, fontSize:this.s(32), color:'#296b72', fontStyle:'700'
     }).setOrigin(0.5).setDepth(201).setAlpha(0);
     this.tweens.add({targets:txt,alpha:1,duration:900,delay:700,hold:1600,yoyo:true,onComplete:()=>txt.destroy()});
   }
@@ -828,7 +829,7 @@ class GameScene extends Phaser.Scene {
     const ov=this.add.graphics().setDepth(190);
     const o={a:0};
     this.tweens.add({targets:o,a:1,duration:1800,
-      onUpdate:()=>{ov.clear();ov.fillStyle(0x061019,o.a);ov.fillRect(0,0,this.W,this.H);},
+      onUpdate:()=>{ov.clear();ov.fillStyle(CityTheme.colors.cream,o.a);ov.fillRect(0,0,this.W,this.H);},
       onComplete:()=>this._toProfile()});
   }
 

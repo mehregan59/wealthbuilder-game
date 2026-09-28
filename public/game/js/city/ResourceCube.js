@@ -30,11 +30,11 @@ class ResourceCube {
   _drawCube(ox, oy, scale) {
     const g = this.gfx; g.clear();
     const s = 16 * scale;
-    g.fillStyle(0xf0c060, 0.95);
+    g.fillStyle(CityTheme.colors.gold, 0.95);
     g.beginPath(); g.moveTo(ox, oy-s); g.lineTo(ox+s, oy-s/2); g.lineTo(ox, oy); g.lineTo(ox-s, oy-s/2); g.closePath(); g.fillPath();
-    g.fillStyle(0xc8902a, 0.95);
+    g.fillStyle(0xb47d18, 0.95);
     g.beginPath(); g.moveTo(ox-s, oy-s/2); g.lineTo(ox, oy); g.lineTo(ox, oy+s/2); g.lineTo(ox-s, oy); g.closePath(); g.fillPath();
-    g.fillStyle(0xe2a840, 0.95);
+    g.fillStyle(0xd69a23, 0.95);
     g.beginPath(); g.moveTo(ox+s, oy-s/2); g.lineTo(ox, oy); g.lineTo(ox, oy+s/2); g.lineTo(ox+s, oy); g.closePath(); g.fillPath();
     g.lineStyle(1, 0xffe080, 0.6);
     g.beginPath(); g.moveTo(ox, oy-s); g.lineTo(ox+s, oy-s/2); g.lineTo(ox, oy); g.lineTo(ox-s, oy-s/2); g.closePath(); g.strokePath();
@@ -56,7 +56,7 @@ class ResourceCube {
       this.container.x = ptr.x; this.container.y = ptr.y;
       const nearest = this._nearestDistrict(ptr.x, ptr.y);
       this.scene.districts?.forEach(d => {
-        if (d === nearest && this._distanceTo(d, ptr.x, ptr.y) < 120) { d._showGlow(); this.targetDistrict = d; }
+        if (d === nearest && this._distanceTo(d, ptr.x, ptr.y) < 150) { d._showGlow(); this.targetDistrict = d; }
         else if (!d.isHovered) d._hideGlow();
       });
     });
