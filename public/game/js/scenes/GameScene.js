@@ -673,7 +673,7 @@ class GameScene extends Phaser.Scene {
     this._showPersistentMessage('The city needs cash for next year\u2019s budget. It must sell one project.\nAnalysts rate both with exactly the same outlook from here.');
     this._showDecisionPanel([
       {icon:'\u2600',label:'Sell Solar Park',desc:'Bought for 400.\nNow worth 560 (+40%).',value:'sell_winner',color:0x4aaa5c},
-      {icon:'\uD83D\uDE8B',label:'Sell Tram Line',desc:'Bought for 400.\nNow worth 280 (\u221230%).',value:'sell_loser',color:0xe2a840}
+      {icon:'🚏',label:'Sell Tram Line',desc:'Bought for 400.\nNow worth 280 (\u221230%).',value:'sell_loser',color:0xe2a840}
     ],(c)=>{
       ScoringEngine.recordDecision(9,c,{phase:'pair'}); this._clearPersistentMessage();
       this._updateStats(0,0,6);
