@@ -118,7 +118,9 @@
 
       function showLanding() {
         if (window.WS_game) {
-          window.WS_game.destroy(true);
+          // Let the shell remove the canvas after Phaser has shut down. Asking
+          // both Phaser and the shell to remove it can race and log an error.
+          window.WS_game.destroy(false);
           window.WS_game = null;
         }
         gameRoot.replaceChildren();
