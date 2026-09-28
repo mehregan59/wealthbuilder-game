@@ -15,7 +15,9 @@ class Tutorial {
       5:{t:'Everyone is excited',b:'One district is booming and headlines are scrolling across the top of the screen.\nTap one of the four responses at the bottom to decide whether to follow the crowd or hold your position.'},
       6:{t:'A visitor arrives',  b:'A delegation is driving in from a neighbouring city carrying an offer of investment.\nYou can tap Research first to learn more \u2014 that costs nothing, and you still choose afterwards from the same options.'},
       7:{t:'Loud headlines',     b:'Reports are scrolling across the top of the screen. Tapping Read report is free and costs you nothing.\nAfter reading, you still tap one of the other options to decide what the city actually does.'},
-      8:{t:'The storm',          b:'Every district is hit \u2014 you cannot prevent it. Once it passes, tap one of the response options at the bottom of the screen to decide what mattered most to protect.'}
+      8:{t:'The storm',          b:'Every district is hit \u2014 you cannot prevent it. Once it passes, tap one of the response options at the bottom of the screen to decide what mattered most to protect.'},
+      9:{t:'The project review', b:'The city must sell projects. Read what each was bought for and is worth today, then tap the one to sell at the bottom of the screen.'},
+      10:{t:'The planning desk', b:'Answer a few forecasts about next year and say how sure you are. Afterwards you will see how your confidence compared with what actually happened.'}
     };
     const DE = {
       1:{t:'So wird gespielt',   b:'Vier Stadtteile liegen vor dir \u2014 zusammen bilden sie deine Stadt. Tippe direkt auf den, den du zuerst bauen willst, um ihn auszuw\u00e4hlen.\nEs gibt keine falsche Antwort.'},
@@ -25,7 +27,9 @@ class Tutorial {
       5:{t:'Alle sind begeistert',b:'Ein Stadtteil boomt und Schlagzeilen laufen oben \u00fcber den Bildschirm.\nTippe unten auf eine der vier Optionen \u2014 folgst du der Menge oder h\u00e4ltst du deine Position?'},
       6:{t:'Besuch kommt an',    b:'Eine Delegation bringt ein Investitionsangebot aus einer Nachbarstadt.\nTippe auf Nachfragen, um kostenlos mehr zu erfahren \u2014 du entscheidest danach trotzdem aus denselben Optionen.'},
       7:{t:'Laute Schlagzeilen', b:'Berichte laufen oben \u00fcber den Bildschirm. Den Bericht zu lesen ist kostenlos.\nDanach tippst du trotzdem auf eine der anderen Optionen, um zu entscheiden, was die Stadt tut.'},
-      8:{t:'Der Sturm',          b:'Jeder Stadtteil wird getroffen \u2014 du kannst es nicht verhindern. Danach tippst du unten auf eine Option, um zu entscheiden, was dir am wichtigsten war zu sch\u00fctzen.'}
+      8:{t:'Der Sturm',          b:'Jeder Stadtteil wird getroffen \u2014 du kannst es nicht verhindern. Danach tippst du unten auf eine Option, um zu entscheiden, was dir am wichtigsten war zu sch\u00fctzen.'},
+      9:{t:'Projekt-Check',     b:'Die Stadt muss Projekte verkaufen. Lies Kaufpreis und heutigen Wert und tippe unten auf das Projekt, das verkauft wird.'},
+      10:{t:'Planungsb\u00fcro',  b:'Beantworte einige Prognosen f\u00fcr das n\u00e4chste Jahr und gib an, wie sicher du bist. Danach siehst du, wie gut deine Sicherheit zur Wirklichkeit passte.'}
     };
     return (de?DE:EN)[level] || null;
   }

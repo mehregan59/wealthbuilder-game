@@ -201,7 +201,7 @@ class GameScene extends Phaser.Scene {
     this.districts.forEach(d=>d.setSelectable(false));
     this.cubeDropped=0; this.cubeTotal=0;
     if (!this.snapshots[n]) this._saveSnapshot(n);
-    const map={1:this._level1,2:this._level2,3:this._level3,4:this._level4,5:this._level5,6:this._level6,7:this._level7,8:this._level8};
+    const map={1:this._level1,2:this._level2,3:this._level3,4:this._level4,5:this._level5,6:this._level6,7:this._level7,8:this._level8,9:this._level9,10:this._level10};
     const fn=map[n]; if(!fn)return;
     this.hud.setLevel(n,this._levelName(n));
     const run = () => this.time.delayedCall(400, fn.bind(this));
@@ -228,13 +228,13 @@ class GameScene extends Phaser.Scene {
     this.time.delayedCall(250, ()=>this._startLevel(n, true));
   }
 
-  _levelName(n){return {1:'The First Opportunity',2:'The Unexpected Setback',3:'Expansion',4:'Today or Tomorrow',5:'The Boom',6:'The Outside Offer',7:'Breaking News',8:'The Great Storm'}[n]||'Level '+n;}
+  _levelName(n){return {1:'The First Opportunity',2:'The Unexpected Setback',3:'Expansion',4:'Today or Tomorrow',5:'The Boom',6:'The Outside Offer',7:'Breaking News',8:'The Great Storm',9:'The Project Review',10:'The Planning Desk'}[n]||'Level '+n;}
 
   _nextLevel(){
     this._clearConsequence(); this._clearWorldBtn(); this._clearLevel3Idle();
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,this.currentLevel);
     const next=this.currentLevel+1;
-    if(next<=8) this._startLevel(next);
+    if(next<=10) this._startLevel(next);
   }
 
   _toProfile(){ this.tweens.killAll(); this.scene.start('ProfileScene',{stats:this.cityStats}); }
@@ -658,16 +658,105 @@ class GameScene extends Phaser.Scene {
             // Final level: same clickable Continue flow as every other level —
             // the player decides when to move on to their result, rather than
             // it advancing automatically.
-            this._showConsequence(m[c]||m.hold,()=>this._finish());
+            this._showConsequence(m[c]||m.hold,()=>this._nextLevel());
           });
         });
       });
     });
   }
 
+  // ══ LEVEL 9 — The Project Review (disposition effect) ══
+  // Beat A: the city needs cash — sell a project that is up, or one that is
+  // down? Both have the SAME outlook, so only the past price differs.
+  // Beat B: two identical workshops, same future, bought at different prices.
+  _level9() {
+    this._showPersistentMessage('The city needs cash for next year\u2019s budget. It must sell one project.\nAnalysts rate both with exactly the same outlook from here.');
+    this._showDecisionPanel([
+      {icon:'\u2600',label:'Sell Solar Park',desc:'Bought for 400.\nNow worth 560 (+40%).',value:'sell_winner',color:0x4aaa5c},
+      {icon:'\uD83D\uDE8B',label:'Sell Tram Line',desc:'Bought for 400.\nNow worth 280 (\u221230%).',value:'sell_loser',color:0xe2a840}
+    ],(c)=>{
+      ScoringEngine.recordDecision(9,c,{phase:'pair'}); this._clearPersistentMessage();
+      this._updateStats(0,0,6);
+      const m = c==='sell_winner'
+        ? 'The Solar Park is sold and the gain feels good.\nThe Tram Line stays \u2014 its outlook is the same, but its loss is still on the books.'
+        : 'The Tram Line is sold and the loss becomes real.\nThe Solar Park keeps working for the city.';
+      this._showConsequence(m,()=>this._level9Twins());
+    });
+  }
+
+  _level9Twins() {
+    this._showPersistentMessage('Two identical workshops, same street, same future.\nThe city bought one early and cheap, the other later and expensive. One must go.');
+    this._showDecisionPanel([
+      {icon:'\uD83D\uDD28',label:'Sell Workshop A',desc:'Bought for 200.\nWorth 300 today.',value:'sell_gain',color:0x4aaa5c},
+      {icon:'\uD83D\uDD28',label:'Sell Workshop B',desc:'Bought for 400.\nWorth 300 today.',value:'sell_loss',color:0xe2a840},
+      {icon:'\u2696',label:'Either one',desc:'Same value, same future.\nThe price paid is history.',value:'either',color:0x5c8ab0}
+    ],(c)=>{
+      ScoringEngine.recordDecision(9,c,{phase:'twin'}); this._clearPersistentMessage();
+      this._updateStats(0,2,4);
+      this._showConsequence('Both workshops were worth 300 and had the same future.\nWhat the city once paid does not change what either will earn from here.',()=>this._nextLevel());
+    });
+  }
+
+  // ══ LEVEL 10 — The Planning Desk (forecast calibration) ══
+  _level10() {
+    this._forecasts=[]; this._fcIndex=0;
+    this._level10Ask();
+  }
+
+  _forecastOptions(){
+    return [
+      {icon:'\u2714',label:'Yes \u2014 very sure',desc:'90% confident',value:'y90',color:0x4aaa5c},
+      {icon:'\u2713',label:'Yes \u2014 probably',desc:'65% confident',value:'y65',color:0x4ecdc4},
+      {icon:'\u2753',label:'No idea',desc:'50 / 50',value:'n50',color:0x6b7a8d},
+      {icon:'\u2717',label:'No \u2014 probably',desc:'65% confident',value:'x65',color:0xe2a840},
+      {icon:'\u2718',label:'No \u2014 very sure',desc:'90% confident',value:'x90',color:0xe74c3c}
+    ];
+  }
+  _parseForecast(v){ return { pick: v==='n50'?null:v[0]==='y', conf: parseInt(v.slice(1),10) }; }
+
+  _level10Ask() {
+    const F=Assessment.FORECASTS, i=this._fcIndex;
+    if (i>=F.length) return this._level10Reveal();
+    this._showPersistentMessage('Forecast '+(i+1)+' of '+F.length+':\n'+F[i].q);
+    this._showDecisionPanel(this._forecastOptions(),(v)=>{
+      const f=this._parseForecast(v);
+      ScoringEngine.recordDecision(10,v,{phase:'forecast',id:F[i].id,pick:f.pick,conf:f.conf,outcome:F[i].outcome});
+      this._forecasts.push(Object.assign({outcome:F[i].outcome},f));
+      this._clearPersistentMessage();
+      this._fcIndex++;
+      this.time.delayedCall(250,()=>this._level10Ask());
+    });
+  }
+
+  _level10Reveal() {
+    const r=Assessment.forecastResult(this._forecasts);
+    this.hud.advanceYear(1);
+    const lines=Assessment.FORECASTS.map((q,i)=>{
+      const f=this._forecasts[i]; const ok=f.pick===null?'\u2013':(f.pick===q.outcome?'\u2714':'\u2718');
+      return ok+'  '+q.q+'  \u2192 '+(q.outcome?'Yes':'No');
+    }).join('\n');
+    const summary='\n\nAverage confidence: '+Math.round(r.avgConf*100)+'%   \u00b7   Correct: '+Math.round(r.hitRate*100)+'%'
+      +(r.gap>0.1?'\nYou were more confident than you were right.':r.gap<-0.1?'\nYou were right more often than you expected.':'\nYour confidence matched your accuracy closely.')
+      +'\nFour forecasts describe this session, not your personality.';
+    this._reportModal('How did the forecasts turn out?',lines+summary,()=>this._level10Practice());
+  }
+
+  _level10Practice() {
+    const P=Assessment.PRACTICE;
+    this._showPersistentMessage('One practice forecast, now that you have seen your results:\n'+P.q);
+    this._showDecisionPanel(this._forecastOptions(),(v)=>{
+      const f=this._parseForecast(v);
+      ScoringEngine.recordDecision(10,v,{phase:'practice',id:P.id,pick:f.pick,conf:f.conf,outcome:P.outcome});
+      this._clearPersistentMessage();
+      const ok=f.pick===null?'You called it 50/50.':(f.pick===P.outcome?'You were right.':'You were wrong.');
+      this._updateStats(2,4,0);
+      this._showConsequence('The transport district did recover. '+ok+'\nGood forecasters are not always right \u2014 their confidence matches how often they are.',()=>this._finish());
+    });
+  }
+
   _finish() {
     this._clearConsequence(); this._clearWorldBtn();
-    this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,8);
+    this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,10);
     const ov=this.add.graphics().setDepth(190);
     const o={a:0};
     this.tweens.add({targets:o,a:1,duration:1800,

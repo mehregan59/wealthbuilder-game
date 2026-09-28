@@ -273,7 +273,7 @@ class StatsPanel {
     this.history.development.push(Math.max(0,Math.min(100,d)));
     this.history.resources.push(Math.max(0,Math.min(100,r)));
     this.levels.push(level===undefined?this.levels.length:level);
-    while (this.history.happiness.length > 9) {
+    while (this.history.happiness.length > 11) {
       this.history.happiness.shift(); this.history.development.shift();
       this.history.resources.shift(); this.levels.shift();
     }

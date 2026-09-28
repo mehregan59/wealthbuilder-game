@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from "react";
 const SCRIPTS = [
   "i18n",
   "scoring",
+  "assessment",
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",
