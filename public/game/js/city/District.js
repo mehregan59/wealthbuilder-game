@@ -14,7 +14,7 @@ class District {
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
-    this.labelBaseY=this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
+    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
     // High-contrast card: a busy drawn city behind it must never make the
     // district name hard to read.
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);
@@ -28,6 +28,13 @@ class District {
     this.labelContainer.x=Math.max(minX,Math.min(maxX,this.cx));
     this.labelBaseY=Math.max(this.s(58),this.labelBaseY);
     this.labelContainer.y=this.labelBaseY;
+    // In the connected city the name is a sign mounted on the landmark
+    // itself (station facade, farm gate, campus, housing gate), on posts.
+    if(this.scene.hasMetro){
+      const posts=this.scene.add.graphics(),ph=this.s(18);
+      posts.fillStyle(0x3a3f3c,1); posts.fillRect(-w*0.32,h/2,this.s(3),ph); posts.fillRect(w*0.32-this.s(3),h/2,this.s(3),ph);
+      this.labelContainer.addAt(posts,0);
+    }
 
   }
 
@@ -37,7 +44,8 @@ class District {
     this.gfx.clear();
     // In the connected metropolis a district is a quarter of the city, not a
     // separate plot: a paved block that sits flush in the surrounding streets.
-    if(this.scene.hasMetro||this.scene.hasPanorama) this._plaza(); else { this._parcel(); this._streets(); }
+    if(this.scene.hasMetro){ this._metroLandmark(); return; }
+    if(this.scene.hasPanorama) this._plaza(); else { this._parcel(); this._streets(); }
     if(this.id==='housing')this._housing(); else if(this.id==='transport')this._transport();
     else if(this.id==='technology')this._technology(); else this._energy();
   }
@@ -107,6 +115,89 @@ class District {
     if(st>=4)this._box(1.75,.22,.32,.34,.58,0xf2e7c9,0x67847e,0x87a39b);
     this.turbinePos=[];for(let i=0;i<Math.min(1+st,4);i++){const gx=.25+i*.52,gy=1.68+(i%2)*.18,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.4),ty-this.s(34),this.s(2.8),this.s(34));this.turbinePos.push({x:tx,y:ty-this.s(35)});}
   }
+  // ---- Connected-city landmarks: each district is a recognisable quarter
+  // built straight onto the shared city ground (no plot, no plaza tile).
+  _gable(gx,gy,w,d,h,wall,wallR,roof,rh){
+    rh=rh===undefined?.32:rh;const g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
+    this._poly(g,[P(gx+.06,gy+d+.1,0),P(gx+w+.16,gy+d+.1,0),P(gx+w+.16,gy+.1,0)],0x244840,.18);
+    this._poly(g,[P(gx,gy+d,0),P(gx,gy+d,h),P(gx+w,gy+d,h),P(gx+w,gy+d,0)],wall,1);
+    this._poly(g,[P(gx+w,gy,0),P(gx+w,gy,h),P(gx+w,gy+d/2,h+rh),P(gx+w,gy+d,h),P(gx+w,gy+d,0)],wallR,1);
+    this._poly(g,[P(gx,gy,h),P(gx+w,gy,h),P(gx+w,gy+d/2,h+rh),P(gx,gy+d/2,h+rh)],this._shade(roof,.82),1);
+    this._poly(g,[P(gx,gy+d,h),P(gx+w,gy+d,h),P(gx+w,gy+d/2,h+rh),P(gx,gy+d/2,h+rh)],roof,1);
+    // door + windows on the street facade
+    g.fillStyle(0x4a3a2c,1);const dx=this.ix(gx+w*.5,gy+d),dy=this.iy(gx+w*.5,gy+d,0);g.fillRect(dx-this.s(2),dy-this.s(7),this.s(4),this.s(7));
+    g.fillStyle(0xcfe6e8,.95);[.22,.78].forEach(f=>{const x=this.ix(gx+w*f,gy+d),y=this.iy(gx+w*f,gy+d,h*.62);g.fillRect(x-this.s(2),y-this.s(2),this.s(4),this.s(4));});
+  }
+  _shade(c,k){const r=((c>>16)&255)*k,gg=((c>>8)&255)*k,b=(c&255)*k;return (Math.round(r)<<16)|(Math.round(gg)<<8)|Math.round(b);}
+  _path(a,b,wd,color){const g=this.gfx;g.lineStyle(this.s(wd),color,1);g.beginPath();g.moveTo(this.ix(a[0],a[1]),this.iy(a[0],a[1],0));g.lineTo(this.ix(b[0],b[1]),this.iy(b[0],b[1],0));g.strokePath();}
+  _metroLandmark(){
+    if(this.id==='housing')this._mHousing(); else if(this.id==='transport')this._mStation();
+    else if(this.id==='technology')this._mTech(); else this._mEnergy();
+  }
+  _mHousing(){
+    const st=this._stage(),walls=[[0xf1e2c4,0xd7c3a0],[0xe9c9a4,0xcfae88],[0xf4efe2,0xd9d2bf],[0xd9b7a0,0xbf9d86],[0xe8dcb5,0xcdc099]],roofs=[0xb1543f,0x9a4a38,0x6f5a52,0xc0664a];
+    this._path([-.2,1.15],[2.45,1.15],7,0xcfc8b4);this._path([1.1,-.2],[1.1,2.45],6,0xcfc8b4);
+    const lots=[];for(let r=0;r<4;r++)for(let c=0;c<4;c++){const gx=-.15+c*.62,gy=-.15+r*.62;if(Math.abs(gx+.1-1.1)<.2||Math.abs(gy+.1-1.15)<.2)continue;lots.push([gx,gy,r*4+c]);}
+    const n=Math.min(lots.length,6+st*3);lots.slice(0,n).sort((a,b)=>(a[0]+a[1])-(b[0]+b[1])).forEach(([gx,gy,k])=>{
+      const wl=walls[k%walls.length],tall=(st>=3&&k%3===0),h=tall?.78:.5;
+      this._gable(gx,gy,.44,.4,h,wl[0],wl[1],roofs[k%roofs.length]);
+      if(st>=3&&k%2===0)this._solar(gx+.1,gy+.12,1);
+    });
+    for(let i=0;i<2+st;i++)this._tree(-.1+i*.55,2.35,.7);
+  }
+  _mStation(){
+    const st=this._stage(),g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
+    // tracks + platform in front of the hall
+    this._poly(g,[P(-.2,1.55,0),P(2.45,1.55,0),P(2.45,2.4,0),P(-.2,2.4,0)],0x8f8a7c,1);
+    g.lineStyle(this.s(1.5),0x5a4a3c,1);for(let t=0;t<3;t++){const y0=1.72+t*.24;[0,.08].forEach(o=>{g.beginPath();g.moveTo(this.ix(-.2,y0+o),this.iy(-.2,y0+o,.01));g.lineTo(this.ix(2.45,y0+o),this.iy(2.45,y0+o,.01));g.strokePath();});}
+    // historic sandstone hall with arched glass roof (stepped vault)
+    const gx=.05,gy=.1,w=2.2,d=1.2,h=.62;
+    this._box(gx,gy,w,d,h,0xe6d2a8,0xc9a878,0xdcc095);
+    const steps=6;for(let i=0;i<steps;i++){const a0=Math.PI*i/steps,a1=Math.PI*(i+1)/steps,y0=gy+d/2-Math.cos(a0)*d/2,y1=gy+d/2-Math.cos(a1)*d/2,z0=h+Math.sin(a0)*.55,z1=h+Math.sin(a1)*.55;
+      this._poly(g,[P(gx,y0,z0),P(gx+w,y0,z0),P(gx+w,y1,z1),P(gx,y1,z1)],i<3?0x7fa7ad:0xa9cdd2,.97);g.lineStyle(1,0x3f5f63,.6);g.strokePath();}
+    // arched front gable on the east end
+    const ex=gx+w;g.fillStyle(0xdcc095,1);g.beginPath();g.moveTo(this.ix(ex,gy),this.iy(ex,gy,h));for(let i=0;i<=12;i++){const a=Math.PI*i/12;g.lineTo(this.ix(ex,gy+d/2-Math.cos(a)*d/2),this.iy(ex,gy+d/2-Math.cos(a)*d/2,h+Math.sin(a)*.62));}g.closePath();g.fillPath();
+    g.fillStyle(0x9cc6cc,1);g.beginPath();for(let i=0;i<=12;i++){const a=Math.PI*i/12,yy=gy+d/2-Math.cos(a)*d*.34,zz=h*.25+Math.sin(a)*.72;i?g.lineTo(this.ix(ex,yy),this.iy(ex,yy,zz)):g.moveTo(this.ix(ex,yy),this.iy(ex,yy,zz));}g.closePath();g.fillPath();
+    // arched windows along the facade
+    g.fillStyle(0x6d8d93,1);for(let i=0;i<6;i++){const x=this.ix(gx+.2+i*.34,gy+d),y=this.iy(gx+.2+i*.34,gy+d,h*.45);g.fillRoundedRect(x-this.s(3),y-this.s(6),this.s(6),this.s(11),{tl:this.s(3),tr:this.s(3),bl:0,br:0});}
+    // clock tower
+    const tb=this._box(-.15,.95,.38,.38,1.55+.12*st,0xe2cb9c,0xbf9c6c,0xd4b585);
+    const cx=this.ix(-.15+.19,1.33),cy=this.iy(-.15+.19,1.33,1.25+.12*st);g.fillStyle(0xf7f1e1,1);g.fillCircle(cx,cy,this.s(6));g.lineStyle(this.s(1.2),0x2e2e2e,1);g.strokeCircle(cx,cy,this.s(6));g.lineBetween(cx,cy,cx,cy-this.s(4));g.lineBetween(cx,cy,cx+this.s(3),cy);
+    const top=tb.h,tp=P(-.15+.19,.95+.19,top+.55);g.fillStyle(0x3f6a6c,1);[[P(-.15,1.33,top),P(.23,1.33,top)],[P(.23,1.33,top),P(.23,.95,top)]].forEach(([a,b])=>{g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(tp.x,tp.y);g.closePath();g.fillPath();});
+    if(st>=2)this._box(1.9,1.6,.5,.2,.18,0xe0a82e,0x9a7a2a,0xc29530);
+    if(st>=3)this._box(.4,2.05,.9,.18,.16,0xc9423a,0x8e2e28,0xa9362f);
+  }
+  _mTech(){
+    const st=this._stage(),g=this.gfx;
+    this._path([-.2,1.2],[2.45,1.2],6,0xd6d3c6);
+    // university: classical hall with columns, pediment and a green court
+    const u=this._box(-.1,-.1,1.05,.7,.62,0xefe8d6,0xcfc4a8,0xe0d6bc);
+    const P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
+    g.fillStyle(0xfaf6ea,1);for(let i=0;i<6;i++){const x=this.ix(-.02+i*.17,.6),y=this.iy(-.02+i*.17,.6,0);g.fillRect(x-this.s(1.5),y-this.s(15),this.s(3),this.s(15));}
+    this._poly(g,[P(-.1,.6,.62),P(.95,.6,.62),P(.425,.6,.95)],0xe6dcc2,1);
+    this._poly(g,[P(-.1,.6,.62),P(.95,.6,.62),P(.425,.6,.95)].map(q=>q),0xe6dcc2,1);
+    const dm=P(.425,.25,.62);g.fillStyle(0x5f8f86,1);g.fillEllipse(dm.x,dm.y-this.s(6),this.s(26),this.s(18));g.fillStyle(0xeee6d0,1);g.fillRect(dm.x-this.s(13),dm.y-this.s(4),this.s(26),this.s(5));
+    this._tree(.1,.95,.6);this._tree(.7,.95,.6);
+    // modern glass offices, taller as the quarter grows
+    const spots=[[1.3,-.1],[1.95,.3],[1.35,1.5],[.2,1.5],[1.95,1.5],[.85,1.55]];
+    spots.slice(0,Math.min(2+st,spots.length)).sort((a,b)=>(a[0]+a[1])-(b[0]+b[1])).forEach(([x,y],i)=>{
+      const h=.8+st*.22+(i%2)*.3,b=this._box(x,y,.45,.45,h,0xcfe3e4,0x3d6e79,0x5c8e98);
+      g.lineStyle(1,0xbfe6ea,.55);for(let k=1;k<5;k++){const z=h*k/5;g.beginPath();g.moveTo(this.ix(x,y+.45),this.iy(x,y+.45,z));g.lineTo(this.ix(x+.45,y+.45),this.iy(x+.45,y+.45,z));g.lineTo(this.ix(x+.45,y),this.iy(x+.45,y,z));g.strokePath();}
+      if(st>=3){const r=P(x+.22,y+.22,h);g.fillStyle(0x6fae62,1);g.fillEllipse(r.x,r.y,this.s(18),this.s(9));}
+    });
+  }
+  _mEnergy(){
+    const st=this._stage(),g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
+    // ground-mounted solar farm: fenced rows of panels on the grass
+    this._poly(g,[P(-.25,-.25,0),P(2.5,-.25,0),P(2.5,2.5,0),P(-.25,2.5,0)],0x8fb577,.55);
+    g.lineStyle(1,0x5d6b62,.8);const f=[P(-.25,-.25,0),P(2.5,-.25,0),P(2.5,2.5,0),P(-.25,2.5,0)];g.beginPath();g.moveTo(f[0].x,f[0].y);f.forEach(q=>g.lineTo(q.x,q.y));g.closePath();g.strokePath();
+    const rows=Math.min(3+st*2,10);
+    for(let r=0;r<rows;r++){const gy=-.1+r*.26;for(let c=0;c<6;c++){const gx=-.1+c*.33;if(gx>1.35&&gy>1.1)continue;
+      this._poly(g,[P(gx,gy,.05),P(gx+.28,gy,.05),P(gx+.28,gy+.14,.2),P(gx,gy+.14,.2)],0x24506a,1);
+      g.lineStyle(1,0x7fc6d6,.7);g.beginPath();g.moveTo(this.ix(gx+.14,gy),this.iy(gx+.14,gy,.05));g.lineTo(this.ix(gx+.14,gy+.14),this.iy(gx+.14,gy+.14,.2));g.strokePath();}}
+    this._box(1.55,1.35,.45,.4,.34,0xe3bd55,0x77602b,0xa88732);
+    this.turbinePos=[];for(let i=0;i<Math.min(1+st,4);i++){const gx=-.2+i*.6,gy=-.45,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
+  }
   _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.cx,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide();});this.hitZone.on('pointerdown',()=>{if(this.selectable&&this.onSelect)this.onSelect(this);});}
   setSelectable(on,cb){this.selectable=on;this.onSelect=cb||null;if(on)this._pulseOn();else this._pulseOff();}
   _ringPts(){return [{x:this.ix(-.25,2.5),y:this.iy(-.25,2.5,0)},{x:this.ix(2.5,2.5),y:this.iy(2.5,2.5,0)},{x:this.ix(2.5,-.25),y:this.iy(2.5,-.25,0)},{x:this.ix(-.25,-.25),y:this.iy(-.25,-.25,0)}];}
@@ -125,7 +216,7 @@ class District {
   _cracks(){for(let i=0;i<3;i++){const c=this.scene.add.graphics().setDepth(20),x=this.cx+Phaser.Math.Between(-50,50),y=this.cy+Phaser.Math.Between(-12,30);c.lineStyle(this.s(2),0xc85848,.9);c.beginPath();c.moveTo(x,y);c.lineTo(x+Phaser.Math.Between(-12,12),y+this.s(15));c.strokePath();this.scene.tweens.add({targets:c,alpha:0,duration:2400,delay:500,onComplete:()=>c.destroy()});}}
   celebrate(){this._construction();}
   setStorm(on){this.scene.tweens.add({targets:[this.gfx,this.animGfx],alpha:on?.48:1,duration:1200});this.scene.tweens.add({targets:this.labelContainer,alpha:on?.65:1,duration:1200});}
-  update(time,delta){this.animTime+=delta;this.animGfx.clear();this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
+  update(time,delta){this.animTime+=delta;this.animGfx.clear();if(!(this.scene.hasMetro&&this.id==='energy'))this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
   _blades(delta){if(!this.turbinePos)return;this.turbineAngle+=delta*.0026;const g=this.animGfx;this.turbinePos.forEach((t,i)=>{const a0=this.turbineAngle+i*.6;g.fillStyle(0xf4f5ef,1);for(let b=0;b<3;b++){const a=a0+b*Math.PI*2/3;g.beginPath();g.moveTo(t.x,t.y);g.lineTo(t.x+Math.cos(a)*this.s(13),t.y+Math.sin(a)*this.s(13));g.lineTo(t.x+Math.cos(a+.27)*this.s(10),t.y+Math.sin(a+.27)*this.s(10));g.closePath();g.fillPath();}g.fillStyle(0x6f8786,1);g.fillCircle(t.x,t.y,this.s(2.2));});}
   getName(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.nameDE:this.name;}
   getTooltip(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.tooltipDE:this.tooltip;}
