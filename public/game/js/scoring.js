@@ -39,7 +39,10 @@ const ScoringEngine = {
   },
 
   scoreLossAversion() {
-    const d = this.decisions.find(d => d.level === 2);
+    // Level 2 has two beats; loss aversion is measured on the "dip" beat
+    // (a temporary drop with no real information behind it).
+    const d = this.decisions.find(x => x.level === 2 && x.phase === 'dip')
+           || this.decisions.find(x => x.level === 2);
     if (!d) return 50;
     const gameScore = { cancel: 90, wait: 70, continue: 30, invest_more: 10 }[d.value] ?? 50;
     const startScore = { stop: 90, wait: 60, research: 30 }[this.startingAnswers[2]] ?? 50;
