@@ -866,12 +866,15 @@ class GameScene extends Phaser.Scene {
     const cx=this._cx();
     const pw=Math.min(this.s(720),this._availW()), ph=this.s(104), px=cx-pw/2, py=this.H-this.s(186);
 
-    // The whole screen goes almost completely dark behind the consequence
-    // box and Continue button — a clean, unambiguous "this step is over"
-    // beat rather than a partial dim with the scene still visibly going.
+    // The city stays visible behind the result: only a light veil plus a
+    // stronger shade behind the message band, so the player can actually
+    // see the consequence they caused instead of a black screen.
     const dim=this.add.graphics();
-    dim.fillStyle(0x02060c, 0.9);
+    dim.fillStyle(0x02060c, 0.28);
     dim.fillRect(0, 0, this.W, this.H);
+    dim.fillStyle(0x02060c, 0.55);
+    dim.fillRect(0, py-this.s(26), this.W, this.H-(py-this.s(26)));
+
 
     const bg=this.add.graphics();
     bg.fillStyle(0x040a14,0.95); bg.fillRoundedRect(px,py,pw,ph,this.s(12));
