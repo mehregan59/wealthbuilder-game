@@ -109,7 +109,9 @@ class PlayerSetup extends Phaser.Scene {
     this.tweens.killAll();
     window.playerInfo=this.selections;
     const fo=this.add.graphics().setDepth(100);fo.fillStyle(0x000000,0);fo.fillRect(0,0,this.W,this.H);
-    this.tweens.add({targets:fo,alpha:1,duration:500,onComplete:()=>this.scene.start('RetirementContext')});
+    const next=this._skipped?'StartingQuestions':'RetirementContext';
+    if(this._skipped && !window.retirementContext) window.retirementContext={saule:['unsure'],buildexp:null,years:null};
+    this.tweens.add({targets:fo,alpha:1,duration:500,onComplete:()=>this.scene.start(next)});
   }
 
   _fadeIn() {
