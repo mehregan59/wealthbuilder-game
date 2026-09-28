@@ -2,6 +2,8 @@ class Boot extends Phaser.Scene {
   constructor() { super({ key: 'Boot' }); }
   preload() {
     const W=this.scale.width, H=this.scale.height;
+    // Painted regional-city artwork used as the playable backdrop.
+    this.load.image('cityPanorama', (window.WS_ASSET_BASE||'/game/assets/')+'city-panorama.jpg');
     const bar=this.add.graphics();
     const progress=this.add.graphics();
     const text=this.add.text(W/2, H/2-50, 'Building your city...', {

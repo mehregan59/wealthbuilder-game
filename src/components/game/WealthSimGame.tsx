@@ -7,6 +7,7 @@ const SCRIPTS = [
   "pensionContent",
   "city/CityTheme",
   "city/UrbanFabric",
+  "city/CityScape",
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",

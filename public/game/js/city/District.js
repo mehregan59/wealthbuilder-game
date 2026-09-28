@@ -12,7 +12,9 @@ class District {
   _icon(){return {housing:'⌂',transport:'▤',technology:'◇',energy:'☀'}[this.id]||'•';}
   _buildLabel(){
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
-    this.labelBaseY=this.cy-this.s(132); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
+    // labelLift lets neighbouring districts stagger their names so two
+    // labels can never sit on top of each other.
+    this.labelBaseY=this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'700'}).setOrigin(0.5);
     const w=t.width+this.s(26),h=this.s(30),bg=this.scene.add.graphics();
     bg.fillStyle(CityTheme.colors.paper,0.94); bg.fillRoundedRect(-w/2,-h/2,w,h,this.s(6));

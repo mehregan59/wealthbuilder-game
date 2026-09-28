@@ -18,12 +18,16 @@ class GameScene extends Phaser.Scene {
 
     const groundY = this.isCompact ? Math.round(this.H * 0.29) : this.s(352);
     this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
-    const ground = this.add.graphics().setDepth(-5);
-    // Warmer, lighter land so the city reads as a living place rather than
-    // a dark board. Navy/gold stays for the HUD and framing only.
-    ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
-    ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
-    ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    // The painted regional city replaces the flat drawn land when its
+    // artwork is available; the drawn fallback keeps the game playable
+    // if the image ever fails to load.
+    this.hasPanorama = this.textures.exists('cityPanorama');
+    if(!this.hasPanorama){
+      const ground = this.add.graphics().setDepth(-5);
+      ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
+      ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
+      ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    }
 
 
     this.ambient = new AmbientSystem(this);
@@ -42,9 +46,12 @@ class GameScene extends Phaser.Scene {
     this._panelIntroShown = false;
     this._level3IdleTimer = null;
 
+    if(this.hasPanorama) this.cityscape = new CityScape(this);
     this._buildDistricts();
-    this._drawCityBoundary();
-    this.fabric = new UrbanFabric(this, this.districts);
+    if(!this.hasPanorama){
+      this._drawCityBoundary();
+      this.fabric = new UrbanFabric(this, this.districts);
+    }
     this.roads = new RoadNetwork(this, this.districts);
     this.hud = new HUD(this);
     this.statsPanel = new StatsPanel(this);
@@ -97,7 +104,7 @@ class GameScene extends Phaser.Scene {
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
       new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.08,
+        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.08,labelLift:46,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
@@ -1042,6 +1049,7 @@ class GameScene extends Phaser.Scene {
 
   update(time,delta){
     const night=this.ambient.isNightTime();
+    if(this.cityscape) this.cityscape.update(time,delta);
     this.ambient.update(time,delta);
     this.weather.update(delta);
     this.roads.update(delta,night);

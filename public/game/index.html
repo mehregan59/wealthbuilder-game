@@ -23,12 +23,14 @@
     })();
     window.WS_setTextRes = function (r) { window.WS_TEXT_RES = r; if (window.WS_game) window.WS_game.scene.getScenes(true).forEach(function (sc) { sc.scene.restart(); }); };
   </script>
+  <script>window.WS_ASSET_BASE="assets/";</script>
   <script src="js/i18n.js"></script>
   <script src="js/scoring.js"></script>
   <script src="js/assessment.js"></script>
   <script src="js/pensionContent.js"></script>
   <script src="js/city/CityTheme.js"></script>
   <script src="js/city/UrbanFabric.js"></script>
+  <script src="js/city/CityScape.js"></script>
   <script src="js/city/District.js"></script>
   <script src="js/city/RoadNetwork.js"></script>
   <script src="js/city/ResourceCube.js"></script>
