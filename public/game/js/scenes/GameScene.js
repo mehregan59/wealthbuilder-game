@@ -40,7 +40,11 @@ class GameScene extends Phaser.Scene {
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,0);
 
     this.input.keyboard.on('keydown-P', () => this._toProfile());
-    this.events.on('resourceDropped', ({district,value}) => this._onResourceDropped(district,value));
+    // A restarted scene can retain its local emitter. Replace this listener
+    // rather than stacking another copy, otherwise one cube can be counted
+    // several times and Level 3 appears to skip straight to its outcome.
+    this.events.removeAllListeners('resourceDropped');
+    this.events.on('resourceDropped', ({district,value,cube}) => this._onResourceDropped(district,value,cube));
     this._introSequence();
   }
 
@@ -377,6 +381,8 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 3 ══
   _level3() {
+    this._level3PlacedCubes = new Set();
+    this._level3Resolved = false;
     this._spawnResourceCubes(6);
     this._showPersistentMessage('The city receives 600 new credits.\nPlace all six cubes — 0 of 6 placed.');
     this._armLevel3Idle();
@@ -406,15 +412,19 @@ class GameScene extends Phaser.Scene {
   }
   _clearLevel3Idle(){ if(this._level3IdleTimer){ this._level3IdleTimer.remove(false); this._level3IdleTimer=null; } }
 
-  _onResourceDropped(district) {
-    this.cubeDropped=(this.cubeDropped||0)+1;
-    if(this.currentLevel===3) ScoringEngine.recordDecision(3,'allocate',{districtId:district.id});
+  _onResourceDropped(district, value, cube) {
+    if(this.currentLevel!==3 || this._level3Resolved) return;
+    if(!this._level3PlacedCubes) this._level3PlacedCubes = new Set();
+    if(!cube || this._level3PlacedCubes.has(cube)) return;
+    this._level3PlacedCubes.add(cube);
+    this.cubeDropped=this._level3PlacedCubes.size;
+    ScoringEngine.recordDecision(3,'allocate',{districtId:district.id});
     this._updateStats(2,4,-3);
-    if(this.currentLevel!==3) return;
     if(this.cubeDropped < this.cubeTotal){
       this._showPersistentMessage('The city receives 600 new credits.\nPlace all six cubes — '+this.cubeDropped+' of '+this.cubeTotal+' placed.');
       this._armLevel3Idle();
     } else {
+      this._level3Resolved = true;
       this._clearLevel3Idle();
       this._clearPersistentMessage();
       this.time.delayedCall(950,()=>this._level3Outcome());

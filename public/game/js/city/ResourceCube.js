@@ -86,7 +86,7 @@ class ResourceCube {
       targets: this.container, x: district.cx, y: district.cy, scaleX: 0.1, scaleY: 0.1, alpha: 0, duration: 300, ease: 'Power2.easeIn',
       onComplete: () => {
         district.receiveResource(this.value);
-        this.scene.events.emit('resourceDropped', { district, value: this.value });
+        this.scene.events.emit('resourceDropped', { district, value: this.value, cube: this });
         this.destroy();
       }
     });
