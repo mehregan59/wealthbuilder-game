@@ -11,6 +11,7 @@ const SCRIPTS = [
   "city/AmbientSystem",
   "city/WeatherSystem",
   "ui/TooltipManager",
+  "ui/AskResults",
   "ui/HUD",
   "ui/StatsPanel",
   "ui/WorldButton",
