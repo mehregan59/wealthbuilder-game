@@ -251,8 +251,8 @@ class ProfileScene extends Phaser.Scene {
     const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(22),color:'#e2a840'});
     const intro=this.add.text(bx+this.s(26),by+this.s(52),de
-      ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet.'
-      :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored.',{
+      ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet. Risiko, Verlustaversion und Geduld mischen 90% Spielverhalten mit 10% deiner Startantworten; die anderen fünf Merkmale stammen zu 100% aus dem Spiel. Marktereignisse variieren zwischen Durchgängen — rohe Ergebnisse sind nicht direkt vergleichbar; bewertet werden deine Entscheidungen in den Situationen, denen du begegnet bist. Dies ist eine pädagogische Deutung dieser Sitzung.'
+      :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored. Risk, loss aversion and patience blend 90% gameplay with 10% of your starting answers; the other five traits come from gameplay alone. Market events vary between runs, so raw outcomes are not directly comparable — what is assessed is your decisions in the situations you encountered. This is an educational interpretation of this session.',{
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
@@ -317,6 +317,54 @@ class ProfileScene extends Phaser.Scene {
     this.tweens.add({targets:this.tip,alpha:1,duration:160});
   }
   _hideTip(){ if(this.tip){this.tweens.killTweensOf(this.tip);this.tip.destroy();this.tip=null;} }
+
+  // ── Retirement section helpers ──────────────────────────────────
+  _weakestTrait() {
+    // Lowest observed, gameplay-derived trait — never a blended one.
+    const keys=['lossAversion','patience','diversification','greedFomo','reactionToNoise','resilience','disposition','overconfidence','riskPreference','learning'];
+    let best=null;
+    keys.forEach(k=>{ const v=this.scores[k]; if(v!==null&&v!==undefined&&(best===null||v<this.scores[best])) best=k; });
+    return best;
+  },
+
+  _retirementLines(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    const info=window.playerInfo||{};
+    const lang=de?'de':'en';
+    if(!PC) return {body:'',badges:[]};
+    const parts=[];
+    // Age framing (narrative only)
+    const age=info.age||'';
+    const ageKey=(age==='18-27'||age==='28-37')?'young':(age==='38-47'?'mid':'older');
+    parts.push(PC.ageFraming[ageKey][lang]);
+    // Employment framing — all three pillars always stay visible
+    const emp=PC.employmentFraming[info.employment]||PC.employmentFraming.other;
+    parts.push(emp[lang]);
+    parts.push(PC.pillarsNote[lang]);
+    // Reform stakes (conditional language — still a proposal)
+    parts.push(PC.items.reform2027[lang]);
+    // Weakest observed trait → training direction (existing levels only)
+    const w=this._weakestTrait();
+    if(w&&PC.training[w]) parts.push(PC.training[w][lang]);
+    const badges=[PC.items.rentenniveau48,PC.items.fruhstartRente,PC.items.retirementAge,PC.items.target70]
+      .map(i=>({status:PC.STATUS[i.status]||i.status}));
+    return {body:parts.join('\n'),badges};
+  },
+
+  _ctaLabel(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    const emp=(window.playerInfo||{}).employment||'other';
+    if(!PC) return de?'Meine Renteninformation lesen':'Read my pension information';
+    return (PC.cta[emp]||PC.cta.other)[de?'de':'en'];
+  },
+
+  _ctaBody(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    if(!PC) return '';
+    const lang=de?'de':'en';
+    return [PC.items.rentenniveau48[lang],PC.items.fruhstartRente[lang],PC.items.retirementAge[lang],PC.items.target70[lang]].join('\n\n')
+      + (de?'\n\nBildung, keine Produktempfehlung.':'\n\nEducation, not a product recommendation.');
+  },
 
   _traitInfo(de) {
     if (de) return {
