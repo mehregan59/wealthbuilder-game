@@ -269,9 +269,10 @@ class Metropolis {
       this.hillTurbines.push({ x: q.x, y: q.y - h, r: this.s(24 * k), a: Math.random() * 6.28, sp: 0.8 + Math.random() * 0.5 });
     });
     for (let row = 0; row < 3; row++) for (let i = 0; i < 6; i++) {
-      const q = this.p(0.80 + i * 0.030, 0.400 + row * 0.035);
-      g.fillStyle(0x27566b, 1); g.fillRoundedRect(q.x - this.s(11), q.y - this.s(5), this.s(22), this.s(10), 2);
-      g.lineStyle(1, 0x8ed6df, 0.8); g.lineBetween(q.x, q.y - this.s(5), q.x, q.y + this.s(5));
+      const q = this.p(0.80 + i * 0.030, 0.335 + row * 0.026), w=this.s(22), h=this.s(11);
+      g.fillStyle(0x4d5a58,1);g.fillRect(q.x-this.s(1),q.y,this.s(2),this.s(7));
+      g.fillStyle(0x27566b,1);g.beginPath();g.moveTo(q.x-w/2,q.y);g.lineTo(q.x+w/2,q.y-this.s(5));g.lineTo(q.x+w/2,q.y+h-this.s(5));g.lineTo(q.x-w/2,q.y+h);g.closePath();g.fillPath();
+      g.lineStyle(1,0x8ed6df,.8);g.lineBetween(q.x,q.y-this.s(2),q.x,q.y+h-this.s(2));
     }
   }
 
