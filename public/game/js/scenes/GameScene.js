@@ -9,11 +9,19 @@ class GameScene extends Phaser.Scene {
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
 
+    // Honoured across the scene: decorative motion is reduced, but every
+    // consequence still shows as text, so no information is lost.
+    this.reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
+
     const groundY = this.s(352);
     this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
     const ground = this.add.graphics().setDepth(-5);
-    ground.fillStyle(0x18351c,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
-    ground.fillStyle(0x122a15,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    // Warmer, lighter land so the city reads as a living place rather than
+    // a dark board. Navy/gold stays for the HUD and framing only.
+    ground.fillStyle(0x3d6b43,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
+    ground.fillStyle(0x4b7d4f,1); ground.fillRect(0,groundY,this.W,this.s(9));
+    ground.fillStyle(0x30583a,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+
 
     this.ambient = new AmbientSystem(this);
     this.weather = new WeatherSystem(this);
