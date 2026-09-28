@@ -230,7 +230,7 @@ const Assessment = {
     const l3 = D.filter(d => d.level === 3);
     if (l3.length) {
       const c = {}; l3.forEach(d => { const k = d.districtId || '?'; c[k] = (c[k] || 0) + 1; });
-      push(3, 'You placed ' + l3.length + ' funding cubes: ' + Object.entries(c).map(([k, n]) => n + ' in ' + k).join(', ') + '.');
+      push(3, 'You placed ' + l3.length + (l3.length === 1 ? ' funding cube: ' : ' funding cubes: ') + Object.entries(c).map(([k, n]) => n + ' in ' + k).join(', ') + '.');
     }
     const rp = last(4, d => d.phase === 'repair'); if (rp) push(4, 'You chose to ' + N(rp.value) + '.');
     const bd = last(4, d => d.phase === 'build'); if (bd) push(4, 'You built the ' + N(bd.value) + '.');
