@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from "react";
 
 const SCRIPTS = [
+  "i18n",
+  "scoring",
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",
@@ -43,27 +45,8 @@ function installGlobals() {
   if (!w["currentLang"]) w["currentLang"] = "en";
   if (!w["playerInfo"]) w["playerInfo"] = {};
   if (!w["retirementContext"]) w["retirementContext"] = {};
-  if (!w["ScoringEngine"]) {
-    w["ScoringEngine"] = {
-      decisions: [] as unknown[],
-      startingAnswers: [] as unknown[],
-      levelStartTime: null as number | null,
-      reset(this: any) {
-        this.decisions = [];
-        this.startingAnswers = [];
-      },
-      startTimer(this: any) {
-        this.levelStartTime = Date.now();
-      },
-      recordDecision(this: any, level: number, value: unknown, extra?: object) {
-        const elapsed = this.levelStartTime ? Date.now() - this.levelStartTime : null;
-        this.decisions.push({ level, value, elapsed, ...(extra ?? {}) });
-      },
-      recordStartingAnswer(this: any, idx: number, value: unknown) {
-        this.startingAnswers[idx] = value;
-      },
-    };
-  }
+  // ScoringEngine comes from the real scoring.js loaded in SCRIPTS —
+  // no stub here, or the persona/trait scoring would silently no-op.
 }
 
 // The Phaser instance is kept at module scope so React StrictMode's
