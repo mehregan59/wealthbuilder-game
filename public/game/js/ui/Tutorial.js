@@ -42,31 +42,23 @@ class Tutorial {
   // that ending matters, since knowing you're being measured changes how
   // you play.
   static briefing(de) {
+    // Kept deliberately short: two pages, then the city. Everything else
+    // the player needs is explained in the level card at the moment it
+    // matters, instead of up front before anything is visible.
     if (de) return [
       {t:'Willkommen',
        b:'Dir wurde gerade eine wachsende Stadt \u00fcbergeben \u2014 nicht die Stadt, in der du lebst, sondern eine neue, die vollst\u00e4ndig durch deine Entscheidungen hier entsteht.\n\nJeder Stadtteil, jede Baustelle, jede Wahl geh\u00f6rt dir.'},
-      {t:'Ein paar kurze Fragen',
-       b:'Gleich stellen wir dir ein paar kurze Fragen zu dir. Sie ver\u00e4ndern das Spiel nicht \u2014 sie helfen uns nur, das, was du am Ende siehst, etwas pers\u00f6nlicher zu machen.'},
-      {t:'Deine Seitenleiste',
-       b:'Links siehst du immer den Zustand deiner Stadt: Zufriedenheit, Wachstum und Mittel.\n\nDarunter zeigt ein Diagramm, wie sich diese Werte \u00fcber die Level entwickeln, und eine Leiste, wie gut jeder einzelne Stadtteil l\u00e4uft. Schau jederzeit hinein.'},
-      {t:'Ein Hinweis zur Zeit',
-       b:'In einigen Leveln beginnen Ereignisse zu laufen, sobald sie erscheinen \u2014 Nachrichten scrollen, ein Sturm zieht auf.\n\nEs gibt keinen Countdown. Nimm dir die Zeit, die du brauchst.'},
-      {t:'Bleib dran',
-       b:'Jede Entscheidung baut auf der vorherigen auf. Bleib bis zum letzten Kapitel dabei \u2014 am Ende wartet ein Blick auf die Stadt, die du gebaut hast.'}
+      {t:'Bevor es losgeht',
+       b:'Links siehst du immer den Zustand deiner Stadt: Zufriedenheit, Wachstum und Mittel.\n\nEs gibt keinen Countdown \u2014 nimm dir die Zeit, die du brauchst. Bleib bis zum letzten Kapitel dabei: am Ende wartet ein Blick auf die Stadt, die du gebaut hast.'}
     ];
     return [
       {t:'Welcome',
        b:'You\u2019ve just been handed a growing city \u2014 not the city you live in, but a new one, built entirely through the choices you make here.\n\nEvery district, every building site, every decision belongs to you.'},
-      {t:'A few quick questions',
-       b:'In a moment we\u2019ll ask a few short questions about you. They don\u2019t change the game \u2014 they just help make what you see at the end a little more personal.'},
-      {t:'Your side panel',
-       b:'The panel on the left always shows the state of your city: happiness, growth and funds.\n\nBelow that, a chart tracks how those move across levels, and a performance list shows how each individual district is doing. Check it any time.'},
-      {t:'A note about timing',
-       b:'In some levels events start running the moment they appear \u2014 headlines scroll, a storm rolls in.\n\nThere is no countdown. Take whatever time you need to decide.'},
-      {t:'Stick with it',
-       b:'Every decision builds on the last one. Stay with it through the final chapter \u2014 there\u2019s a look back at the city you built waiting at the end.'}
+      {t:'Before you start',
+       b:'The panel on the left always shows the state of your city: happiness, growth and funds.\n\nThere is no countdown \u2014 take whatever time you need. Stay with it through the final chapter: there\u2019s a look back at the city you built waiting at the end.'}
     ];
   }
+
 
   showBriefing(onDone) {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
