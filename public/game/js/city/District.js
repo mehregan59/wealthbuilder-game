@@ -35,6 +35,8 @@ class District {
       posts.fillStyle(0x3a3f3c,1); posts.fillRect(-w*0.32,h/2,this.s(3),ph); posts.fillRect(w*0.32-this.s(3),h/2,this.s(3),ph);
       this.labelContainer.addAt(posts,0);
     }
+    this.labelHit=this.scene.add.rectangle(this.labelContainer.x,this.labelContainer.y,w,h,0xffffff,0).setDepth(46).setInteractive({useHandCursor:true});
+    this.labelHit.on('pointerdown',(pointer,localX,localY,event)=>{if(event&&event.stopPropagation)event.stopPropagation();if(this.selectable&&this.onSelect)this.onSelect(this);else if(this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.labelContainer.x,this.labelBaseY-this.s(8));});
 
   }
 

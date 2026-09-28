@@ -12,7 +12,7 @@ class TooltipManager {
     this.pinnedSource = null;
   }
 
-  show(source, x, y) {
+  show(source, x, y, immediate) {
     if (this._showTimer) this._showTimer.remove(false);
     if (this._hideTimer) { this._hideTimer.remove(); this._hideTimer = null; }
     const title = source.getName?source.getName():(source.name||'');
@@ -28,13 +28,14 @@ class TooltipManager {
     this.bg.lineStyle(1,0xe0a82e,0.6); this.bg.strokeRoundedRect(0,0,W,H,8);
     this.bg.fillStyle(0xe0a82e,0.8); this.bg.fillRect(0,0,3,H);
     this.titleText.setPosition(pad+4,pad); this.bodyText.setPosition(pad+4,pad+titleH+4);
-    this._showTimer=this.scene.time.delayedCall(650,()=>{
+    const reveal=()=>{
       this._showTimer=null;
       this.container.setPosition(tx,ty);
       this.scene.tweens.killTweensOf(this.container);
       this.scene.tweens.add({targets:this.container,alpha:1,duration:180,ease:'Power2.easeOut'});
       this.visible = true;
-    });
+    };
+    if(immediate)reveal();else this._showTimer=this.scene.time.delayedCall(650,reveal);
   }
 
   hide() {
@@ -48,7 +49,7 @@ class TooltipManager {
     });
   }
 
-  toggle(source,x,y){if(this.pinnedSource===source){this.pinnedSource=null;this.hide();return;}this.pinnedSource=source;this.show(source,x,y);}
+  toggle(source,x,y){if(this.pinnedSource===source){this.pinnedSource=null;this.hide();return;}this.pinnedSource=source;this.show(source,x,y,true);}
 
   showText(title, body, x, y, duration) {
     this.show({getName:()=>title,getTooltip:()=>body},x,y);
