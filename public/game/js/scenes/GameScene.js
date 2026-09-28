@@ -786,16 +786,18 @@ class GameScene extends Phaser.Scene {
   _reportModal(title,text,cb){
     const W=this.W,H=this.H;
     const ov=this.add.graphics().setDepth(90); ov.fillStyle(0x000000,0.7); ov.fillRect(0,0,W,H);
-    const bw=Math.min(this.s(560),W-this.s(80)), bh=this.s(250), bx=(W-bw)/2, by=(H-bh)/2;
+    const bw=Math.min(this.s(620),W-this.s(80));
+    const b=this.add.text(W/2,0,text,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(15),color:'#b8cde0',
+      wordWrap:{width:bw-this.s(70)},align:'center',lineSpacing:this.s(6)}).setOrigin(0.5,0).setDepth(92);
+    const bh=Math.max(this.s(250), b.height+this.s(150)), bx=(W-bw)/2, by=(H-bh)/2;
+    b.setY(by+this.s(66));
     const box=this.add.graphics().setDepth(91);
     box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
     box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const t=this.add.text(W/2,by+this.s(34),title,{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(19),color:'#e2a840'}).setOrigin(0.5).setDepth(92);
-    const b=this.add.text(W/2,by+this.s(90),text,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(15),color:'#b8cde0',
-      wordWrap:{width:bw-this.s(70)},align:'center',lineSpacing:this.s(6)}).setOrigin(0.5).setDepth(92);
-    const btn=this.add.text(W/2,by+bh-this.s(36),'Continue →',{
+    const btn=this.add.text(W/2,by+bh-this.s(36),'Continue \u2192',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(17),color:'#f0c060'})
       .setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
     btn.on('pointerover',()=>btn.setColor('#ffe090')); btn.on('pointerout',()=>btn.setColor('#f0c060'));
