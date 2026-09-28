@@ -315,7 +315,8 @@ class GameScene extends Phaser.Scene {
     this._clearSiteMarkers(); this._clearPersistentMessage();
     this.districts.forEach(x=>x.setSelectable(false));
     ScoringEngine.recordDecision(1,v,{districtId:d.id});
-    d.receiveResource(2); this.cameras.main.shake(240,0.004); this._updateStats(5,10,-5);
+    d.receiveResource(2); if(!this.reducedMotion) this.cameras.main.shake(240,0.004); this._updateStats(5,10,-5);
+    this._addLandmark(d,'\uD83C\uDFD7','Built first here', d.accentColor);
     const m={safe:'Construction begins carefully.\nThe city grows slowly but steadily.',
              balanced:'A balanced approach takes shape.\nThe city moves forward with measured confidence.',
              aggressive:'Cranes rise. Citizens are excited.\nResults will take time to appear.'};
