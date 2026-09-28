@@ -123,8 +123,9 @@ class ProfileScene extends Phaser.Scene {
       const q=this.add.text(bx+lb.width+this.s(7),by+this.s(1),'\u24D8',{
         fontFamily:'Arial, sans-serif',fontSize:this.s(13),color:'#3f6288'
       }).setDepth(100).setAlpha(0);
-      const vt=this.add.text(bx+colW,by,this._label(val),{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#e2a840',fontStyle:'700'
+      const missing=(val===null||val===undefined);
+      const vt=this.add.text(bx+colW,by,missing?(de?'Nicht beobachtet':'Not observed'):this._label(val),{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:missing?'#5a7d9e':'#e2a840',fontStyle:'700'
       }).setOrigin(1,0).setDepth(100).setAlpha(0);
       const bg=this.add.graphics().setDepth(99).setAlpha(0);
       bg.fillStyle(0x152744,1); bg.fillRoundedRect(bx,by+this.s(22),colW,this.s(8),this.s(4));
@@ -132,11 +133,12 @@ class ProfileScene extends Phaser.Scene {
 
       this.tweens.add({targets:[lb,q,vt,bg,fl],alpha:1,duration:550,delay:800+i*95});
       const o={v:0};
-      this.tweens.add({targets:o,v:val,duration:950,delay:900+i*95,ease:'Power2.easeOut',
+      this.tweens.add({targets:o,v:missing?0:val,duration:950,delay:900+i*95,ease:'Power2.easeOut',
         onUpdate:()=>{
           fl.clear();
-          const c=val>66?0x4ecdc4:val>33?0xe2a840:0xe74c7c;
-          fl.fillStyle(c,0.95);
+          if(missing) return;
+          // Neutral single colour: a high value is a description, not "better".
+          fl.fillStyle(0x7fa6c9,0.95);
           fl.fillRoundedRect(bx,by+this.s(22),Math.max(this.s(8),colW*(o.v/100)),this.s(8),this.s(4));
         }});
 
