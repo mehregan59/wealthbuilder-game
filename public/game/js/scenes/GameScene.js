@@ -444,13 +444,18 @@ class GameScene extends Phaser.Scene {
     ScoringEngine.recordDecision(3,'allocate',{districtId:district.id});
     this._updateStats(2,4,-3);
     if(this.cubeDropped < this.cubeTotal){
-      this._showPersistentMessage('The city receives 600 new credits.\nPlace all six cubes — '+this.cubeDropped+' of '+this.cubeTotal+' placed.');
+      this._showPersistentMessage('The city receives 600 new credits.\nDrag a cube onto a district — or tap a district to send the next cube there.\n'+this.cubeDropped+' of '+this.cubeTotal+' placed.');
       this._armLevel3Idle();
     } else {
       this._level3Resolved = true;
       this._clearLevel3Idle();
-      this._clearPersistentMessage();
-      this.time.delayedCall(950,()=>this._level3Outcome());
+      this.districts.forEach(d=>d.setSelectable(false));
+      // Exposure preview: the player sees where their money sits BEFORE
+      // the random shock lands, so the outcome is understood, not guessed.
+      const c={}; (ScoringEngine.decisions||[]).filter(d=>d.level===3).forEach(d=>{c[d.districtId]=(c[d.districtId]||0)+1;});
+      const spread=Object.entries(c).map(([k,n])=>n*100+' in '+k).join(', ');
+      this._showPersistentMessage('All six placed. Your credits now sit: '+spread+'.\nNext year one district will be hit — which one is not known in advance.');
+      this.time.delayedCall(2600,()=>{ this._clearPersistentMessage(); this._level3Outcome(); });
     }
   }
 
@@ -462,7 +467,7 @@ class GameScene extends Phaser.Scene {
     const exposed=placed*100, lost=Math.round(exposed*0.4);
     const share=placed/(this.cubeTotal||6);
     loser.takeDamage(8+Math.round(40*share)); // visual damage scales with exposure
-    this.cameras.main.shake(120+Math.round(400*share),0.002+0.006*share);
+    if(!this.reducedMotion) this.cameras.main.shake(120+Math.round(400*share),0.002+0.006*share);
     this._updateStats(-Math.round(10*share),-Math.round(15*share),0);
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     const nm=de?(loser.nameDE||loser.name):loser.name;
@@ -471,6 +476,7 @@ class GameScene extends Phaser.Scene {
       : 'The '+nm+' district fell 40%.\nYou had '+exposed+' credits there \u2192 you lost '+lost+' credits.';
     this._showConsequence(msg,()=>this._nextLevel());
   }
+
 
   // ══ LEVEL 4 ══
   // Beat A: an urgent repair. Spending cash on a genuine need is NOT
