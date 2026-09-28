@@ -76,7 +76,7 @@ class GameScene extends Phaser.Scene {
     const R = this.W - this.s(128);
     const span = R - L;
     const px = f => Math.round(L + span * f);
-    const baseY = this.isCompact ? Math.round(this.H*0.53) : this.s(482);
+    const baseY = this.isCompact ? Math.round(this.H*0.53) : Math.round(Math.max(this.s(482),Math.min(this.H*0.46,this.H-this.s(420))));
     const compactPoints = this.isCompact ? [
       {x:this.W*.27,y:baseY}, {x:this.W*.72,y:baseY-this.s(22)},
       {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
