@@ -287,17 +287,24 @@ class GameScene extends Phaser.Scene {
   }
 
   // ══ LEVEL 2 ══
+  // Two beats. Beat A: the technology district drops on a vague, alarming
+  // headline with no real information behind it — pure noise — and then
+  // recovers on its own. Beat B: the transport district drops with clear
+  // bad fundamentals (its main employer is leaving for good) — real news —
+  // and does NOT recover. Beat A measures loss aversion; comparing how the
+  // player treated A versus B measures whether they can tell a temporary
+  // dip from genuine bad news.
   _level2() {
     this._workersLeave(); this.districts[2].takeDamage(28); this._updateStats(-5,-8,0);
     this.time.delayedCall(1900,()=>{
-      this._showPersistentMessage('The technology district has lost value.\nWhat does the city do?');
+      this._showPersistentMessage('The technology district has lost value.\nHeadlines are alarming, but nothing concrete has changed.\nWhat does the city do?');
       this._showDecisionPanel([
         {icon:'🛡',label:'Cancel project',desc:'Stop work now,\nkeep the resources',value:'cancel',color:0x3a5f8a},
         {icon:'🏗',label:'Push through',desc:'Finish as planned,\naccept the dip',value:'continue',color:0x4aaa5c},
         {icon:'💰',label:'Invest more',desc:'Double down\non the district',value:'invest_more',color:0xddaa00},
         {icon:'⏳',label:'Pause & reassess',desc:'Halt work now,\ndecide again later',value:'wait',color:0x6b7a8d}
       ],(c)=>{
-        ScoringEngine.recordDecision(2,c); this._clearPersistentMessage();
+        ScoringEngine.recordDecision(2,c,{phase:'dip'}); this._clearPersistentMessage();
         const e={cancel:{d:[5,-10,10],m:'Resources secured.\nThe project rests. The city will not benefit if it recovers.'},
                  continue:{d:[0,5,-5],m:'The plan continues.\nThe city accepts short-term uncertainty.'},
                  invest_more:{d:[-5,12,-15],m:'The city doubles down.\nHigh stakes.'},
@@ -306,7 +313,52 @@ class GameScene extends Phaser.Scene {
         this._updateStats(e.d[0],e.d[1],e.d[2]);
         if(c==='invest_more'){this.districts[2].receiveResource(1);this.cameras.main.shake(190,0.003);}
         else if(c==='cancel') this.districts[2].takeDamage(8);
-        this._showConsequence(e.m,()=>this._nextLevel());
+        this._showConsequence(e.m,()=>this._level2Recovery(c));
+      });
+    });
+  }
+
+  // Beat A resolution: the dip was noise. The district recovers on its own,
+  // whatever the player did — but panicking cost resources for nothing.
+  _level2Recovery(choice) {
+    this.districts[2].receiveResource(3);
+    const m={cancel:'Weeks later: the scare blows over.\nThe district recovers — without the city. The cancelled project stays cancelled.',
+             continue:'Weeks later: the scare blows over.\nThe district recovers. Staying the course paid off.',
+             invest_more:'Weeks later: the scare blows over.\nThe district recovers — and the extra investment pays off handsomely.',
+             wait:'Weeks later: the scare blows over.\nThe district recovers. The pause cost time, but nothing else.'}[choice]
+             ||'Weeks later: the scare blows over.\nThe district recovers.';
+    if(choice==='cancel') this._updateStats(-5,0,0);
+    else if(choice==='invest_more') this._updateStats(5,8,0);
+    else if(choice==='continue') this._updateStats(3,5,0);
+    this._showConsequence(m,()=>this._level2News());
+  }
+
+  // Beat B: a second drop, this time with clear bad fundamentals. The
+  // transport district's main employer is leaving for good. Holding or
+  // doubling down is costly here; cutting losses is the reasonable move.
+  _level2News() {
+    this.time.delayedCall(1200,()=>{
+      this.districts[1].takeDamage(30); this._updateStats(-5,-8,0);
+      this.cameras.main.shake(200,0.003);
+      this.time.delayedCall(1600,()=>{
+        this._showPersistentMessage('Now the transport district is falling.\nThis time there is real news: its largest employer\nis leaving the city for good. What does the city do?');
+        this._showDecisionPanel([
+          {icon:'🛡',label:'Cut losses',desc:'Sell the district assets\nbefore it gets worse',value:'cancel',color:0x3a5f8a},
+          {icon:'🏗',label:'Hold on',desc:'Keep everything,\nhope it turns around',value:'continue',color:0x4aaa5c},
+          {icon:'💰',label:'Invest more',desc:'Double down\non the district',value:'invest_more',color:0xddaa00},
+          {icon:'⏳',label:'Pause & reassess',desc:'Halt work now,\ndecide again later',value:'wait',color:0x6b7a8d}
+        ],(c)=>{
+          ScoringEngine.recordDecision(2,c,{phase:'news'}); this._clearPersistentMessage();
+          const e={cancel:{d:[5,-5,5],m:'The city exits in time.\nThe district keeps declining, but the resources were saved.'},
+                   continue:{d:[-8,-12,0],m:'The city holds on.\nThe district keeps declining. Hope is not a strategy.'},
+                   invest_more:{d:[-12,-15,-10],m:'The city doubles down on a shrinking district.\nThe extra resources sink with it.'},
+                   wait:{d:[-3,-6,0],m:'The city waits.\nThe district keeps declining while decisions are postponed.'}}[c]
+                   ||{d:[-8,-12,0],m:'The city holds on.\nThe district keeps declining.'};
+          this._updateStats(e.d[0],e.d[1],e.d[2]);
+          if(c==='invest_more'){this.districts[1].takeDamage(10);this.cameras.main.shake(190,0.003);}
+          else if(c==='continue') this.districts[1].takeDamage(6);
+          this._showConsequence(e.m,()=>this._nextLevel());
+        });
       });
     });
   }
