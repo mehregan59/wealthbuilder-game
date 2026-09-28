@@ -58,9 +58,11 @@ const ScoringEngine = {
     const d = this.decisions.find(x => x.level === 2 && x.phase === 'dip')
            || this.decisions.find(x => x.level === 2);
     if (!d) return 50;
+    const del = this._delegate('lossAversion');
+    if (del !== null) return del;
     const gameScore = { cancel: 90, wait: 70, continue: 30, invest_more: 10 }[d.value] ?? 50;
     const startScore = { stop: 90, wait: 60, research: 30 }[this.startingAnswers[2]] ?? 50;
-    return Math.round(gameScore * 0.8 + startScore * 0.2);
+    return Math.round(gameScore * 0.9 + startScore * 0.1);
   },
 
   scoreDiversification(allocation) {
@@ -78,9 +80,11 @@ const ScoringEngine = {
     // Only the build choice measures patience; the urgent-repair beat does not.
     const d = this.decisions.find(d => d.level === 4 && (d.value === 'festival' || d.value === 'university'));
     if (!d) return 50;
+    const del = this._delegate('patience');
+    if (del !== null) return del;
     const gameScore = { festival: 20, university: 85 }[d.value] ?? 50;
     const startScore = { impatient: 20, moderate: 55, patient: 85 }[this.startingAnswers[1]] ?? 50;
-    return Math.round(gameScore * 0.8 + startScore * 0.2);
+    return Math.round(gameScore * 0.9 + startScore * 0.1);
   },
 
   scoreGreedFomo() {
