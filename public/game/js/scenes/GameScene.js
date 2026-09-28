@@ -10,7 +10,7 @@ class GameScene extends Phaser.Scene {
       : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
     this.PANEL = this.isCompact ? 0 : Math.round(Math.min(286, Math.max(244, this.W * 0.18)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
-      ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
+      (window.cityName = ['Lindenfeld','Auenstadt','Sonnenberg','Rheinhafen','Wiesental','Neuhafen'][Math.floor(Math.random()*6)]);
 
     // Honoured across the scene: decorative motion is reduced, but every
     // consequence still shows as text, so no information is lost.
