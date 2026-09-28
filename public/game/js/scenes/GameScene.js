@@ -18,12 +18,16 @@ class GameScene extends Phaser.Scene {
 
     const groundY = this.isCompact ? Math.round(this.H * 0.29) : this.s(352);
     this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
-    const ground = this.add.graphics().setDepth(-5);
-    // Warmer, lighter land so the city reads as a living place rather than
-    // a dark board. Navy/gold stays for the HUD and framing only.
-    ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
-    ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
-    ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    // The painted regional city replaces the flat drawn land when its
+    // artwork is available; the drawn fallback keeps the game playable
+    // if the image ever fails to load.
+    this.hasPanorama = this.textures.exists('cityPanorama');
+    if(!this.hasPanorama){
+      const ground = this.add.graphics().setDepth(-5);
+      ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
+      ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
+      ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
+    }
 
 
     this.ambient = new AmbientSystem(this);
