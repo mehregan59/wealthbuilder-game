@@ -13,3 +13,4 @@
 - Centralize game palette and typography in `CityTheme`; the embedded app and standalone build must load identical city modules.
 - Keep the React home screen outside Phaser; start the existing game on demand and return through the `wealthsim:home` browser event so game logic stays unchanged.
 - Tie the city day/night phase to level progression while retaining continuous ambient motion, so visual time follows the simulation.
+- Track historical district investment separately from current visual capacity, so losses can visibly remove assets without rewriting recorded decisions.

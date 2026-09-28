@@ -14,3 +14,4 @@
 - [x] Add progression-linked day/night lighting and interactive district detail panels.
 - [x] Always open the landing page after refresh and keep Back to home visible on the final screen.
 - [x] Add the landing page and working return-home flow to the standalone GitHub Pages build.
+- [x] Make district details dwell-only, shorten automatic text, correct station/solar/ship art, animate capacity changes, and fix short-screen results overlap.

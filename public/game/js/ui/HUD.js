@@ -70,7 +70,7 @@ class HUD {
       color:'#296b72', align:'center', backgroundColor:'#fffbf1',
       padding:{x:this.s(18),y:this.s(10)}
     }).setOrigin(0.5).setDepth(66).setAlpha(0);
-    this.scene.tweens.add({targets:m,alpha:1,duration:900,hold:dur||4000,yoyo:true,onComplete:()=>m.destroy()});
+    this.scene.tweens.add({targets:m,alpha:1,duration:720,hold:dur?dur*.8:3200,yoyo:true,onComplete:()=>m.destroy()});
   }
 
   showLevelTitle(n, title) {
@@ -86,7 +86,7 @@ class HUD {
     }).setOrigin(0.5).setDepth(81).setAlpha(0);
     ov.setAlpha(0);
     this.scene.tweens.add({
-      targets:[ov,lbl,ttl], alpha:1, duration:280, hold:620, yoyo:true,
+      targets:[ov,lbl,ttl], alpha:1, duration:224, hold:496, yoyo:true,
       onComplete:()=>{ ov.destroy(); lbl.destroy(); ttl.destroy(); }
     });
   }

@@ -238,10 +238,14 @@ class RoadNetwork {
   }
   _dropShipLabel(){ if(this.shipText){ this.shipText.destroy(); this.shipText=null; } }
   _ship(x,y,ang,isNight) {
-    const g=this.carGfx,L=this.s(46),H=this.s(12),cs=Math.cos(ang),sn=Math.sin(ang),p=(a,b)=>({x:x+a*cs-b*sn,y:y+a*sn+b*cs});
-    const hull=[p(-L/2,-H/3),p(L/2,-H/3),p(L/2-this.s(8),H/2),p(-L/2+this.s(6),H/2)];
-    g.fillStyle(0x173b40,.25);g.fillEllipse(x,y+this.s(6),H*1.1,L*.8);g.fillStyle(0x7a3f2c,1);g.beginPath();g.moveTo(hull[0].x,hull[0].y);hull.slice(1).forEach(q=>g.lineTo(q.x,q.y));g.closePath();g.fillPath();
-    const cabin=p(-L*.08,0);g.fillStyle(0xfffbf1,1);g.fillCircle(cabin.x,cabin.y,this.s(7));const mast=p(L*.12,0),top={x:mast.x-sn*this.s(25),y:mast.y+cs*this.s(25)};g.lineStyle(this.s(2),0x3c3c3c,1);g.lineBetween(mast.x,mast.y,top.x,top.y);const f1={x:top.x+cs*this.s(18),y:top.y+sn*this.s(18)},f2={x:top.x-sn*this.s(9),y:top.y+cs*this.s(9)};g.fillStyle(0xe0a82e,1);g.fillTriangle(top.x,top.y,f1.x,f1.y,f2.x,f2.y);if(isNight){const bow=p(L/2-this.s(3),0);g.fillStyle(0xffe9a0,.9);g.fillCircle(bow.x,bow.y,this.s(2));}if(this.shipText)this.shipText.setPosition(x+this.s(24),y-this.s(30));
+    const g=this.carGfx,L=this.s(54),H=this.s(18),cs=Math.cos(ang),sn=Math.sin(ang),p=(a,b)=>({x:x+a*cs-b*sn,y:y+a*sn+b*cs});
+    const poly=(pts,col)=>{g.fillStyle(col,1);g.beginPath();g.moveTo(pts[0].x,pts[0].y);pts.slice(1).forEach(q=>g.lineTo(q.x,q.y));g.closePath();g.fillPath();};
+    poly([p(-L*.48,-H*.38),p(L*.28,-H*.48),p(L*.55,0),p(L*.28,H*.48),p(-L*.48,H*.38),p(-L*.58,0)],0x6f3e31);
+    poly([p(-L*.36,-H*.26),p(L*.25,-H*.32),p(L*.43,0),p(L*.25,H*.32),p(-L*.36,H*.26)],0xd9c596);
+    const cabin=[p(-L*.22,-H*.24),p(L*.02,-H*.24),p(L*.02,H*.24),p(-L*.22,H*.24)];poly(cabin,0xfffbf1);
+    const win=p(-L*.08,0);g.fillStyle(0x5f8790,1);g.fillCircle(win.x,win.y,this.s(3));
+    const mast=p(L*.08,0),top=p(L*.08,-H*1.8);g.lineStyle(this.s(2),0x3c3c3c,1);g.lineBetween(mast.x,mast.y,top.x,top.y);poly([top,p(L*.40,-H*1.55),p(L*.08,-H*.95)],0xe0a82e);
+    if(isNight){const bow=p(L*.48,0);g.fillStyle(0xffe9a0,.9);g.fillCircle(bow.x,bow.y,this.s(2.6));}if(this.shipText)this.shipText.setPosition(x+this.s(28),y-this.s(34));
   }
 
   _car(x,y,ang,c,isNight,big) {
