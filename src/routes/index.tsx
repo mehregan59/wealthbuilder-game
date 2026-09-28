@@ -11,13 +11,13 @@ export const Route = createFileRoute("/")({
       {
         name: "description",
         content:
-          "A behavioral investment simulation: build a city, make eight decisions, and discover your investor profile.",
+          "A behavioral retirement-planning simulation: build a connected city, make ten decisions, and understand your decision patterns.",
       },
       { property: "og:title", content: "WealthSim — Build Your Future" },
       {
         property: "og:description",
         content:
-          "A behavioral investment simulation: build a city, make eight decisions, and discover your investor profile.",
+          "A behavioral retirement-planning simulation: build a connected city, make ten decisions, and understand your decision patterns.",
       },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
@@ -28,9 +28,9 @@ export const Route = createFileRoute("/")({
 
 function Loading() {
   return (
-    <div className="flex h-dvh w-full flex-col items-center justify-center bg-[#061019]">
-      <h1 className="font-serif text-4xl tracking-wide text-[#e2a840]">WealthSim</h1>
-      <p className="mt-2 text-sm text-[#4a6080]">Building your city…</p>
+    <div className="flex h-dvh w-full flex-col items-center justify-center bg-background">
+      <h1 className="font-heading text-4xl font-bold text-primary">WealthSim</h1>
+      <p className="mt-2 text-sm text-muted-foreground">Building your city…</p>
     </div>
   );
 }
