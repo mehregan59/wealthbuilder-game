@@ -13,7 +13,7 @@ class Tutorial {
       3:{t:'Spread or focus',    b:'Six bright funding blocks appear in a row along the bottom. The easiest way to invest is to tap a district once for each block you want to send there. You can also drag blocks onto districts. Place all six; the counter shows your progress.\nWatch the DISTRICT PERFORMANCE panel to see each district grow.'},
       4:{t:'Now or later',       b:'Two buildings are shown at the bottom of the screen. Tap the one you want to build. One choice pays off immediately; the other pays off much later.\nWhichever you pick will matter again before the game ends.'},
       5:{t:'Everyone is excited',b:'One district is booming and headlines are scrolling across the top of the screen.\nTap one of the four responses at the bottom to decide whether to follow the crowd or hold your position.'},
-      6:{t:'A visitor arrives',  b:'A delegation is driving in from a neighbouring city carrying an offer of investment.\nYou can tap Research first to learn more \u2014 that costs nothing, and you still choose afterwards from the same options.'},
+      6:{t:'A visitor arrives',  b:'A ship from a neighbouring city is sailing up the river with an investment offer.\nYou can tap Research first to learn more \u2014 that costs nothing, and you still choose afterwards from the same options.'},
       7:{t:'Loud headlines',     b:'Reports are scrolling across the top of the screen. Tapping Read report is free and costs you nothing.\nAfter reading, you still tap one of the other options to decide what the city actually does.'},
       8:{t:'The storm',          b:'Every district is hit \u2014 you cannot prevent it. Once it passes, tap one of the response options at the bottom of the screen to decide what mattered most to protect.'},
       9:{t:'The project review', b:'The city must sell projects. Read what each was bought for and is worth today, then tap the one to sell at the bottom of the screen.'},
@@ -105,7 +105,7 @@ class Tutorial {
 
     const pad=this.s(24);
     const bh=pad*2+title.height+this.s(12)+body.height+this.s(52);
-    const bx=cx-bw/2, by=centred ? (H-bh)/2 : this.s(96);
+    const bx=cx-bw/2, by=centred ? (H-bh)/2 : this.s(104);
 
     const bg=this.scene.add.graphics().setDepth(130);
     if(centred){ bg.fillStyle(0xfffbf1,0.72); bg.fillRect(0,0,W,H); }

@@ -141,6 +141,15 @@ class RoadNetwork {
 
   // Delegation (Level 6)
   sendVisitor(onArrive) {
+    const riv=this.scene.metro&&this.scene.metro.river;
+    if(riv){
+      // In the connected city the offer arrives by ship up the river.
+      const pts=[riv[4],riv[3],riv[2]].map(q=>({x:q.x,y:q.y}));
+      this._shipLabel();
+      this.visitor={ ship:true, path:pts, i:0, t:0, sp:0.006, arrived:false, exiting:false,
+                     x:pts[0].x, y:pts[0].y, onArrive:onArrive };
+      return;
+    }
     this.showSign(true);
     const pts=this.lanes[2].pts.slice().reverse();
     this.visitor={ path:pts, i:0, t:0, sp:0.010, arrived:false, exiting:false,
@@ -149,12 +158,24 @@ class RoadNetwork {
   visitorAccept(target, onDone) {
     if(!this.visitor) return;
     const v=this.visitor;
+    if(v.ship){
+      const riv=this.scene.metro.river;
+      v.path=[{x:v.x,y:v.y},{x:riv[1].x,y:riv[1].y}]; v.i=0; v.t=0; v.arrived=false; v.exiting=true;
+      v.onExit=()=>{ this._dropShipLabel(); if(onDone) onDone(); };
+      return;
+    }
     v.driveTo={ from:{x:v.x,y:v.y}, to:{x:target.cx,y:target.cy+this.s(46)}, t:0, sp:0.011,
       onDone:()=>{ this.visitor=null; this.showSign(false); if(onDone) onDone(); } };
   }
   visitorDecline() {
     if(!this.visitor) return;
     const v=this.visitor;
+    if(v.ship){
+      const riv=this.scene.metro.river;
+      v.path=[{x:v.x,y:v.y},{x:riv[3].x,y:riv[3].y},{x:riv[4].x,y:riv[4].y}]; v.i=0; v.t=0; v.arrived=false; v.exiting=true;
+      v.onExit=()=>this._dropShipLabel();
+      return;
+    }
     v.path=this.lanes[2].pts.slice(); v.i=0; v.t=0; v.exiting=true; v.arrived=false;
     this.showSign(false);
   }
@@ -197,14 +218,37 @@ class RoadNetwork {
       v.t+=v.sp*(delta/16);
       while(v.t>=1){ v.t-=1; v.i++; }
       if(v.i>=pts.length-1){
-        if(v.exiting){ this.visitor=null; return; }
+        if(v.exiting){ this.visitor=null; if(v.onExit) v.onExit(); return; }
         v.arrived=true; v.i=pts.length-2; v.t=1;
         if(v.onArrive){ const cb=v.onArrive; v.onArrive=null; cb(); }
       }
     }
     const p1=pts[Math.min(v.i,pts.length-2)], p2=pts[Math.min(v.i+1,pts.length-1)];
     v.x=p1.x+(p2.x-p1.x)*v.t; v.y=p1.y+(p2.y-p1.y)*v.t;
+    if(v.ship){ this._ship(v.x,v.y,isNight); return; }
     this._car(v.x,v.y,Math.atan2(p2.y-p1.y,p2.x-p1.x),{col:0xffd54a,stop:0},isNight,true);
+  }
+
+  _shipLabel() {
+    this._dropShipLabel();
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    this.shipText=this.scene.add.text(0,0,de?'\u2691 Investitionsangebot':'\u2691 Investment offer',{
+      fontFamily:CityTheme.heading,fontSize:this.s(13),color:'#fffbf1',fontStyle:'700',
+      backgroundColor:'#296b72',padding:{x:this.s(8),y:this.s(4)}
+    }).setOrigin(0,1).setDepth(40);
+  }
+  _dropShipLabel(){ if(this.shipText){ this.shipText.destroy(); this.shipText=null; } }
+  _ship(x,y,isNight) {
+    const g=this.carGfx, L=this.s(46), H=this.s(12);
+    g.fillStyle(0x173b40,0.25); g.fillEllipse(x,y+this.s(6),L*1.1,H*0.8);
+    g.fillStyle(0x7a3f2c,1); g.beginPath(); g.moveTo(x-L/2,y-H/3); g.lineTo(x+L/2,y-H/3); g.lineTo(x+L/2-this.s(8),y+H/2); g.lineTo(x-L/2+this.s(6),y+H/2); g.closePath(); g.fillPath();
+    g.fillStyle(0xfffbf1,1); g.fillRect(x-L/4,y-H*1.3,L/2.2,H);
+    g.fillStyle(0x296b72,1); for(let i=0;i<3;i++) g.fillRect(x-L/4+this.s(3)+i*this.s(7),y-H*1.1,this.s(4),this.s(4));
+    // mast + flag
+    g.fillStyle(0x3c3c3c,1); g.fillRect(x+L/4,y-H*3.2,this.s(2),H*2.4);
+    g.fillStyle(0xe0a82e,1); g.fillTriangle(x+L/4+this.s(2),y-H*3.2,x+L/4+this.s(18),y-H*2.8,x+L/4+this.s(2),y-H*2.4);
+    if(isNight){ g.fillStyle(0xffe9a0,0.9); g.fillCircle(x+L/2-this.s(3),y-H/4,this.s(2)); }
+    if(this.shipText) this.shipText.setPosition(x+L/4+this.s(20),y-H*2.5);
   }
 
   _car(x,y,ang,c,isNight,big) {
