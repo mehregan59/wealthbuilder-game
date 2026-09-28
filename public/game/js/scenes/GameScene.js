@@ -462,8 +462,8 @@ class GameScene extends Phaser.Scene {
 
   _spawnResourceCubes(n) {
     this.cubeTotal=n; this.cubeDropped=0;
-    // Coins stack vertically along the right edge, large and easy to grab.
-    const x=this.W-this.s(50), top=this.s(120), gap=Math.min(this.s(66),(this.H-top-this.s(40))/n);
+    // Coins stack vertically beside the side panel, below the district signs, large and easy to grab.
+    const x=this.PANEL+this.s(46), top=Math.max(this.s(400),this.H*0.44), gap=Math.min(this.s(66),(this.H-top-this.s(40))/n);
     for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>this.cubes.push(new ResourceCube(this,x,top+i*gap,1)));
   }
 
