@@ -22,6 +22,13 @@ class District {
     bg.fillStyle(0x0e2b2c,0.92); bg.fillRoundedRect(-w/2,-h/2,w,h,this.s(7));
     bg.lineStyle(this.s(2),this.accentColor,0.95); bg.strokeRoundedRect(-w/2,-h/2,w,h,this.s(7));
     this.labelContainer.add([bg,t]); this.labelH=h;
+    // Keep the name fully on screen: never tucked behind the side panel or
+    // cut off at the right edge.
+    const minX=(this.scene.PANEL||0)+w/2+this.s(10), maxX=this.scene.W-w/2-this.s(10);
+    this.labelContainer.x=Math.max(minX,Math.min(maxX,this.cx));
+    this.labelBaseY=Math.max(this.s(58),this.labelBaseY);
+    this.labelContainer.y=this.labelBaseY;
+
   }
 
   subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(19);}
