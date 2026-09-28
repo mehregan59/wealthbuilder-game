@@ -239,26 +239,36 @@ class ProfileScene extends Phaser.Scene {
     return v>=80?'Very high':v>=64?'High':v>=42?'Moderate':v>=26?'Low':'Very low';
   }
 
+  // Every score is either a number derived from an actual recorded choice,
+  // or null ("not observed"). Missing data never becomes a neutral 50.
   _computeScores() {
     const D=(typeof ScoringEngine!=='undefined'&&ScoringEngine.decisions)?ScoringEngine.decisions:[];
     const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
-    const get=n=>(D.find(d=>d.level===n)||{}).value;
-    const m=(map,k,def)=>(map[k]!==undefined?map[k]:def);
+    // Final (non-research) action for a level — research is tracked separately.
+    const finalOf=n=>(D.filter(d=>d.level===n&&d.value!=='research').pop()||{}).value;
+    const researched=n=>D.some(d=>d.level===n&&d.value==='research');
+    const warnUnknown=(n,v)=>{ if(v!==undefined) console.warn('[WealthSim] Unrecognised action at level '+n+':',v); return null; };
+    const pick=(map,n)=>{ const v=finalOf(n); if(v===undefined) return null; return map[v]!==undefined?map[v]:warnUnknown(n,v); };
+    // Stated answer only nudges an observed score; it never creates one on its own.
+    const blend=(game,map,ans)=>{ if(game===null) return null; const st=map[ans]; return st===undefined?game:Math.round(game*0.8+st*0.2); };
 
-    const risk =Math.round(m({safe:20,balanced:52,aggressive:88},get(1),50)*0.8+m({safe:20,balanced:52,aggressive:88},A[0],50)*0.2);
-    const loss =Math.round(m({cancel:90,wait:70,continue:30,invest_more:12},get(2),50)*0.8+m({stop:90,wait:60,research:28},A[2],50)*0.2);
-    const pat  =Math.round(m({festival:20,university:88},get(4),50)*0.8+m({impatient:20,moderate:55,patient:88},A[1],50)*0.2);
-    const greed=m({all_in:95,increase:66,hold:26,reduce:12},get(5),50);
-    const learn=m({research:88,accept:66,independent:56,decline:38},get(6),50);
-    // Level 7: reading the report then acting shows information-seeking
-    const l7 = D.filter(d=>d.level===7);
-    const readFirst = l7.some(d=>d.value==='research');
-    const finalAct = (l7.filter(d=>d.value!=='research').pop()||{}).value;
-    let noise = m({sell:90,reduce:56,hold:26},finalAct,50);
-    if (readFirst) noise = Math.max(6, noise - 26);
-    const resil=m({hold:90,rebalance:86,opportunistic:76,safe_haven:44,sell_all:14},get(8),50);
+    const risk =blend(pick({safe:20,balanced:52,aggressive:88},1),{safe:20,balanced:52,aggressive:88},A[0]);
+    const loss =blend(pick({cancel:90,wait:70,continue:30,invest_more:12},2),{stop:90,wait:60,research:28},A[2]);
+    const pat  =blend(pick({festival:20,university:88},4),{impatient:20,moderate:55,patient:88},A[1]);
+    const greed=pick({all_in:95,increase:66,hold:26,reduce:12},5);
+    const resil=pick({hold:90,rebalance:86,opportunistic:76,safe_haven:44,sell_all:14},8);
 
-    let divers=50;
+    // Level 6: the final choice is scored; reading the report is a separate observation.
+    const read6=researched(6), read7=researched(7);
+    let learn=pick({accept:60,independent:60,decline:50},6);
+    if (learn!==null && read6) learn=Math.min(100,learn+25);
+
+    // Level 7: every offered action has an explicit value. invest_more is a
+    // strong move against the headlines, i.e. also a reaction (contrarian).
+    let noise=pick({sell:90,reduce:56,hold:22,invest_more:70},7);
+    if (noise!==null && read7) noise=Math.max(6, noise-20);
+
+    let divers=null;
     const l3=D.filter(d=>d.level===3);
     if (l3.length) {
       const counts={};
@@ -266,29 +276,38 @@ class ProfileScene extends Phaser.Scene {
       const vals=Object.values(counts), total=vals.reduce((a,b)=>a+b,0);
       if(total>0){
         const hhi=vals.reduce((s,v)=>s+Math.pow(v/total,2),0);
-        divers=Math.round(Math.max(0,Math.min(100,(1-hhi)/0.75*100)));
+        // Normalised against the most even allocation actually possible with
+        // six cubes over four districts (2/2/1/1, HHI = 0.2778) -> 100.
+        const minH=0.2778;
+        divers=Math.round(Math.max(0,Math.min(100,(1-hhi)/(1-minH)*100)));
       }
     }
     return {riskPreference:risk,lossAversion:loss,patience:pat,diversification:divers,
-            greedFomo:greed,reactionToNoise:noise,learning:readFirst?Math.min(100,learn+10):learn,resilience:resil};
+            greedFomo:greed,reactionToNoise:noise,learning:learn,resilience:resil,
+            _researched:read6||read7, _observed:[risk,loss,pat,divers,greed,noise,learn,resil].filter(v=>v!==null).length};
   }
 
   _assignPersona(s) {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     const P={
-      strategist:{icon:'\u265F',name:de?'Der Stratege':'The Strategist',desc:de?'Geduldig, diversifiziert und informationssuchend. Du passt dich an, ohne auf Gewinne oder Verluste überzureagieren.':'Patient, diversified and information-seeking. You adapt without overreacting to gains or losses.'},
-      guardian:{icon:'\uD83D\uDEE1',name:de?'Der Hüter':'The Guardian',desc:de?'Du schützt sorgfältig, was du aufgebaut hast. Vorsichtig und geduldig — achte darauf, produktives Risiko nicht zu vermeiden.':'You carefully protect what you have built. Cautious and patient — watch that you do not avoid productive risk.'},
-      challenger:{icon:'\uD83D\uDE80',name:de?'Der Herausforderer':'The Challenger',desc:de?'Selbstbewusst und wachstumsorientiert. Komfortabel mit Unsicherheit — achte auf Überkonzentration.':'Confident and growth-oriented. Comfortable with uncertainty — watch for overconcentration.'},
-      explorer:{icon:'\uD83D\uDD2D',name:de?'Der Entdecker':'The Explorer',desc:de?'Neugierig und ausgewogen. Du suchst Informationen, bevor du handelst, und lernst aus Ergebnissen.':'Curious and balanced. You seek information before acting and learn from outcomes.'},
-      sprinter:{icon:'\u26A1',name:de?'Der Sprinter':'The Sprinter',desc:de?'Du reagierst stark auf sofortige Chancen. Ein längerer Zeithorizont wäre dein wertvollster nächster Schritt.':'You respond strongly to immediate opportunities. A longer time horizon would be your most valuable next step.'},
-      reactor:{icon:'\uD83C\uDF0A',name:de?'Der Reaktor':'The Reactor',desc:de?'Deine Entscheidungen verschieben sich mit den Ereignissen. Ein schriftlicher Plan würde dir in Druckmomenten sehr helfen.':'Your decisions shift with events. A written plan would help you greatly in moments of pressure.'}
+      strategist:{icon:'\u265F',name:de?'Der Stratege':'The Strategist',desc:de?'Geduldig, breit verteilt und du hast Berichte gelesen, bevor du entschieden hast. In diesem Durchgang hast du nicht auf Schlagzeilen überreagiert.':'Patient, spread your resources and read reports before deciding. In this session you did not overreact to headlines.'},
+      guardian:{icon:'\uD83D\uDEE1',name:de?'Der Hüter':'The Guardian',desc:de?'Du hast in diesem Durchgang vorsichtig gewählt und Verluste begrenzt — achte darauf, produktives Risiko nicht ganz zu meiden.':'In this session you chose cautiously and limited losses — watch that you do not avoid productive risk entirely.'},
+      challenger:{icon:'\uD83D\uDE80',name:de?'Der Herausforderer':'The Challenger',desc:de?'Wachstumsorientierte Entscheidungen und mehr Risiko bei steigenden Kursen — achte auf Konzentration.':'Growth-oriented choices and more exposure when prices rose — watch for concentration.'},
+      explorer:{icon:'\uD83D\uDD2D',name:de?'Gemischtes Muster':'Mixed pattern',desc:de?'Deine Entscheidungen passen in diesem Durchgang nicht zu einem klaren Muster — je nach Situation unterschiedlich.':'Your choices in this session did not fit one clear pattern — they varied with the situation.'},
+      sprinter:{icon:'\u26A1',name:de?'Der Sprinter':'The Sprinter',desc:de?'Du hast sofortige Vorteile gewählt und bei steigenden Kursen nachgelegt. Ein längerer Zeithorizont wäre eine gute Übung.':'You chose immediate rewards and added exposure when prices rose. Practising a longer time horizon would be a useful next step.'},
+      reactor:{icon:'\uD83C\uDF0A',name:de?'Der Reaktor':'The Reactor',desc:de?'Deine Entscheidungen haben sich mit Schlagzeilen und Kursbewegungen verschoben. Ein schriftlicher Plan hilft in Druckmomenten.':'Your choices shifted with headlines and price moves. A written plan helps in moments of pressure.'},
+      insufficient:{icon:'\u2026',name:de?'Zu wenig Daten':'Not enough evidence',desc:de?'Es wurden zu wenige Entscheidungen erfasst, um ein Muster zu beschreiben.':'Too few decisions were recorded to describe a pattern.'}
     };
+    const v=(k)=>s[k]; const has=(...k)=>k.every(x=>s[x]!==null&&s[x]!==undefined);
     let key;
-    if (s.reactionToNoise>70 && s.greedFomo>60) key='reactor';
-    else if (s.patience<36 && s.greedFomo>62) key='sprinter';
-    else if (s.riskPreference<36 && s.lossAversion>64) key='guardian';
-    else if (s.riskPreference>68 && s.greedFomo>58) key='challenger';
-    else if (s.patience>62 && s.reactionToNoise<42 && s.resilience>62) key='strategist';
+    if (s._observed<4) key='insufficient';
+    else if (has('reactionToNoise','greedFomo') && v('reactionToNoise')>70 && v('greedFomo')>60) key='reactor';
+    else if (has('patience','greedFomo') && v('patience')<36 && v('greedFomo')>62) key='sprinter';
+    else if (has('riskPreference','lossAversion') && v('riskPreference')<36 && v('lossAversion')>64) key='guardian';
+    else if (has('riskPreference','greedFomo') && v('riskPreference')>68 && v('greedFomo')>58) key='challenger';
+    // Strategist claims patience, spreading AND information-seeking — each must be observed.
+    else if (has('patience','reactionToNoise','resilience','diversification') && v('patience')>62 && v('reactionToNoise')<42
+             && v('resilience')>62 && v('diversification')>=60 && s._researched) key='strategist';
     else key='explorer';
     return Object.assign({key:key},P[key]);
   }
