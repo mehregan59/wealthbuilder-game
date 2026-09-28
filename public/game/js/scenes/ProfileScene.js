@@ -105,11 +105,11 @@ class ProfileScene extends Phaser.Scene {
 
     // Trait rows with hover explanations
     const T = this._traitInfo(de);
-    const keys=['riskPreference','lossAversion','patience','diversification','greedFomo','reactionToNoise','learning','resilience'];
+    const keys=['riskPreference','lossAversion','patience','diversification','greedFomo','reactionToNoise','learning','resilience','disposition','overconfidence'];
     const colW=Math.min(this.s(340),(W-this.s(150))/2);
     const startX=cx-colW-this.s(14);
     const startY=cardY+cardH+this.s(34);
-    const rowH=this.s(44);
+    const rowH=this.s(40);
 
     keys.forEach((key,i)=>{
       const col=i%2, row=Math.floor(i/2);
@@ -150,7 +150,7 @@ class ProfileScene extends Phaser.Scene {
     });
 
     // Retirement note
-    const noteY=startY+4*rowH+this.s(18);
+    const noteY=startY+Math.ceil(keys.length/2)*rowH+this.s(14);
     const nW=Math.min(this.s(760),W-this.s(110));
     const nBg=this.add.graphics().setDepth(99).setAlpha(0);
     nBg.fillStyle(0x0b1725,0.92); nBg.fillRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
@@ -179,7 +179,73 @@ class ProfileScene extends Phaser.Scene {
     const hit=this.add.rectangle(cx,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
 
+    this._detailsButton(de);
     console.log('[WealthSim] Scores:',this.scores,'Persona:',this.persona.key);
+  }
+
+  // ── Corner button + "How we got this" details panel ─────────────
+  _detailsButton(de) {
+    const lbl=de?'\u24D8  So entstand dein Ergebnis':'\u24D8  How we got this result';
+    const t=this.add.text(this.W-this.s(20),this.s(20),lbl,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#e2a840',fontStyle:'600',
+      backgroundColor:'#0b1725',padding:{x:this.s(12),y:this.s(8)}
+    }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
+    this.tweens.add({targets:t,alpha:1,duration:800,delay:2400});
+    t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#e2a840'));
+    t.on('pointerdown',()=>this._openDetails(de));
+  }
+
+  _openDetails(de) {
+    if (this.details) return;
+    this._hideTip();
+    const W=this.W,H=this.H;
+    const D=(typeof ScoringEngine!=='undefined'&&ScoringEngine.decisions)?ScoringEngine.decisions:[];
+    const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
+    const rows=Assessment.evidence(D,A,this.scores);
+    const c=this.add.container(0,0).setDepth(200);
+    const ov=this.add.rectangle(W/2,H/2,W,H,0x000000,0.78).setInteractive();
+    const bw=Math.min(this.s(980),W-this.s(40)), bh=H-this.s(40), bx=(W-bw)/2, by=this.s(20);
+    const box=this.add.graphics();
+    box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
+    const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
+      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(22),color:'#e2a840'});
+    const intro=this.add.text(bx+this.s(26),by+this.s(52),de
+      ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet.'
+      :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored.',{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
+    c.add([ov,box,title,intro]);
+    const colW=(bw-this.s(78))/2;
+    let y=[by+this.s(86),by+this.s(86)];
+    rows.forEach((r,i)=>{
+      const col=i%2, x=bx+this.s(26)+col*(colW+this.s(26));
+      const hd=this.add.text(x,y[col],r.trait,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#f0c060',fontStyle:'700'});
+      const did=this.add.text(x,y[col]+hd.height+this.s(3),r.did||(de?'Nicht beobachtet in dieser Sitzung.':'Not observed in this session.'),{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:r.did?'#dbe8f4':'#5a7d9e',wordWrap:{width:colW}});
+      const how=this.add.text(x,did.y+did.height+this.s(2),r.how,{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#7d97b3',fontStyle:'italic',wordWrap:{width:colW}});
+      c.add([hd,did,how]);
+      y[col]=how.y+how.height+this.s(12);
+    });
+    const foot=this.add.text(bx+this.s(26),by+bh-this.s(30),de
+      ?'Nur diese Sitzung. Keine Diagnose und keine Finanzberatung.'
+      :'This session only. Not a diagnosis and not financial advice.',{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#456a8c'});
+    const close=this.add.text(bx+bw-this.s(20),by+this.s(18),de?'Schlie\u00dfen \u2715':'Close \u2715',{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#a8c0d8'}).setOrigin(1,0).setInteractive({useHandCursor:true});
+    close.on('pointerover',()=>close.setColor('#ffffff')); close.on('pointerout',()=>close.setColor('#a8c0d8'));
+    close.on('pointerdown',()=>{ c.destroy(); this.details=null; });
+    c.add([foot,close]);
+    // Scroll if content is taller than the box.
+    const contentBottom=Math.max(y[0],y[1]), maxScroll=Math.max(0,contentBottom-(by+bh-this.s(40)));
+    if (maxScroll>0) {
+      const movable=c.list.slice(4).filter(o=>o!==foot&&o!==close);
+      const base=movable.map(o=>o.y); let off=0;
+      const mask=this.make.graphics({add:false}); mask.fillRect(bx,by+this.s(80),bw,bh-this.s(120));
+      const gm=mask.createGeometryMask(); movable.forEach(o=>o.setMask(gm));
+      this.input.on('wheel',(p,go,dx,dy)=>{ if(!this.details) return; off=Math.max(0,Math.min(maxScroll,off+dy*0.5)); movable.forEach((o,i)=>o.y=base[i]-off); });
+    }
+    this.details=c;
   }
 
   // ── Hover explanation popup ───────────────────────────────────────
@@ -221,6 +287,8 @@ class ProfileScene extends Phaser.Scene {
       greedFomo:{label:'FOMO-Reaktion',text:'FOMO = "Fear Of Missing Out", die Angst etwas zu verpassen. Misst, wie stark steigende Kurse dich zum Nachkaufen verleiten.'},
       reactionToNoise:{label:'Reaktion auf Nachrichten',text:'Wie stark Schlagzeilen deine Entscheidungen verändern. Niedrige Werte bedeuten, du hältst an deinem Plan fest.'},
       learning:{label:'Lernfähigkeit',text:'Ob du dein Verhalten anpasst, nachdem du Ergebnisse gesehen hast — ohne zu über- oder unterreagieren.'},
+      disposition:{label:'Gewinner verkaufen',text:'Ob du Gewinner zu fr\u00fch verkaufst und Verlierer h\u00e4ltst \u2014 oder den Kaufpreis entscheiden l\u00e4sst, obwohl nur die Zukunft z\u00e4hlt.'},
+      overconfidence:{label:'\u00dcberzuversicht',text:'Wie weit deine Sicherheit bei Prognosen \u00fcber deiner Trefferquote lag. Vier Prognosen beschreiben nur diese Sitzung.'},
       resilience:{label:'Resilienz',text:'Wie ruhig du in einem Abschwung bleibst und ob du deine Struktur intakt hältst, bis sich die Lage erholt.'}
     };
     return {
@@ -231,6 +299,8 @@ class ProfileScene extends Phaser.Scene {
       greedFomo:{label:'FOMO response',text:'FOMO means "Fear Of Missing Out". This measures how strongly rising prices tempt you to pile in after the gains have already happened.'},
       reactionToNoise:{label:'Reaction to news',text:'How much headlines change your decisions. Low scores mean you stick to your plan when the news gets loud.'},
       learning:{label:'Adaptability',text:'Whether you adjust your approach after seeing results — without overreacting to a single setback or success.'},
+      disposition:{label:'Selling winners early',text:'Whether you sell what is up and keep what is down \u2014 or let the price you paid decide, when only the future should matter.'},
+      overconfidence:{label:'Overconfidence',text:'How far your forecast confidence was above your actual hit rate. Four forecasts describe this session only.'},
       resilience:{label:'Resilience',text:'How steadily you behave during a downturn, and whether you keep your structure intact until conditions recover.'}
     };
   }
@@ -241,53 +311,10 @@ class ProfileScene extends Phaser.Scene {
     return v>=80?'Very high':v>=64?'High':v>=42?'Moderate':v>=26?'Low':'Very low';
   }
 
-  // Every score is either a number derived from an actual recorded choice,
-  // or null ("not observed"). Missing data never becomes a neutral 50.
   _computeScores() {
     const D=(typeof ScoringEngine!=='undefined'&&ScoringEngine.decisions)?ScoringEngine.decisions:[];
     const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
-    // Final (non-research) action for a level — research is tracked separately.
-    // Level 4's urgent-repair beat is context, not a patience signal.
-    const finalOf=n=>(D.filter(d=>d.level===n&&d.value!=='research'&&d.phase!=='repair').pop()||{}).value;
-    const researched=n=>D.some(d=>d.level===n&&d.value==='research');
-    const warnUnknown=(n,v)=>{ if(v!==undefined) console.warn('[WealthSim] Unrecognised action at level '+n+':',v); return null; };
-    const pick=(map,n)=>{ const v=finalOf(n); if(v===undefined) return null; return map[v]!==undefined?map[v]:warnUnknown(n,v); };
-    // Stated answer only nudges an observed score; it never creates one on its own.
-    const blend=(game,map,ans)=>{ if(game===null) return null; const st=map[ans]; return st===undefined?game:Math.round(game*0.8+st*0.2); };
-
-    const risk =blend(pick({safe:20,balanced:52,aggressive:88},1),{safe:20,balanced:52,aggressive:88},A[0]);
-    const loss =blend(pick({cancel:90,wait:70,continue:30,invest_more:12},2),{stop:90,wait:60,research:28},A[2]);
-    const pat  =blend(pick({festival:20,university:88},4),{impatient:20,moderate:55,patient:88},A[1]);
-    const greed=pick({all_in:95,increase:66,hold:26,reduce:12},5);
-    const resil=pick({hold:90,rebalance:86,opportunistic:76,safe_haven:44,sell_all:14},8);
-
-    // Level 6: the final choice is scored; reading the report is a separate observation.
-    const read6=researched(6), read7=researched(7);
-    let learn=pick({accept:60,independent:60,decline:50},6);
-    if (learn!==null && read6) learn=Math.min(100,learn+25);
-
-    // Level 7: every offered action has an explicit value. invest_more is a
-    // strong move against the headlines, i.e. also a reaction (contrarian).
-    let noise=pick({sell:90,reduce:56,hold:22,invest_more:70},7);
-    if (noise!==null && read7) noise=Math.max(6, noise-20);
-
-    let divers=null;
-    const l3=D.filter(d=>d.level===3);
-    if (l3.length) {
-      const counts={};
-      l3.forEach(d=>{const k=d.districtId||d.value;counts[k]=(counts[k]||0)+1;});
-      const vals=Object.values(counts), total=vals.reduce((a,b)=>a+b,0);
-      if(total>0){
-        const hhi=vals.reduce((s,v)=>s+Math.pow(v/total,2),0);
-        // Normalised against the most even allocation actually possible with
-        // six cubes over four districts (2/2/1/1, HHI = 0.2778) -> 100.
-        const minH=0.2778;
-        divers=Math.round(Math.max(0,Math.min(100,(1-hhi)/(1-minH)*100)));
-      }
-    }
-    return {riskPreference:risk,lossAversion:loss,patience:pat,diversification:divers,
-            greedFomo:greed,reactionToNoise:noise,learning:learn,resilience:resil,
-            _researched:read6||read7, _observed:[risk,loss,pat,divers,greed,noise,learn,resil].filter(v=>v!==null).length};
+    return Assessment.computeScores(D,A);
   }
 
   _assignPersona(s) {
@@ -301,17 +328,7 @@ class ProfileScene extends Phaser.Scene {
       reactor:{icon:'\uD83C\uDF0A',name:de?'Der Reaktor':'The Reactor',desc:de?'Deine Entscheidungen haben sich mit Schlagzeilen und Kursbewegungen verschoben. Ein schriftlicher Plan hilft in Druckmomenten.':'Your choices shifted with headlines and price moves. A written plan helps in moments of pressure.'},
       insufficient:{icon:'\u2026',name:de?'Zu wenig Daten':'Not enough evidence',desc:de?'Es wurden zu wenige Entscheidungen erfasst, um ein Muster zu beschreiben.':'Too few decisions were recorded to describe a pattern.'}
     };
-    const v=(k)=>s[k]; const has=(...k)=>k.every(x=>s[x]!==null&&s[x]!==undefined);
-    let key;
-    if (s._observed<4) key='insufficient';
-    else if (has('reactionToNoise','greedFomo') && v('reactionToNoise')>70 && v('greedFomo')>60) key='reactor';
-    else if (has('patience','greedFomo') && v('patience')<36 && v('greedFomo')>62) key='sprinter';
-    else if (has('riskPreference','lossAversion') && v('riskPreference')<36 && v('lossAversion')>64) key='guardian';
-    else if (has('riskPreference','greedFomo') && v('riskPreference')>68 && v('greedFomo')>58) key='challenger';
-    // Strategist claims patience, spreading AND information-seeking — each must be observed.
-    else if (has('patience','reactionToNoise','resilience','diversification') && v('patience')>62 && v('reactionToNoise')<42
-             && v('resilience')>62 && v('diversification')>=60 && s._researched) key='strategist';
-    else key='explorer';
+    const key=Assessment.personaKey(s);
     return Object.assign({key:key},P[key]);
   }
 
