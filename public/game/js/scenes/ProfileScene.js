@@ -15,9 +15,9 @@ class ProfileScene extends Phaser.Scene {
 
   _bg() {
     const g = this.add.graphics().setDepth(-5);
-    g.fillStyle(0x061019,1); g.fillRect(0,0,this.W,this.H);
+    g.fillStyle(0xfffbf1,1); g.fillRect(0,0,this.W,this.H);
     const sil = this.add.graphics().setDepth(-4);
-    sil.fillStyle(0x0b1725,1);
+    sil.fillStyle(0xf8f2df,1);
     for (let x=0; x<this.W; x+=Phaser.Math.Between(70,120)) {
       const h = Phaser.Math.Between(40,130);
       sil.fillRect(x, this.H-h, Phaser.Math.Between(55,100), h);
@@ -42,9 +42,9 @@ class ProfileScene extends Phaser.Scene {
     const objs=[];
     lines.forEach((txt,i)=>{
       const t=this.add.text(W/2, H/2 - this.s(76) + i*this.s(70), txt, {
-        fontFamily:'Playfair Display, Georgia, serif',
+        fontFamily:CityTheme.heading,
         fontSize: i===0 ? this.s(30) : this.s(20),
-        color: i===0 ? '#e2a840' : '#dbe8f4',
+        color: i===0 ? '#296b72' : '#294f52',
         align:'center', lineSpacing:this.s(9), wordWrap:{width:Math.min(this.s(900),W-this.s(120))}
       }).setOrigin(0.5).setDepth(100).setAlpha(0);
       objs.push(t);
@@ -55,7 +55,7 @@ class ProfileScene extends Phaser.Scene {
     const trans=this.add.text(W/2, H/2+this.s(150), de
       ? 'So wie beim Bauen einer Stadt geht es bei der Planung deiner Zukunft darum,\ndie richtige Balance für dich zu finden.'
       : 'Just like building a city, planning for your future is about\nfinding the right balance for you.', {
-      fontFamily:'Inter, Arial, sans-serif', fontSize:this.s(16), color:'#96b0c8',
+      fontFamily:CityTheme.body, fontSize:this.s(16), color:'#96b0c8',
       align:'center', lineSpacing:this.s(7), fontStyle:'italic'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:trans,alpha:1,duration:1300,delay:totalIn+700});
@@ -66,7 +66,7 @@ class ProfileScene extends Phaser.Scene {
     });
 
     const skip=this.add.text(W-this.s(30),H-this.s(26),de?'Überspringen \u203A':'Skip \u203A',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#456a8c'
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#456a8c'
     }).setOrigin(1,0.5).setDepth(120).setInteractive({useHandCursor:true});
     skip.on('pointerover',()=>skip.setColor('#a8c0d8'));
     skip.on('pointerout',()=>skip.setColor('#456a8c'));
@@ -83,23 +83,23 @@ class ProfileScene extends Phaser.Scene {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
 
     const head=this.add.text(cx,this.s(46),de?'Dein Entscheidungsstil':'Your Decision Style',{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(30),color:'#e2a840'
+      fontFamily:CityTheme.heading,fontSize:this.s(30),color:'#296b72'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:head,alpha:1,duration:900});
 
     const cardW=Math.min(this.s(620),W-this.s(90)), cardX=cx-cardW/2;
     const cardY=this.s(80), cardH=this.s(116);
     const card=this.add.graphics().setDepth(99).setAlpha(0);
-    card.fillStyle(0x0b1725,0.96); card.fillRoundedRect(cardX,cardY,cardW,cardH,this.s(14));
-    card.lineStyle(1,0x2c4767,1); card.strokeRoundedRect(cardX,cardY,cardW,cardH,this.s(14));
-    card.fillStyle(0xe2a840,0.9); card.fillRect(cardX,cardY,cardW,this.s(4));
+    card.fillStyle(0xf8f2df,0.96); card.fillRoundedRect(cardX,cardY,cardW,cardH,this.s(14));
+    card.lineStyle(1,0x7ca5a1,1); card.strokeRoundedRect(cardX,cardY,cardW,cardH,this.s(14));
+    card.fillStyle(0xe0a82e,0.9); card.fillRect(cardX,cardY,cardW,this.s(4));
     this.tweens.add({targets:card,alpha:1,duration:900,delay:250});
 
     const pIcon=this.add.text(cardX+this.s(42),cardY+this.s(58),this.persona.icon,{fontSize:this.s(36)}).setOrigin(0.5).setDepth(100).setAlpha(0);
     const pName=this.add.text(cardX+this.s(78),cardY+this.s(34),this.persona.name,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(23),color:'#f0c060'}).setDepth(100).setAlpha(0);
+      fontFamily:CityTheme.heading,fontSize:this.s(23),color:'#9b6c12'}).setDepth(100).setAlpha(0);
     const pDesc=this.add.text(cardX+this.s(78),cardY+this.s(64),this.persona.desc,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#b0c6da',
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#365d60',
       wordWrap:{width:cardW-this.s(110)},lineSpacing:this.s(5)}).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[pIcon,pName,pDesc],alpha:1,duration:900,delay:500});
 
@@ -118,17 +118,17 @@ class ProfileScene extends Phaser.Scene {
       const info=T[key];
 
       const lb=this.add.text(bx,by,info.label,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#a8c0d8'
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#a8c0d8'
       }).setDepth(100).setAlpha(0);
       const q=this.add.text(bx+lb.width+this.s(7),by+this.s(1),'\u24D8',{
         fontFamily:'Arial, sans-serif',fontSize:this.s(13),color:'#3f6288'
       }).setDepth(100).setAlpha(0);
       const missing=(val===null||val===undefined);
       const vt=this.add.text(bx+colW,by,missing?(de?'Nicht beobachtet':'Not observed'):this._label(val),{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:missing?'#5a7d9e':'#e2a840',fontStyle:'700'
+        fontFamily:CityTheme.body,fontSize:this.s(13),color:missing?'#55777a':'#296b72',fontStyle:'700'
       }).setOrigin(1,0).setDepth(100).setAlpha(0);
       const bg=this.add.graphics().setDepth(99).setAlpha(0);
-      bg.fillStyle(0x152744,1); bg.fillRoundedRect(bx,by+this.s(22),colW,this.s(8),this.s(4));
+      bg.fillStyle(0xdce9df,1); bg.fillRoundedRect(bx,by+this.s(22),colW,this.s(8),this.s(4));
       const fl=this.add.graphics().setDepth(100).setAlpha(0);
 
       this.tweens.add({targets:[lb,q,vt,bg,fl],alpha:1,duration:550,delay:800+i*95});
@@ -145,7 +145,7 @@ class ProfileScene extends Phaser.Scene {
       // Hover zone across the whole row
       const hit=this.add.rectangle(bx+colW/2,by+this.s(14),colW,this.s(38),0xffffff,0)
         .setInteractive({useHandCursor:true}).setDepth(102);
-      hit.on('pointerover',()=>{ q.setColor('#e2a840'); this._showTip(info.label, info.text, bx+colW/2, by); });
+      hit.on('pointerover',()=>{ q.setColor('#296b72'); this._showTip(info.label, info.text, bx+colW/2, by); });
       hit.on('pointerout', ()=>{ q.setColor('#3f6288'); this._hideTip(); });
     });
 
@@ -153,11 +153,11 @@ class ProfileScene extends Phaser.Scene {
     const noteY=startY+Math.ceil(keys.length/2)*rowH+this.s(14);
     const nW=Math.min(this.s(760),W-this.s(110));
     const nBg=this.add.graphics().setDepth(99).setAlpha(0);
-    nBg.fillStyle(0x0b1725,0.92); nBg.fillRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
-    nBg.lineStyle(1,0x2c4767,1); nBg.strokeRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
-    nBg.lineStyle(this.s(4),0x4ecdc4,0.75); nBg.lineBetween(cx-nW/2,noteY+this.s(12),cx-nW/2,noteY+this.s(66));
+    nBg.fillStyle(0xf8f2df,0.92); nBg.fillRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
+    nBg.lineStyle(1,0x7ca5a1,1); nBg.strokeRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
+    nBg.lineStyle(this.s(4),0x296b72,0.75); nBg.lineBetween(cx-nW/2,noteY+this.s(12),cx-nW/2,noteY+this.s(66));
     const nTx=this.add.text(cx,noteY+this.s(39),this._contextNote(window.retirementContext||{},de),{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#c0d4e6',
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#c0d4e6',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(6)
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[nBg,nTx],alpha:1,duration:900,delay:1700});
@@ -167,24 +167,24 @@ class ProfileScene extends Phaser.Scene {
     const ret=this._retirementLines(de);
     const rBg=this.add.graphics().setDepth(99).setAlpha(0);
     const rTx=this.add.text(cx,retY+this.s(14),ret.body,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#b8cde0',
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#b8cde0',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(5)
     }).setOrigin(0.5,0).setDepth(100).setAlpha(0);
     const rH=rTx.height+this.s(58);
-    rBg.fillStyle(0x0b1725,0.92); rBg.fillRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
-    rBg.lineStyle(1,0x2c4767,1); rBg.strokeRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
-    rBg.lineStyle(this.s(4),0xe2a840,0.75); rBg.lineBetween(cx-nW/2,retY+this.s(12),cx-nW/2,retY+rH-this.s(12));
+    rBg.fillStyle(0xf8f2df,0.92); rBg.fillRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(1,0x7ca5a1,1); rBg.strokeRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(this.s(4),0xe0a82e,0.75); rBg.lineBetween(cx-nW/2,retY+this.s(12),cx-nW/2,retY+rH-this.s(12));
     // Status badges row
     const badgeY=retY+rTx.height+this.s(24);
     let bxOff=cx-(ret.badges.length*this.s(118))/2;
     const badgeObjs=[];
     ret.badges.forEach(b=>{
-      const col=b.status==='LAW'?0x4ecdc4:(b.status==='EFFECTIVE 2027'?0xe2a840:0x7fa6c9);
+      const col=b.status==='LAW'?0x296b72:(b.status==='EFFECTIVE 2027'?0xe0a82e:0x7fa6c9);
       const bg=this.add.graphics().setDepth(100).setAlpha(0);
       bg.fillStyle(col,0.16); bg.fillRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
       bg.lineStyle(1,col,0.8); bg.strokeRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
       const bt=this.add.text(bxOff+this.s(55),badgeY+this.s(10),b.status,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(10),color:'#dbe8f4',fontStyle:'700'
+        fontFamily:CityTheme.body,fontSize:this.s(10),color:'#294f52',fontStyle:'700'
       }).setOrigin(0.5).setDepth(100).setAlpha(0);
       badgeObjs.push(bg,bt);
       bxOff+=this.s(118);
@@ -194,27 +194,27 @@ class ProfileScene extends Phaser.Scene {
     const disc=this.add.text(cx,retY+rH+this.s(14),de
       ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung. Rentenangaben zuletzt geprüft: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—')
       : 'This profile reflects this session only. It is not financial advice. Pension facts last verified: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—'),{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#456a8c',align:'center'
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#456a8c',align:'center'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
     // Buttons: Play Again + real-world CTA adapted to the player's situation
     const bY=retY+rH+this.s(40), bW=this.s(220), bH=this.s(48), gap=this.s(20);
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
-    btnBg.fillStyle(0xe2a840,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
+    btnBg.fillStyle(0xe0a82e,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
     const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(18),color:'#0b1725',fontStyle:'700'
+      fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     const ctaLabel=this._ctaLabel(de);
     const ctaTx=this.add.text(0,0,ctaLabel,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#4ecdc4',fontStyle:'600'
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     const ctaW=Math.min(Math.max(bW,ctaTx.width+this.s(32)),W/2-this.s(30));
     const ctaX=Math.min(cx+gap/2, W-ctaW-this.s(16));
     ctaTx.setPosition(ctaX+ctaW/2,bY+bH/2);
     const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
-    ctaBg.fillStyle(0x0b1725,1); ctaBg.fillRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
-    ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
+    ctaBg.fillStyle(0xf8f2df,1); ctaBg.fillRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
+    ctaBg.lineStyle(1,0x296b72,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); if(typeof AskResults!=='undefined') AskResults.reset(); this.scene.start('PlayerSetup'); });
@@ -229,19 +229,19 @@ class ProfileScene extends Phaser.Scene {
   _detailsButton(de) {
     const lbl=de?'\u24D8  So entstand dein Ergebnis':'\u24D8  How we got this result';
     const t=this.add.text(this.W-this.s(20),this.s(20),lbl,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#e2a840',fontStyle:'600',
-      backgroundColor:'#0b1725',padding:{x:this.s(12),y:this.s(8)}
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
+      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
     }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
     this.tweens.add({targets:t,alpha:1,duration:800,delay:2400});
-    t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#e2a840'));
+    t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#296b72'));
     t.on('pointerdown',()=>this._openDetails(de));
     if (typeof AskResults==='undefined') return;
     const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'?  Frag nach deinem Ergebnis':'?  Ask about my result',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#e2a840',fontStyle:'600',
-      backgroundColor:'#0b1725',padding:{x:this.s(12),y:this.s(8)}
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
+      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
     }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
     this.tweens.add({targets:a,alpha:1,duration:800,delay:2600});
-    a.on('pointerover',()=>a.setColor('#ffe090')); a.on('pointerout',()=>a.setColor('#e2a840'));
+    a.on('pointerover',()=>a.setColor('#ffe090')); a.on('pointerout',()=>a.setColor('#296b72'));
     a.on('pointerdown',()=>{ this._hideTip(); AskResults.open(this._askContext(), de); });
     this.events.once('shutdown',()=>AskResults.close());
   }
@@ -268,13 +268,13 @@ class ProfileScene extends Phaser.Scene {
     const bw=Math.min(this.s(980),W-this.s(40)), bh=H-this.s(40), bx=(W-bw)/2, by=this.s(20);
     const box=this.add.graphics();
     box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
-    box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
+    box.lineStyle(1,0xe0a82e,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(22),color:'#e2a840'});
+      fontFamily:CityTheme.heading,fontSize:this.s(22),color:'#296b72'});
     const intro=this.add.text(bx+this.s(26),by+this.s(52),de
       ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet. Risiko, Verlustaversion und Geduld mischen 90% Spielverhalten mit 10% deiner Startantworten; die anderen fünf Merkmale stammen zu 100% aus dem Spiel. Marktereignisse variieren zwischen Durchgängen — rohe Ergebnisse sind nicht direkt vergleichbar; bewertet werden deine Entscheidungen in den Situationen, denen du begegnet bist. Dies ist eine pädagogische Deutung dieser Sitzung.'
       :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored. Risk, loss aversion and patience blend 90% gameplay with 10% of your starting answers; the other five traits come from gameplay alone. Market events vary between runs, so raw outcomes are not directly comparable — what is assessed is your decisions in the situations you encountered. This is an educational interpretation of this session.',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
     // Factual record first: what actually happened, in order, with no
@@ -283,10 +283,10 @@ class ProfileScene extends Phaser.Scene {
     let rowsTop=intro.y+intro.height+this.s(16);
     if (tl.length) {
       const tlHd=this.add.text(bx+this.s(26),rowsTop,de?'Was du getan hast':'What you did, in order',{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#f0c060',fontStyle:'700'});
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
       const tlBody=this.add.text(bx+this.s(26),tlHd.y+tlHd.height+this.s(6),
         tl.map(e=>'Level '+e.level+' \u2014 '+e.text).join('\n'),{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#c8dcee',
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#c8dcee',
         wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(4)});
       c.add([tlHd,tlBody]);
       rowsTop=tlBody.y+tlBody.height+this.s(18);
@@ -294,11 +294,11 @@ class ProfileScene extends Phaser.Scene {
     let y=[rowsTop,rowsTop];
     rows.forEach((r,i)=>{
       const col=i%2, x=bx+this.s(26)+col*(colW+this.s(26));
-      const hd=this.add.text(x,y[col],r.trait,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#f0c060',fontStyle:'700'});
+      const hd=this.add.text(x,y[col],r.trait,{fontFamily:CityTheme.body,fontSize:this.s(13),color:'#9b6c12',fontStyle:'700'});
       const did=this.add.text(x,y[col]+hd.height+this.s(3),r.did||(de?'Nicht beobachtet in dieser Sitzung.':'Not observed in this session.'),{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:r.did?'#dbe8f4':'#5a7d9e',wordWrap:{width:colW}});
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:r.did?'#294f52':'#55777a',wordWrap:{width:colW}});
       const how=this.add.text(x,did.y+did.height+this.s(2),r.how,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#7d97b3',fontStyle:'italic',wordWrap:{width:colW}});
+        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#7d97b3',fontStyle:'italic',wordWrap:{width:colW}});
       c.add([hd,did,how]);
       y[col]=how.y+how.height+this.s(12);
     });
@@ -308,18 +308,18 @@ class ProfileScene extends Phaser.Scene {
     if (Assessment.RESEARCH) {
       let my=Math.max(y[0],y[1])+this.s(10);
       const mHd=this.add.text(bx+this.s(26),my,de?'Methode und Grenzen':'Method and limits',{
-        fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(17),color:'#e2a840'});
+        fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72'});
       const mNote=this.add.text(bx+this.s(26),mHd.y+mHd.height+this.s(6),Assessment.RESEARCH_NOTE,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#8fa9c2',
+        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#8fa9c2',
         fontStyle:'italic',wordWrap:{width:bw-this.s(60)}});
       c.add([mHd,mNote]);
       my=mNote.y+mNote.height+this.s(10);
       Assessment.RESEARCH.forEach(r=>{
         const rh=this.add.text(bx+this.s(26),my,r.concept,{
-          fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#f0c060',fontStyle:'700'});
+          fontFamily:CityTheme.body,fontSize:this.s(12),color:'#9b6c12',fontStyle:'700'});
         const rb=this.add.text(bx+this.s(26),rh.y+rh.height+this.s(2),
           (de?'Forschung: ':'Research: ')+r.finding+'\n'+(de?'Im Spiel: ':'In the game: ')+r.mechanic+'\n'+(de?'Grenze: ':'Limit: ')+r.limit,{
-          fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#a8c0d8',
+          fontFamily:CityTheme.body,fontSize:this.s(11),color:'#a8c0d8',
           wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(3)});
         c.add([rh,rb]);
         my=rb.y+rb.height+this.s(10);
@@ -329,9 +329,9 @@ class ProfileScene extends Phaser.Scene {
     const foot=this.add.text(bx+this.s(26),by+bh-this.s(30),de
       ?'Nur diese Sitzung. Keine Diagnose und keine Finanzberatung.'
       :'This session only. Not a diagnosis and not financial advice.',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#456a8c'});
+      fontFamily:CityTheme.body,fontSize:this.s(11),color:'#456a8c'});
     const close=this.add.text(bx+bw-this.s(20),by+this.s(18),de?'Schlie\u00dfen \u2715':'Close \u2715',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#a8c0d8'}).setOrigin(1,0).setInteractive({useHandCursor:true});
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#a8c0d8'}).setOrigin(1,0).setInteractive({useHandCursor:true});
     close.on('pointerover',()=>close.setColor('#ffffff')); close.on('pointerout',()=>close.setColor('#a8c0d8'));
     close.on('pointerdown',()=>{ c.destroy(); this.details=null; });
     c.add([foot,close]);
@@ -353,9 +353,9 @@ class ProfileScene extends Phaser.Scene {
     const tw=Math.min(this.s(340),this.W-this.s(60));
     const pad=this.s(14);
     const tTitle=this.add.text(0,0,title,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#f0c060',fontStyle:'700'});
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
     const tBody=this.add.text(0,0,body,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#b8cde0',
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#b8cde0',
       wordWrap:{width:tw-pad*2},lineSpacing:this.s(5)});
     const th = pad*2 + tTitle.height + this.s(6) + tBody.height;
     let tx = x - tw/2;
@@ -364,9 +364,9 @@ class ProfileScene extends Phaser.Scene {
     if (ty < this.s(10)) ty = y + this.s(48);
 
     const bg=this.add.graphics();
-    bg.fillStyle(0x040c16,0.98); bg.fillRoundedRect(tx,ty,tw,th,this.s(10));
-    bg.lineStyle(1,0xe2a840,0.65); bg.strokeRoundedRect(tx,ty,tw,th,this.s(10));
-    bg.lineStyle(this.s(3),0xe2a840,0.7); bg.lineBetween(tx,ty+this.s(10),tx,ty+th-this.s(10));
+    bg.fillStyle(0xe8f1e9,0.98); bg.fillRoundedRect(tx,ty,tw,th,this.s(10));
+    bg.lineStyle(1,0xe0a82e,0.65); bg.strokeRoundedRect(tx,ty,tw,th,this.s(10));
+    bg.lineStyle(this.s(3),0xe0a82e,0.7); bg.lineBetween(tx,ty+this.s(10),tx,ty+th-this.s(10));
     tTitle.setPosition(tx+pad, ty+pad);
     tBody.setPosition(tx+pad, ty+pad+tTitle.height+this.s(6));
 
