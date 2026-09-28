@@ -55,9 +55,9 @@ class ProfileScene extends Phaser.Scene {
         align:'center', lineSpacing:this.s(9), wordWrap:{width:Math.min(this.s(900),W-this.s(120))}
       }).setOrigin(0.5).setDepth(100).setAlpha(0);
       objs.push(t);
-      this.tweens.add({targets:t,alpha:1,y:t.y-this.s(9),duration:1400,delay:600+i*2600,ease:'Sine.easeOut'});
+      this.tweens.add({targets:t,alpha:1,y:t.y-this.s(9),duration:1120,delay:480+i*2080,ease:'Sine.easeOut'});
     });
-    const totalIn = 600 + (lines.length-1)*2600 + 1400;
+    const totalIn = 480 + (lines.length-1)*2080 + 1120;
 
     const trans=this.add.text(W/2, H/2+this.s(150), de
       ? 'So wie beim Bauen einer Stadt geht es bei der Planung deiner Zukunft darum,\ndie richtige Balance für dich zu finden.'
@@ -65,10 +65,10 @@ class ProfileScene extends Phaser.Scene {
       fontFamily:CityTheme.body, fontSize:this.s(16), color:'#96b0c8',
       align:'center', lineSpacing:this.s(7), fontStyle:'italic'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
-    this.tweens.add({targets:trans,alpha:1,duration:1300,delay:totalIn+700});
+    this.tweens.add({targets:trans,alpha:1,duration:1040,delay:totalIn+560});
 
-    this.time.delayedCall(totalIn+4200,()=>{
-      this.tweens.add({targets:objs.concat([trans]),alpha:0,duration:1500,
+    this.time.delayedCall(totalIn+3360,()=>{
+      this.tweens.add({targets:objs.concat([trans]),alpha:0,duration:1200,
         onComplete:()=>{objs.forEach(o=>o.destroy());trans.destroy();this._dashboard();}});
     });
 
