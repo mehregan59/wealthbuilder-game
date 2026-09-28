@@ -51,6 +51,9 @@ class PlayerSetup extends Phaser.Scene {
     t.on('pointerover',()=>t.setColor('#c8d4e8'));
     t.on('pointerout',()=>t.setColor('#6b8aaa'));
     t.on('pointerdown',()=>{ this._skipped=true; this._goNext(); });
+  }
+
+
 
   _drawStepDots(active) {
     const cx=this.W/2,steps=3,spacing=28;
