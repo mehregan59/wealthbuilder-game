@@ -14,7 +14,7 @@ class District {
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
-    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?88:this.id==='energy'?78:62):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
+    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
     // High-contrast card: a busy drawn city behind it must never make the
     // district name hard to read.
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);
@@ -196,7 +196,7 @@ class District {
       this._poly(g,[P(gx,gy,.05),P(gx+.28,gy,.05),P(gx+.28,gy+.14,.2),P(gx,gy+.14,.2)],0x24506a,1);
       g.lineStyle(1,0x7fc6d6,.7);g.beginPath();g.moveTo(this.ix(gx+.14,gy),this.iy(gx+.14,gy,.05));g.lineTo(this.ix(gx+.14,gy+.14),this.iy(gx+.14,gy+.14,.2));g.strokePath();}}
     this._box(1.55,1.35,.45,.4,.34,0xe3bd55,0x77602b,0xa88732);
-    this.turbinePos=[];for(let i=0;i<Math.min(1+st,4);i++){const gx=1.5+(i%2)*.55,gy=1.9+Math.floor(i/2)*.4,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
+    this.turbinePos=[];for(let i=0;i<Math.min(1+st,4);i++){const gx=-.2+i*.6,gy=-.45,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
   }
   _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.cx,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide();});this.hitZone.on('pointerdown',()=>{if(this.selectable&&this.onSelect)this.onSelect(this);});}
   setSelectable(on,cb){this.selectable=on;this.onSelect=cb||null;if(on)this._pulseOn();else this._pulseOff();}
@@ -216,7 +216,7 @@ class District {
   _cracks(){for(let i=0;i<3;i++){const c=this.scene.add.graphics().setDepth(20),x=this.cx+Phaser.Math.Between(-50,50),y=this.cy+Phaser.Math.Between(-12,30);c.lineStyle(this.s(2),0xc85848,.9);c.beginPath();c.moveTo(x,y);c.lineTo(x+Phaser.Math.Between(-12,12),y+this.s(15));c.strokePath();this.scene.tweens.add({targets:c,alpha:0,duration:2400,delay:500,onComplete:()=>c.destroy()});}}
   celebrate(){this._construction();}
   setStorm(on){this.scene.tweens.add({targets:[this.gfx,this.animGfx],alpha:on?.48:1,duration:1200});this.scene.tweens.add({targets:this.labelContainer,alpha:on?.65:1,duration:1200});}
-  update(time,delta){this.animTime+=delta;this.animGfx.clear();this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
+  update(time,delta){this.animTime+=delta;this.animGfx.clear();if(!(this.scene.hasMetro&&this.id==='energy'))this._updateCitizens(delta);if(this.id==='energy')this._blades(delta);}
   _blades(delta){if(!this.turbinePos)return;this.turbineAngle+=delta*.0026;const g=this.animGfx;this.turbinePos.forEach((t,i)=>{const a0=this.turbineAngle+i*.6;g.fillStyle(0xf4f5ef,1);for(let b=0;b<3;b++){const a=a0+b*Math.PI*2/3;g.beginPath();g.moveTo(t.x,t.y);g.lineTo(t.x+Math.cos(a)*this.s(13),t.y+Math.sin(a)*this.s(13));g.lineTo(t.x+Math.cos(a+.27)*this.s(10),t.y+Math.sin(a+.27)*this.s(10));g.closePath();g.fillPath();}g.fillStyle(0x6f8786,1);g.fillCircle(t.x,t.y,this.s(2.2));});}
   getName(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.nameDE:this.name;}
   getTooltip(){return (typeof currentLang!=='undefined'&&currentLang==='de')?this.tooltipDE:this.tooltip;}
