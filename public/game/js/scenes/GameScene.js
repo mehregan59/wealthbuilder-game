@@ -700,6 +700,7 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(UNI_START,()=>{
           this._tempMessage('The Research University opens its doors.\nGraduates create companies. Income rises. Your patience pays off.',UNI_HOLD,UNI_FADE);
           this.districts[0].receiveResource(2); this.districts[1].receiveResource(1);
+          this._addLandmark(this.districts[2],'\uD83C\uDF93','University open',0x4ecdc4);
           this._updateStats(10,15,0);
         });
       }
