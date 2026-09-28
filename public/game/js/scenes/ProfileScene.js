@@ -149,7 +149,7 @@ class ProfileScene extends Phaser.Scene {
       hit.on('pointerout', ()=>{ q.setColor('#3f6288'); this._hideTip(); });
     });
 
-    // Retirement note
+    // Retirement note (existing context note) + new retirement section
     const noteY=startY+Math.ceil(keys.length/2)*rowH+this.s(14);
     const nW=Math.min(this.s(760),W-this.s(110));
     const nBg=this.add.graphics().setDepth(99).setAlpha(0);
@@ -162,22 +162,64 @@ class ProfileScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[nBg,nTx],alpha:1,duration:900,delay:1700});
 
-    const disc=this.add.text(cx,noteY+this.s(98),de
-      ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung.'
-      : 'This profile reflects this session only. It is not financial advice.',{
+    // ── Retirement in Germany: personalised, badged, educational ──
+    const retY=noteY+this.s(92);
+    const ret=this._retirementLines(de);
+    const rBg=this.add.graphics().setDepth(99).setAlpha(0);
+    const rTx=this.add.text(cx,retY+this.s(14),ret.body,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#b8cde0',
+      align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(5)
+    }).setOrigin(0.5,0).setDepth(100).setAlpha(0);
+    const rH=rTx.height+this.s(58);
+    rBg.fillStyle(0x0b1725,0.92); rBg.fillRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(1,0x2c4767,1); rBg.strokeRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(this.s(4),0xe2a840,0.75); rBg.lineBetween(cx-nW/2,retY+this.s(12),cx-nW/2,retY+rH-this.s(12));
+    // Status badges row
+    const badgeY=retY+rTx.height+this.s(24);
+    let bxOff=cx-(ret.badges.length*this.s(118))/2;
+    const badgeObjs=[];
+    ret.badges.forEach(b=>{
+      const col=b.status==='LAW'?0x4ecdc4:(b.status==='EFFECTIVE 2027'?0xe2a840:0x7fa6c9);
+      const bg=this.add.graphics().setDepth(100).setAlpha(0);
+      bg.fillStyle(col,0.16); bg.fillRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
+      bg.lineStyle(1,col,0.8); bg.strokeRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
+      const bt=this.add.text(bxOff+this.s(55),badgeY+this.s(10),b.status,{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(10),color:'#dbe8f4',fontStyle:'700'
+      }).setOrigin(0.5).setDepth(100).setAlpha(0);
+      badgeObjs.push(bg,bt);
+      bxOff+=this.s(118);
+    });
+    this.tweens.add({targets:[rBg,rTx].concat(badgeObjs),alpha:1,duration:900,delay:1900});
+
+    const disc=this.add.text(cx,retY+rH+this.s(14),de
+      ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung. Rentenangaben zuletzt geprüft: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—')
+      : 'This profile reflects this session only. It is not financial advice. Pension facts last verified: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—'),{
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#456a8c',align:'center'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
-    const bY=noteY+this.s(126), bW=this.s(220), bH=this.s(48);
+    // Buttons: Play Again + real-world CTA adapted to the player's situation
+    const bY=retY+rH+this.s(40), bW=this.s(220), bH=this.s(48), gap=this.s(20);
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
-    btnBg.fillStyle(0xe2a840,1); btnBg.fillRoundedRect(cx-bW/2,bY,bW,bH,this.s(11));
-    const btnTx=this.add.text(cx,bY+bH/2,de?'Nochmal spielen':'Play Again',{
+    btnBg.fillStyle(0xe2a840,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
+    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(18),color:'#0b1725',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
-    this.tweens.add({targets:[btnBg,btnTx],alpha:1,duration:800,delay:2300});
-    const hit=this.add.rectangle(cx,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
+    const ctaLabel=this._ctaLabel(de);
+    const ctaTx=this.add.text(0,0,ctaLabel,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#4ecdc4',fontStyle:'600'
+    }).setOrigin(0.5).setDepth(100).setAlpha(0);
+    const ctaW=Math.min(Math.max(bW,ctaTx.width+this.s(32)),W/2-this.s(30));
+    const ctaX=Math.min(cx+gap/2, W-ctaW-this.s(16));
+    ctaTx.setPosition(ctaX+ctaW/2,bY+bH/2);
+    const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
+    ctaBg.fillStyle(0x0b1725,1); ctaBg.fillRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
+    ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
+    this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
+    const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
+    const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
+    ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
     this._detailsButton(de);
     console.log('[WealthSim] Scores:',this.scores,'Persona:',this.persona.key);
@@ -211,12 +253,13 @@ class ProfileScene extends Phaser.Scene {
     const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(22),color:'#e2a840'});
     const intro=this.add.text(bx+this.s(26),by+this.s(52),de
-      ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet.'
-      :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored.',{
+      ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet. Risiko, Verlustaversion und Geduld mischen 90% Spielverhalten mit 10% deiner Startantworten; die anderen fünf Merkmale stammen zu 100% aus dem Spiel. Marktereignisse variieren zwischen Durchgängen — rohe Ergebnisse sind nicht direkt vergleichbar; bewertet werden deine Entscheidungen in den Situationen, denen du begegnet bist. Dies ist eine pädagogische Deutung dieser Sitzung.'
+      :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored. Risk, loss aversion and patience blend 90% gameplay with 10% of your starting answers; the other five traits come from gameplay alone. Market events vary between runs, so raw outcomes are not directly comparable — what is assessed is your decisions in the situations you encountered. This is an educational interpretation of this session.',{
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
-    let y=[by+this.s(86),by+this.s(86)];
+    const rowsTop=intro.y+intro.height+this.s(16);
+    let y=[rowsTop,rowsTop];
     rows.forEach((r,i)=>{
       const col=i%2, x=bx+this.s(26)+col*(colW+this.s(26));
       const hd=this.add.text(x,y[col],r.trait,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#f0c060',fontStyle:'700'});
@@ -277,6 +320,54 @@ class ProfileScene extends Phaser.Scene {
     this.tweens.add({targets:this.tip,alpha:1,duration:160});
   }
   _hideTip(){ if(this.tip){this.tweens.killTweensOf(this.tip);this.tip.destroy();this.tip=null;} }
+
+  // ── Retirement section helpers ──────────────────────────────────
+  _weakestTrait() {
+    // Lowest observed, gameplay-derived trait — never a blended one.
+    const keys=['lossAversion','patience','diversification','greedFomo','reactionToNoise','resilience','disposition','overconfidence','riskPreference','learning'];
+    let best=null;
+    keys.forEach(k=>{ const v=this.scores[k]; if(v!==null&&v!==undefined&&(best===null||v<this.scores[best])) best=k; });
+    return best;
+  }
+
+  _retirementLines(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    const info=window.playerInfo||{};
+    const lang=de?'de':'en';
+    if(!PC) return {body:'',badges:[]};
+    const parts=[];
+    // Age framing (narrative only)
+    const age=info.age||'';
+    const ageKey=(age==='18-27'||age==='28-37')?'young':(age==='38-47'?'mid':'older');
+    parts.push(PC.ageFraming[ageKey][lang]);
+    // Employment framing — all three pillars always stay visible
+    const emp=PC.employmentFraming[info.employment]||PC.employmentFraming.other;
+    parts.push(emp[lang]);
+    parts.push(PC.pillarsNote[lang]);
+    // Reform stakes (conditional language — still a proposal)
+    parts.push(PC.items.reform2027[lang]);
+    // Weakest observed trait → training direction (existing levels only)
+    const w=this._weakestTrait();
+    if(w&&PC.training[w]) parts.push(PC.training[w][lang]);
+    const badges=[PC.items.rentenniveau48,PC.items.fruhstartRente,PC.items.retirementAge,PC.items.target70]
+      .map(i=>({status:PC.STATUS[i.status]||i.status}));
+    return {body:parts.join('\n'),badges};
+  }
+
+  _ctaLabel(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    const emp=(window.playerInfo||{}).employment||'other';
+    if(!PC) return de?'Meine Renteninformation lesen':'Read my pension information';
+    return (PC.cta[emp]||PC.cta.other)[de?'de':'en'];
+  }
+
+  _ctaBody(de) {
+    const PC=typeof PensionContent!=='undefined'?PensionContent:null;
+    if(!PC) return '';
+    const lang=de?'de':'en';
+    return [PC.items.rentenniveau48[lang],PC.items.fruhstartRente[lang],PC.items.retirementAge[lang],PC.items.target70[lang]].join('\n\n')
+      + (de?'\n\nBildung, keine Produktempfehlung.':'\n\nEducation, not a product recommendation.');
+  }
 
   _traitInfo(de) {
     if (de) return {

@@ -4,6 +4,7 @@ const SCRIPTS = [
   "i18n",
   "scoring",
   "assessment",
+  "pensionContent",
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",

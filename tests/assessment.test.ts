@@ -43,6 +43,49 @@ describe("level wiring", () => {
   });
 });
 
+describe("90/10 blend", () => {
+  it("risk: gameplay 90%, stated answer 10%", () => {
+    // safe gameplay (20) + aggressive stated (88) -> 20*0.9 + 88*0.1 = 26.8 -> 27
+    expect(A.computeScores([{ level: 1, value: "safe" }], ["aggressive"]).riskPreference).toBe(27);
+  });
+  it("patience: gameplay 90%, stated answer 10%", () => {
+    // university (88) + impatient stated (20) -> 88*0.9 + 20*0.1 = 81.2 -> 81
+    expect(A.computeScores([{ level: 4, value: "university", phase: "build" }], [undefined, "impatient"]).patience).toBe(81);
+  });
+  it("loss aversion: gameplay 90%, stated answer 10%", () => {
+    // continue dip (30) + stop stated (90) -> 30*0.9 + 90*0.1 = 36
+    expect(A.computeScores([{ level: 2, value: "continue", phase: "dip" }], [undefined, undefined, "stop"]).lossAversion).toBe(36);
+  });
+  it("skipped starting answer -> gameplay only, no invented preference", () => {
+    expect(A.computeScores([{ level: 1, value: "safe" }], []).riskPreference).toBe(20);
+  });
+  it("other traits are 100% gameplay regardless of answers", () => {
+    const s = A.computeScores([{ level: 5, value: "hold" }], ["aggressive", "impatient", "stop"]);
+    expect(s.greedFomo).toBe(26);
+  });
+});
+
+describe("pension content", () => {
+  const PC = load("pensionContent.js", "PensionContent");
+  it("has exactly three badge states", () => {
+    expect(Object.keys(PC.STATUS)).toEqual(["LAW", "EFFECTIVE_2027", "PROPOSAL"]);
+  });
+  it("proposals never carry an EFFECTIVE 2027 badge", () => {
+    expect(PC.items.fruhstartRente.status).toBe("PROPOSAL");
+    expect(PC.items.retirementAge.status).toBe("PROPOSAL");
+    expect(PC.items.target70.status).toBe("PROPOSAL");
+  });
+  it("Generationenkapital is omitted", () => {
+    expect(JSON.stringify(PC.items)).not.toContain("enerationenkapital");
+  });
+  it("every item and framing exists in both languages with a verified date", () => {
+    for (const k of Object.keys(PC.items)) { expect(PC.items[k].en).toBeTruthy(); expect(PC.items[k].de).toBeTruthy(); }
+    for (const k of Object.keys(PC.training)) { expect(PC.training[k].en).toBeTruthy(); expect(PC.training[k].de).toBeTruthy(); }
+    for (const k of Object.keys(PC.cta)) { expect(PC.cta[k].en).toBeTruthy(); expect(PC.cta[k].de).toBeTruthy(); }
+    expect(PC.lastVerified).toMatch(/^\d{4}-\d{2}-\d{2}$/);
+  });
+});
+
 describe("level 3 exposure", () => {
   it("losses scale with exposure", () => {
     expect(A.level3Loss(0)).toEqual({ exposed: 0, lost: 0 });
