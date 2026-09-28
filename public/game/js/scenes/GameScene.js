@@ -303,10 +303,11 @@ class GameScene extends Phaser.Scene {
 
   _choiceLabel(x,y,text,color) {
     const c=this.add.container(x,y).setDepth(14);
-    const t=this.add.text(0,0,text,{fontFamily:CityTheme.body,fontSize:this.s(13),color:'#173b40',fontStyle:'600'}).setOrigin(0.5);
-    const w=t.width+this.s(22), h=this.s(25);
+    const t=this.add.text(0,0,text,{fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'700'}).setOrigin(0.5);
+    const w=t.width+this.s(24), h=this.s(28);
     const bg=this.add.graphics();
-    bg.fillStyle(color,0.32); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
+    bg.fillStyle(0x10282a,0.25); bg.fillRoundedRect(-w/2+this.s(2),-h/2+this.s(3),w,h,h/2);
+    bg.fillStyle(0xfffbf1,0.98); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
     bg.lineStyle(this.s(1.6),color,0.95); bg.strokeRoundedRect(-w/2,-h/2,w,h,h/2);
     c.add([bg,t]); c.setAlpha(0); c.setScale(0.8);
     this.tweens.add({targets:c,alpha:1,scaleX:1,scaleY:1,duration:400,ease:'Back.easeOut'});
@@ -905,8 +906,11 @@ class GameScene extends Phaser.Scene {
       fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',
       align:'center',wordWrap:{width:Math.min(this.s(760),this._availW())},
       backgroundColor:'#fffbf1',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5),stroke:'#fffbf1',strokeThickness:1
-    }).setOrigin(0.5).setDepth(48).setAlpha(0);
-    this.tweens.add({targets:this.persistentMsg,alpha:1,y:y,duration:600});
+    }).setOrigin(0.5,0).setDepth(48).setAlpha(0);
+    // Anchor the top edge under the header so multi-line text is never cut off.
+    const top=y-this.s(14);
+    this.persistentMsg.y=top-this.s(6);
+    this.tweens.add({targets:this.persistentMsg,alpha:1,y:top,duration:600});
   }
   _clearPersistentMessage(){ if(this.persistentMsg){this.tweens.killTweensOf(this.persistentMsg);this.persistentMsg.destroy();this.persistentMsg=null;} }
 
