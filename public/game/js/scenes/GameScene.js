@@ -92,11 +92,12 @@ class GameScene extends Phaser.Scene {
     // town by the river, the glass station, the office campus, the hills
     // with solar panels and wind turbines.
     const panoramaPoints = (this.hasPanorama && !this.isCompact) ? [
-      {x:this.PANEL+(this.W-this.PANEL)*0.11, y:this.H*0.74},
-      {x:this.PANEL+(this.W-this.PANEL)*0.36, y:this.H*0.68},
-      {x:this.PANEL+(this.W-this.PANEL)*0.63, y:this.H*0.70},
-      {x:this.PANEL+(this.W-this.PANEL)*0.88, y:this.H*0.76}
+      {x:this.PANEL+(this.W-this.PANEL)*0.10, y:this.H*0.56},
+      {x:this.PANEL+(this.W-this.PANEL)*0.33, y:this.H*0.50},
+      {x:this.PANEL+(this.W-this.PANEL)*0.64, y:this.H*0.60},
+      {x:this.PANEL+(this.W-this.PANEL)*0.89, y:this.H*0.55}
     ] : null;
+
     const pts = panoramaPoints || compactPoints;
     const at=(index,f,y)=>pts ? {cx:pts[index].x,cy:pts[index].y} : {cx:px(f),cy:y};
     const p0=at(0,.12,baseY+this.s(18)),p1=at(1,.38,baseY-this.s(34));
