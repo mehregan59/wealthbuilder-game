@@ -183,30 +183,32 @@ class ProfileScene extends Phaser.Scene {
     rBg.lineStyle(this.s(4),0xe0a82e,0.75); rBg.lineBetween(cx-nW/2,retY+this.s(12),cx-nW/2,retY+rH-this.s(12));
     // Status badges row
     const badgeY=retY+rTx.height+this.s(24);
-    let bxOff=cx-(ret.badges.length*this.s(118))/2;
+    let bxOff=cx-(ret.badges.length*this.s(170))/2;
     const badgeObjs=[];
     ret.badges.forEach(b=>{
       const col=b.status==='LAW'?0x296b72:(b.status==='EFFECTIVE 2027'?0xe0a82e:0x7fa6c9);
       // Plain status label (dot + text), deliberately not shaped like a button.
       const bg=this.add.graphics().setDepth(100).setAlpha(0);
       bg.fillStyle(col,1); bg.fillCircle(bxOff+this.s(10),badgeY+this.s(10),this.s(4));
-      const bt=this.add.text(bxOff+this.s(58),badgeY+this.s(10),(b.label?b.label+': ':'')+b.status,{
-        fontFamily:CityTheme.body,fontSize:this.s(10),color:'#294f52',fontStyle:'700'
+      const bt=this.add.text(bxOff+this.s(84),badgeY+this.s(10),(b.label?b.label+': ':'')+b.status,{
+        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#294f52',fontStyle:'700'
       }).setOrigin(0.5).setDepth(100).setAlpha(0);
       badgeObjs.push(bg,bt);
-      bxOff+=this.s(118);
+      bxOff+=this.s(170);
     });
     this.tweens.add({targets:[rBg,rTx].concat(badgeObjs),alpha:1,duration:900,delay:1900});
 
-    const disc=this.add.text(cx,retY+rH+this.s(14),de
+    const discY=retY+rH+this.s(14);
+    const disc=this.add.text(cx,discY,de
       ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung. Rentenangaben zuletzt geprüft: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—')
       : 'This profile reflects this session only. It is not financial advice. Pension facts last verified: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—'),{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#456a8c',align:'center'
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#456a8c',align:'center',wordWrap:{width:nW-this.s(30)}
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
     // Exit to the game home plus a next-step education preview.
-    const bY=this.H-this.s(70), bW=this.s(220), bH=this.s(48), gap=this.s(20);
+    const bW=this.s(220), bH=this.s(48), gap=this.s(20);
+    const bY=Math.max(discY+disc.height+this.s(82),this.H-this.s(70));
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
     btnBg.fillStyle(0xe0a82e,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
     const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Zur Startseite':'Back to home',{
@@ -368,7 +370,8 @@ class ProfileScene extends Phaser.Scene {
   // ── Hover explanation popup ───────────────────────────────────────
   _showTip(title, body, x, y) {
     this._hideTip();
-    const tw=Math.min(this.s(340),this.W-this.s(60));
+    const longBody=String(body||'').length>420;
+    const tw=Math.min(this.s(longBody?560:340),this.W-this.s(60));
     const pad=this.s(14);
     const tTitle=this.add.text(0,0,title,{
       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
@@ -380,6 +383,7 @@ class ProfileScene extends Phaser.Scene {
     tx = Math.max(this.s(10), Math.min(tx, this.W - tw - this.s(10)));
     let ty = y - th - this.s(14);
     if (ty < this.s(10)) ty = y + this.s(48);
+    ty=Math.max(this.s(10),Math.min(ty,this.H-th-this.s(10)));
 
     const bg=this.add.graphics();
     bg.fillStyle(0xe8f1e9,0.98); bg.fillRoundedRect(tx,ty,tw,th,this.s(10));
@@ -423,8 +427,12 @@ class ProfileScene extends Phaser.Scene {
     // Weakest observed trait → training direction (existing levels only)
     const w=this._weakestTrait();
     if(w&&PC.training[w]) parts.push(PC.training[w][lang]);
-    const badges=[PC.items.rentenniveau48,PC.items.fruhstartRente,PC.items.retirementAge,PC.items.target70]
-      .map(i=>({status:PC.STATUS[i.status]||i.status}));
+    // One label per legal state. The detail text explains the individual
+    // proposals; repeating PROPOSAL three times looked like three controls.
+    const badges=[
+      {label:de?'48%-Haltelinie':'48% safety line',status:PC.STATUS[PC.items.rentenniveau48.status]},
+      {label:de?'Reformideen':'Reform ideas',status:PC.STATUS.PROPOSAL}
+    ];
     return {body:parts.join('\n'),badges};
   }
 

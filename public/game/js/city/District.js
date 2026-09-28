@@ -152,7 +152,7 @@ class District {
     this._poly(g,[P(-.2,1.55,0),P(2.45,1.55,0),P(2.45,2.4,0),P(-.2,2.4,0)],0x8f8a7c,1);
     g.lineStyle(this.s(1.5),0x5a4a3c,1);for(let t=0;t<3;t++){const y0=1.72+t*.24;[0,.08].forEach(o=>{g.beginPath();g.moveTo(this.ix(-.2,y0+o),this.iy(-.2,y0+o,.01));g.lineTo(this.ix(2.45,y0+o),this.iy(2.45,y0+o,.01));g.strokePath();});}
     // historic sandstone hall with arched glass roof (stepped vault)
-    const gx=.05,gy=.1,w=2.2,d=1.2,h=.62;
+    const gx=.28,gy=-.12,w=2.2,d=1.2,h=.62;
     this._box(gx,gy,w,d,h,0xe6d2a8,0xc9a878,0xdcc095);
     const steps=6;for(let i=0;i<steps;i++){const a0=Math.PI*i/steps,a1=Math.PI*(i+1)/steps,y0=gy+d/2-Math.cos(a0)*d/2,y1=gy+d/2-Math.cos(a1)*d/2,z0=h+Math.sin(a0)*.55,z1=h+Math.sin(a1)*.55;
       this._poly(g,[P(gx,y0,z0),P(gx+w,y0,z0),P(gx+w,y1,z1),P(gx,y1,z1)],i<3?0x7fa7ad:0xa9cdd2,.97);g.lineStyle(1,0x3f5f63,.6);g.strokePath();}
@@ -182,9 +182,11 @@ class District {
     const dm=P(.425,.25,.62);g.fillStyle(0x5f8f86,1);g.fillEllipse(dm.x,dm.y-this.s(6),this.s(26),this.s(18));g.fillStyle(0xeee6d0,1);g.fillRect(dm.x-this.s(13),dm.y-this.s(4),this.s(26),this.s(5));
     this._tree(.1,.95,.6);this._tree(.7,.95,.6);
     // modern glass offices, taller as the quarter grows
-    const spots=[[1.3,-.1],[1.95,.3],[1.35,1.5],[.2,1.5],[1.95,1.5],[.85,1.55]];
+    // Offices spread through separate street lots. Each additional credit
+    // reveals another building instead of only stretching existing towers.
+    const spots=[[1.35,-.28],[2.25,.18],[1.55,1.72],[-.38,1.58],[2.35,1.55],[.72,1.92],[2.82,.72],[-.65,.55],[1.18,2.35],[3.05,1.82]];
     spots.slice(0,Math.min(1+st+this._grow(),spots.length)).sort((a,b)=>(a[0]+a[1])-(b[0]+b[1])).forEach(([x,y],i)=>{
-      const h=.8+st*.22+(i%2)*.3+this._grow()*.07,b=this._box(x,y,.45,.45,h,0xcfe3e4,0x3d6e79,0x5c8e98);
+      const h=.8+st*.22+(i%2)*.3,b=this._box(x,y,.45,.45,h,0xcfe3e4,0x3d6e79,0x5c8e98);
       g.lineStyle(1,0xbfe6ea,.55);for(let k=1;k<5;k++){const z=h*k/5;g.beginPath();g.moveTo(this.ix(x,y+.45),this.iy(x,y+.45,z));g.lineTo(this.ix(x+.45,y+.45),this.iy(x+.45,y+.45,z));g.lineTo(this.ix(x+.45,y),this.iy(x+.45,y,z));g.strokePath();}
       if(st>=3){const r=P(x+.22,y+.22,h);g.fillStyle(0x6fae62,1);g.fillEllipse(r.x,r.y,this.s(18),this.s(9));}
     });
@@ -193,7 +195,7 @@ class District {
     const st=this._stage(),g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
     // ground-mounted solar farm: fenced rows of panels on the grass
     const gr=this._grow(),rows=Math.min(2+st+gr,8);
-    for(let r=0;r<rows;r++){const gy=.1+r*.24;for(let c=0;c<5;c++){const gx=.05+c*.3;if(gx>1.1&&gy>1.0)continue;
+    for(let r=0;r<rows;r++){const gy=-.32+r*.24;for(let c=0;c<5;c++){const gx=-.05+c*.3;if(gx>1.1&&gy>.58)continue;
       // tilted panel on two legs, sitting on grass inside the quarter
       g.fillStyle(0x4d5a58,1);const l1=P(gx+.04,gy+.14,0),l2=P(gx+.24,gy+.14,0);g.fillRect(l1.x-this.s(.8),l1.y-this.s(5),this.s(1.6),this.s(5));g.fillRect(l2.x-this.s(.8),l2.y-this.s(5),this.s(1.6),this.s(5));
       this._poly(g,[P(gx,gy,.05),P(gx+.28,gy,.05),P(gx+.28,gy+.14,.2),P(gx,gy+.14,.2)],0x24506a,1);
