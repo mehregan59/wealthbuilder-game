@@ -199,16 +199,19 @@ class District {
     const st=this._stage(),g=this.gfx,P=(a,b,z)=>({x:this.ix(a,b),y:this.iy(a,b,z)});
     // ground-mounted solar farm: fenced rows of panels on the grass
     const gr=this._grow(),rows=Math.min(2+st+gr,8);
-    for(let r=0;r<rows;r++){const gy=-.47+r*.24;for(let c=0;c<5;c++){const gx=-.05+c*.3;if(gx>1.1&&gy>.58)continue;
+    // Four panels per row keep the farm together; the former fifth panel
+    // sat by itself across the diagonal road.
+    for(let r=0;r<rows;r++){const gy=-.47+r*.24;for(let c=0;c<4;c++){const gx=-.05+c*.3;if(gx>1.1&&gy>.58)continue;
       // tilted panel on two legs, sitting on grass inside the quarter
       g.fillStyle(0x4d5a58,1);const l1=P(gx+.04,gy+.14,0),l2=P(gx+.24,gy+.14,0);g.fillRect(l1.x-this.s(.8),l1.y-this.s(5),this.s(1.6),this.s(5));g.fillRect(l2.x-this.s(.8),l2.y-this.s(5),this.s(1.6),this.s(5));
       this._poly(g,[P(gx,gy,.05),P(gx+.28,gy,.05),P(gx+.28,gy+.14,.2),P(gx,gy+.14,.2)],0x24506a,1);
       g.lineStyle(1,0x7fc6d6,.7);g.beginPath();g.moveTo(this.ix(gx+.14,gy),this.iy(gx+.14,gy,.05));g.lineTo(this.ix(gx+.14,gy+.14),this.iy(gx+.14,gy+.14,.2));g.strokePath();}}
     this._box(1.45,.15,.35,.3,.3,0xe3bd55,0x77602b,0xa88732);
-    // conventional (gas) power station with chimneys, shown for honest context
-    this._box(1.55,1.3,.7,.55,.5,0xb9b3a6,0x7d776c,0x9a9486);
-    [[1.7,1.4],[2.0,1.4]].forEach(([cx,cy])=>{const b=P(cx,cy,.5),t=P(cx,cy,1.25);g.fillStyle(0x8c8579,1);g.fillRect(b.x-this.s(3),t.y,this.s(6),b.y-t.y);g.fillStyle(0xc85848,1);g.fillRect(b.x-this.s(3),t.y+this.s(3),this.s(6),this.s(2));});
-    this.chimneyPos=[P(1.7,1.4,1.3),P(2.0,1.4,1.3)];
+    // Keep the conventional (gas) station in the lower-right field, away
+    // from the solar rows and the district's diagonal road.
+    this._box(2.25,1.72,.7,.55,.5,0xb9b3a6,0x7d776c,0x9a9486);
+    [[2.4,1.82],[2.7,1.82]].forEach(([cx,cy])=>{const b=P(cx,cy,.5),t=P(cx,cy,1.25);g.fillStyle(0x8c8579,1);g.fillRect(b.x-this.s(3),t.y,this.s(6),b.y-t.y);g.fillStyle(0xc85848,1);g.fillRect(b.x-this.s(3),t.y+this.s(3),this.s(6),this.s(2));});
+    this.chimneyPos=[P(2.4,1.82,1.3),P(2.7,1.82,1.3)];
     this.turbinePos=[];for(let i=0;i<Math.min(2+st+gr,8);i++){const gx=-.2+(i%4)*.6+(i>=4?.3:0),gy=i>=4?-.9:-.45,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
   }
   _touchPointer(pointer){const e=pointer&&pointer.event;return !!(pointer&&pointer.wasTouch)||(e&&e.pointerType==='touch');}
