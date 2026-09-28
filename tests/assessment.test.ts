@@ -122,7 +122,7 @@ describe("level 10 forecast calibration", () => {
   it("50/50 answers count as half a hit and are perfectly calibrated", () => {
     expect(A.forecastResult([{ pick: null, conf: 50, outcome: true }]).overconfidence).toBe(0);
   });
-  it("practice round is not scored", () => {
+  it("practice round alone does not produce an overconfidence score", () => {
     const s = A.computeScores([{ level: 10, value: "y90", phase: "practice", pick: true, conf: 90, outcome: false }], []);
     expect(s.overconfidence).toBeNull();
   });
