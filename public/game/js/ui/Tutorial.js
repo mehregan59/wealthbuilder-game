@@ -8,7 +8,7 @@ class Tutorial {
     // where things appear) rather than assuming the player already knows
     // the controls.
     const EN = {
-      1:{t:'How to play',        b:'Four districts sit in front of you \u2014 together they make up your city. Tap directly on the one you want to build first to select it and start construction there.\nThere is no wrong answer \u2014 pick what feels right.'},
+      1:{t:'How to play',        b:'Four districts sit in front of you \u2014 together they make up your city. Tap one of the districts below to start growing your city.\nThere is no wrong answer \u2014 pick what feels right.'},
       2:{t:'Something changed',  b:'A district lost value. Read what happened, then tap one of the options at the bottom of the screen to decide how the city responds.\nHover any district to see what it represents.'},
       3:{t:'Spread or focus',    b:'Six bright funding blocks appear in a row along the bottom. The easiest way to invest is to tap a district once for each block you want to send there. You can also drag blocks onto districts. Place all six; the counter shows your progress.\nWatch the DISTRICT PERFORMANCE panel to see each district grow.'},
       4:{t:'Now or later',       b:'Two buildings are shown at the bottom of the screen. Tap the one you want to build. One choice pays off immediately; the other pays off much later.\nWhichever you pick will matter again before the game ends.'},
@@ -20,7 +20,7 @@ class Tutorial {
       10:{t:'The planning desk', b:'Answer a few forecasts about next year and say how sure you are. Afterwards you will see how your confidence compared with what actually happened.'}
     };
     const DE = {
-      1:{t:'So wird gespielt',   b:'Vier Stadtteile liegen vor dir \u2014 zusammen bilden sie deine Stadt. Tippe direkt auf den, den du zuerst bauen willst, um ihn auszuw\u00e4hlen.\nEs gibt keine falsche Antwort.'},
+      1:{t:'So wird gespielt',   b:'Vier Stadtteile liegen vor dir \u2014 zusammen bilden sie deine Stadt. Tippe auf einen Stadtteil unten, um deine Stadt wachsen zu lassen.\nEs gibt keine falsche Antwort.'},
       2:{t:'Etwas hat sich ge\u00e4ndert',b:'Ein Stadtteil hat an Wert verloren. Tippe unten auf eine der Optionen, um zu entscheiden, wie die Stadt reagiert.'},
       3:{t:'Streuen oder b\u00fcndeln',b:'Sechs helle Finanzierungsbl\u00f6cke erscheinen unten in einer Reihe. Tippe f\u00fcr jeden Block einmal auf den gew\u00fcnschten Stadtteil. Du kannst die Bl\u00f6cke auch ziehen. Platziere alle sechs; der Z\u00e4hler zeigt deinen Fortschritt.\nDas DISTRICT-PERFORMANCE-Feld zeigt das Wachstum.'},
       4:{t:'Jetzt oder sp\u00e4ter',b:'Zwei Geb\u00e4ude stehen unten zur Auswahl. Tippe auf das, das du bauen willst. Eine Wahl zahlt sich sofort aus, die andere viel sp\u00e4ter.'},

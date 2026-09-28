@@ -244,6 +244,7 @@ class GameScene extends Phaser.Scene {
     const map={1:this._level1,2:this._level2,3:this._level3,4:this._level4,5:this._level5,6:this._level6,7:this._level7,8:this._level8,9:this._level9,10:this._level10};
     const fn=map[n]; if(!fn)return;
     this.hud.setLevel(n,this._levelName(n));
+    if(this.ambient)this.ambient.setSimulationLevel(n);
     const run = () => this.time.delayedCall(400, fn.bind(this));
     const proceed = () => {
       // The very first time Level 1 starts, point the player at the side
@@ -258,7 +259,7 @@ class GameScene extends Phaser.Scene {
     if (skipTutorial) proceed();
     else {
       this.hud.showLevelTitle(n,this._levelName(n));
-      this.time.delayedCall(1900, ()=> this.tutorial.show(n, proceed));
+      this.time.delayedCall(720, ()=> this.tutorial.show(n, proceed));
     }
   }
 
@@ -298,7 +299,7 @@ class GameScene extends Phaser.Scene {
         o.d.setSelectable(true, ()=>this._onLevel1Choice(o.d,o.v));
       });
     });
-    this._showPersistentMessage('Tap directly on a district below to select it and start building there.');
+    this._showPersistentMessage('Tap one of the districts below to start growing your city.');
   }
 
   _choiceLabel(x,y,text,color) {
@@ -1061,8 +1062,10 @@ class GameScene extends Phaser.Scene {
   }
 
   update(time,delta){
-    const night=this.ambient.isNightTime();
-    if(this.metro){ this.metro.setNight(night?0.55:0); this.metro.update(time,delta); }
+    const nightStrength=this.ambient.getNightStrength();
+    const night=nightStrength>.55;
+    this.nightStrength=nightStrength;
+    if(this.metro){ this.metro.setNight(nightStrength); this.metro.update(time,delta); }
     this.ambient.update(time,delta);
     this.weather.update(delta);
     if(!this.roads.quiet || this.roads.visitor) this.roads.update(delta,night);

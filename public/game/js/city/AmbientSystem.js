@@ -5,6 +5,7 @@ class AmbientSystem {
     this.H = scene.scale.height;
     this.time = 34000;          // start mid-morning so the first view is bright
     this.dayDuration = 120000;  // slower 2-minute cycle
+    this.targetProgress = null;
     this.birds = [];
     this.stars = [];
     this.clouds = [
@@ -38,8 +39,10 @@ class AmbientSystem {
   }
 
   getDayProgress(){ return (this.time % this.dayDuration) / this.dayDuration; }
-  isNightTime(){ const t=this.getDayProgress(); return t < 0.16 || t > 0.84; }
+  getNightStrength(){const t=this.getDayProgress();if(t>=.72)return Math.min(1,(t-.72)/.16);if(t<=.25)return Math.min(1,(.25-t)/.15);return 0;}
+  isNightTime(){ return this.getNightStrength()>.55; }
   isDaytime(){ const t=this.getDayProgress(); return t>=0.30 && t<0.70; }
+  setSimulationLevel(level){const phases=[.35,.43,.52,.62,.72,.82,.92,.05,.18,.30];this.targetProgress=phases[Math.max(0,Math.min(phases.length-1,(level||1)-1))];}
 
   // Bright sky-blue day, warm dawn/dusk, deep night
   getSkyColor() {
@@ -54,14 +57,14 @@ class AmbientSystem {
   }
 
   update(time, delta) {
-    this.time += delta;
+    if(this.targetProgress!==null){const now=this.getDayProgress();let diff=this.targetProgress-now;if(diff>.5)diff-=1;if(diff<-.5)diff+=1;this.time+=diff*this.dayDuration*Math.min(1,delta/2600);if(Math.abs(diff)<.004)this.targetProgress=null;}else this.time += delta;
     this.W = this.scene.scale.width;
     const t = this.getDayProgress();
     const night = this.isNightTime();
     const sky = this.getSkyColor();
-    const nightStrength=t<0.16?(1-t/0.16):(t>0.84?(t-0.84)/0.16:0);
+    const nightStrength=this.getNightStrength();
     this.nightShade.clear();
-    if(nightStrength>0){this.nightShade.fillStyle(0x061522,0.48*nightStrength);this.nightShade.fillRect(0,0,this.W,this.H);}
+    if(nightStrength>0){this.nightShade.fillStyle(0x061522,0.58*nightStrength);this.nightShade.fillRect(0,0,this.W,this.H);}
 
     this.skyGfx.clear();
     this.skyGfx.fillStyle(Phaser.Display.Color.GetColor(sky.r|0, sky.g|0, sky.b|0), 1);
