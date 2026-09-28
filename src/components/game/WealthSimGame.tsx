@@ -173,9 +173,14 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
   }, []);
 
   useEffect(() => {
+    const w = window as unknown as Record<string, unknown>;
+    w["WS_embedded"] = true;
     const exit = () => onExit?.();
     window.addEventListener("wealthsim:home", exit);
-    return () => window.removeEventListener("wealthsim:home", exit);
+    return () => {
+      w["WS_embedded"] = false;
+      window.removeEventListener("wealthsim:home", exit);
+    };
   }, [onExit]);
 
   return (

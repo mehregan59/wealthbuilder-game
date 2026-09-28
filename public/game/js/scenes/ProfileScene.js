@@ -1,3 +1,10 @@
+// Return to the game home: the embedded app listens for 'wealthsim:home';
+// the standalone build has no listener, so it restarts at the first screen.
+function WealthSimHome(scene){
+  if(window.WS_embedded){ window.dispatchEvent(new CustomEvent('wealthsim:home')); return; }
+  const mgr=scene.game.scene; mgr.getScenes(true).forEach(sc=>{ if(sc!==scene) mgr.stop(sc.scene.key); });
+  scene.scene.start('Boot');
+}
 class ProfileScene extends Phaser.Scene {
   constructor(){ super({ key:'ProfileScene' }); }
 
@@ -180,10 +187,10 @@ class ProfileScene extends Phaser.Scene {
     const badgeObjs=[];
     ret.badges.forEach(b=>{
       const col=b.status==='LAW'?0x296b72:(b.status==='EFFECTIVE 2027'?0xe0a82e:0x7fa6c9);
+      // Plain status label (dot + text), deliberately not shaped like a button.
       const bg=this.add.graphics().setDepth(100).setAlpha(0);
-      bg.fillStyle(col,0.16); bg.fillRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
-      bg.lineStyle(1,col,0.8); bg.strokeRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
-      const bt=this.add.text(bxOff+this.s(55),badgeY+this.s(10),b.status,{
+      bg.fillStyle(col,1); bg.fillCircle(bxOff+this.s(10),badgeY+this.s(10),this.s(4));
+      const bt=this.add.text(bxOff+this.s(58),badgeY+this.s(10),(b.label?b.label+': ':'')+b.status,{
         fontFamily:CityTheme.body,fontSize:this.s(10),color:'#294f52',fontStyle:'700'
       }).setOrigin(0.5).setDepth(100).setAlpha(0);
       badgeObjs.push(bg,bt);
@@ -217,7 +224,7 @@ class ProfileScene extends Phaser.Scene {
     ctaBg.lineStyle(1,0x296b72,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
-    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:home')); });
+    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); WealthSimHome(this); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 

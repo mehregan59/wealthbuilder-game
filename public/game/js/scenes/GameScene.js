@@ -10,7 +10,7 @@ class GameScene extends Phaser.Scene {
       : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
     this.PANEL = this.isCompact ? 0 : Math.round(Math.min(286, Math.max(244, this.W * 0.18)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
-      ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
+      (window.cityName = ['Lindenfeld','Auenstadt','Sonnenberg','Rheinhafen','Wiesental','Neuhafen'][Math.floor(Math.random()*6)]);
 
     // Honoured across the scene: decorative motion is reduced, but every
     // consequence still shows as text, so no information is lost.
@@ -258,7 +258,7 @@ class GameScene extends Phaser.Scene {
     if (skipTutorial) proceed();
     else {
       this.hud.showLevelTitle(n,this._levelName(n));
-      this.time.delayedCall(3100, ()=> this.tutorial.show(n, proceed));
+      this.time.delayedCall(1900, ()=> this.tutorial.show(n, proceed));
     }
   }
 
@@ -462,8 +462,9 @@ class GameScene extends Phaser.Scene {
 
   _spawnResourceCubes(n) {
     this.cubeTotal=n; this.cubeDropped=0;
-    const left=this.PANEL+this.s(54), usable=this.W-left-this.s(54), gap=Math.min(this.s(92),usable/(n-1));
-    for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>this.cubes.push(new ResourceCube(this,left+i*gap,this.H-this.s(72),1)));
+    // Coins stack vertically beside the side panel, below the district signs, large and easy to grab.
+    const x=this.PANEL+this.s(46), top=Math.max(this.s(400),this.H*0.44), gap=Math.min(this.s(66),(this.H-top-this.s(40))/n);
+    for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>this.cubes.push(new ResourceCube(this,x,top+i*gap,1)));
   }
 
   // Nudges the player if they pause partway through placing cubes. This is
@@ -629,7 +630,7 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 6 — a delegation drives in from the neighbouring city ══
   _level6() {
-    this._showPersistentMessage('A delegation is arriving from the neighbouring city...');
+    this._showPersistentMessage(this.metro?'A ship from the neighbouring city is sailing up the river with an investment offer...':'A delegation is arriving from the neighbouring city...');
     this.roads.sendVisitor(()=>{
       this._level6Decide(false);
     });
@@ -655,9 +656,9 @@ class GameScene extends Phaser.Scene {
         return;
       }
       ScoringEngine.recordDecision(6,c,{afterResearch:hasRead});
-      const m={accept:'The delegation drives into the city.\nShared infrastructure is established — and celebrated.',
-               independent:'The delegation turns around and leaves.\nThe city builds its own — more expensive, fully controlled.',
-               decline:'The delegation turns around and leaves.\nResources are preserved for other priorities.'};
+      const m={accept:(this.metro?'The offer ship sails up the river and docks.':'The delegation drives into the city.')+'\nShared infrastructure is established — and celebrated.',
+               independent:(this.metro?'The ship sails back downstream.':'The delegation turns around and leaves.')+'\nThe city builds its own — more expensive, fully controlled.',
+               decline:(this.metro?'The ship sails back downstream.':'The delegation turns around and leaves.')+'\nResources are preserved for other priorities.'};
       const dl={accept:[-8,5,-8],independent:[-5,8,-15],decline:[0,0,5]}[c]||[0,0,0];
       this._updateStats(dl[0],dl[1],dl[2]);
       if(c==='accept'){
@@ -897,7 +898,7 @@ class GameScene extends Phaser.Scene {
     btn.on('pointerdown',()=>{ov.destroy();box.destroy();t.destroy();b.destroy();btn.destroy();if(cb)cb();});
   }
 
-  _msgY(){ return this.tickerActive ? this.s(116) : this.s(72); }
+  _msgY(){ return this.tickerActive ? this.s(134) : this.s(92); }
 
   _showPersistentMessage(text){
     this._clearPersistentMessage();
@@ -908,7 +909,7 @@ class GameScene extends Phaser.Scene {
       backgroundColor:'#fffbf1',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5),stroke:'#fffbf1',strokeThickness:1
     }).setOrigin(0.5,0).setDepth(48).setAlpha(0);
     // Anchor the top edge under the header so multi-line text is never cut off.
-    const top=y-this.s(14);
+    const top=y;
     this.persistentMsg.y=top-this.s(6);
     this.tweens.add({targets:this.persistentMsg,alpha:1,y:top,duration:600});
   }
@@ -929,7 +930,9 @@ class GameScene extends Phaser.Scene {
   // Consequences remain visible long enough to read, then advance without
   // requiring a second acknowledgement click.
   _showConsequence(text,onContinue,opts){
-    opts = Object.assign({auto:true,autoDelay:4200},opts||{});
+    // Short, readable pause scaled to the text; a tap skips ahead.
+    const readMs=Math.max(2200,Math.min(4000,1300+String(text||'').length*20));
+    opts = Object.assign({auto:true,autoDelay:readMs},opts||{});
     // Clearing any existing world button/timer here (not just on level
     // transitions) is what stops Continue buttons from stacking if this
     // method is ever called again before a previous button's callback fired.
@@ -981,10 +984,14 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({targets:this.consequencePanel,alpha:1,duration:650});
 
     if(opts.auto){
-      this.worldBtnTimer = this.time.delayedCall(opts.autoDelay||2600, ()=>{
-        this.worldBtnTimer=null;
-        if(onContinue) onContinue();
-      });
+      let done=false;
+      const go=()=>{ if(done) return; done=true; this.input.off('pointerdown',skip);
+        if(this.worldBtnTimer){ this.worldBtnTimer.remove(false); this.worldBtnTimer=null; }
+        if(onContinue) onContinue(); };
+      const panel=this.consequencePanel;
+      const skip=()=>{ if(this.consequencePanel===panel) go(); else this.input.off('pointerdown',skip); };
+      this.time.delayedCall(700,()=>{ if(!done) this.input.on('pointerdown',skip); });
+      this.worldBtnTimer = this.time.delayedCall(opts.autoDelay||2600, go);
       return;
     }
 
