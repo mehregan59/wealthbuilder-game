@@ -38,7 +38,7 @@ class District {
 
   }
 
-  subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(19);}
+  subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(this.scene.hasMetro?36:19);}
   _stage(){return this.health>=78?4:this.health>=58?3:this.health>=34?2:1;}
   draw(){
     this.gfx.clear();
