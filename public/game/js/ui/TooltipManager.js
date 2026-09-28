@@ -10,11 +10,14 @@ class TooltipManager {
     this._hideTimer = null;
     this._showTimer = null;
     this.pinnedSource = null;
+    this.pendingSource = null;
+    this.visibleSource = null;
   }
 
   show(source, x, y, immediate) {
-    if (this._showTimer) this._showTimer.remove(false);
-    if (this._hideTimer) { this._hideTimer.remove(); this._hideTimer = null; }
+    if (this._showTimer) { this._showTimer.remove(false); this._showTimer = null; }
+    if (this._hideTimer) { this._hideTimer.remove(false); this._hideTimer = null; }
+    this.pendingSource = source;
     const title = source.getName?source.getName():(source.name||'');
     const body = source.getPanelText?source.getPanelText():(source.getTooltip?source.getTooltip():(source.tooltip||''));
     if (!title&&!body) return;
@@ -30,26 +33,33 @@ class TooltipManager {
     this.titleText.setPosition(pad+4,pad); this.bodyText.setPosition(pad+4,pad+titleH+4);
     const reveal=()=>{
       this._showTimer=null;
+      if(this.pendingSource!==source && this.pinnedSource!==source)return;
       this.container.setPosition(tx,ty);
       this.scene.tweens.killTweensOf(this.container);
       this.scene.tweens.add({targets:this.container,alpha:1,duration:180,ease:'Power2.easeOut'});
       this.visible = true;
+      this.visibleSource = source;
     };
-    if(immediate)reveal();else this._showTimer=this.scene.time.delayedCall(650,reveal);
+    if(immediate)reveal();else this._showTimer=this.scene.time.delayedCall(900,reveal);
   }
 
-  hide() {
+  hide(source, immediate) {
+    if(source && this.pendingSource && source!==this.pendingSource && source!==this.visibleSource)return;
     if(this._showTimer){this._showTimer.remove(false);this._showTimer=null;}
+    this.pendingSource=null;
     if(this.pinnedSource)return;
     if (!this.visible) return;
-    this._hideTimer = this.scene.time.delayedCall(200, () => {
+    const conceal=()=>{
+      this._hideTimer=null;
       this.scene.tweens.killTweensOf(this.container);
-      this.scene.tweens.add({targets:this.container,alpha:0,duration:200});
+      if(immediate){this.container.setAlpha(0);}else this.scene.tweens.add({targets:this.container,alpha:0,duration:120});
       this.visible = false;
-    });
+      this.visibleSource=null;
+    };
+    if(immediate)conceal();else this._hideTimer=this.scene.time.delayedCall(80,conceal);
   }
 
-  toggle(source,x,y){if(this.pinnedSource===source){this.pinnedSource=null;this.hide();return;}this.pinnedSource=source;this.show(source,x,y,true);}
+  toggle(source,x,y){if(this.pinnedSource===source){this.pinnedSource=null;this.hide(source,true);return;}this.pinnedSource=source;this.pendingSource=source;this.show(source,x,y,true);}
 
   showText(title, body, x, y, duration) {
     this.show({getName:()=>title,getTooltip:()=>body},x,y);

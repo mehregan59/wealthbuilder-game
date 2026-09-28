@@ -229,7 +229,7 @@ class Metropolis {
     spots.forEach((sp, i) => {
       const q = this.p(sp[0], sp[1]), k = sp[2];
       // leave the district quarters free: their landmarks stand there
-      if (this.districtPoints.some(d => Math.abs(d.x - q.x) < this.s(120) && Math.abs(d.y - q.y) < this.s(80))) return;
+      if (this.districtPoints.some((d,index) => Math.abs(d.x - q.x) < this.s(index===1?180:120) && Math.abs(d.y - q.y) < this.s(index===1?150:80))) return;
       const tall = i % 5 === 0;
       const hw = this.s(30 * k), hd = this.s(15 * k), h = this.s((tall ? 58 : 32) * k);
       const warm = i % 3 === 0;
@@ -268,7 +268,7 @@ class Metropolis {
       g.fillTriangle(q.x - this.s(3 * k), q.y, q.x + this.s(3 * k), q.y, q.x, q.y - h);
       this.hillTurbines.push({ x: q.x, y: q.y - h, r: this.s(24 * k), a: Math.random() * 6.28, sp: 0.8 + Math.random() * 0.5 });
     });
-    for (let row = 0; row < 3; row++) for (let i = 0; i < 6; i++) {
+    for (let row = 0; row < 3; row++) for (let i = 0; i < 4; i++) {
       const q = this.p(0.80 + i * 0.030, 0.335 + row * 0.026), w=this.s(22), h=this.s(11);
       g.fillStyle(0x4d5a58,1);g.fillRect(q.x-this.s(1),q.y,this.s(2),this.s(7));
       g.fillStyle(0x27566b,1);g.beginPath();g.moveTo(q.x-w/2,q.y);g.lineTo(q.x+w/2,q.y-this.s(5));g.lineTo(q.x+w/2,q.y+h-this.s(5));g.lineTo(q.x-w/2,q.y+h);g.closePath();g.fillPath();

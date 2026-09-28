@@ -200,12 +200,12 @@ class GameScene extends Phaser.Scene {
   _introSequence() {
     const fi=this.add.graphics().setDepth(200);
     fi.fillStyle(CityTheme.colors.sky,1); fi.fillRect(0,0,this.W,this.H);
-    this.tweens.add({targets:fi,alpha:0,duration:2000,delay:300,onComplete:()=>{fi.destroy();this._startLevel(1);}});
+    this.tweens.add({targets:fi,alpha:0,duration:1600,delay:240,onComplete:()=>{fi.destroy();this._startLevel(1);}});
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     const txt=this.add.text(this.W/2,this.H/2, de ? `${this.cityName} wartet.` : `${this.cityName} awaits.`,{
       fontFamily:CityTheme.heading, fontSize:this.s(32), color:'#296b72', fontStyle:'700'
     }).setOrigin(0.5).setDepth(201).setAlpha(0);
-    this.tweens.add({targets:txt,alpha:1,duration:900,delay:700,hold:1600,yoyo:true,onComplete:()=>txt.destroy()});
+    this.tweens.add({targets:txt,alpha:1,duration:720,delay:560,hold:1280,yoyo:true,onComplete:()=>txt.destroy()});
   }
 
   // Save state so a level can be replayed from scratch
@@ -213,6 +213,8 @@ class GameScene extends Phaser.Scene {
     this.snapshots[n] = {
       stats: Object.assign({}, this.cityStats),
       health: this.districts.map(d=>d.health),
+      resources: this.districts.map(d=>d.resources),
+      capacity: this.districts.map(d=>d.visualCapacity),
       hasUniversity: this.hasUniversity,
       year: this.hud.year,
       decisions: ScoringEngine.decisions.length
@@ -223,7 +225,7 @@ class GameScene extends Phaser.Scene {
     const s = this.snapshots[n];
     if (!s) return false;
     this.cityStats = Object.assign({}, s.stats);
-    this.districts.forEach((d,i)=>{ d.health = s.health[i]; d.draw(); d.labelContainer.y = d.labelBaseY - (d.health/100)*this.s(24); });
+    this.districts.forEach((d,i)=>{ d.health = s.health[i]; d.resources=(s.resources||[])[i]||0; d.visualCapacity=(s.capacity||[])[i]||0; d.draw(); d.labelContainer.y = d.labelBaseY - (d.health/100)*this.s(24); });
     this.hasUniversity = s.hasUniversity;
     this.hud.year = s.year;
     this.hud.yearText.setText('Year ' + s.year);
@@ -873,7 +875,7 @@ class GameScene extends Phaser.Scene {
     const tk=this.add.text(this.W+20,top+h/2,lines.join('   ★   '),{
       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'600'
     }).setOrigin(0,0.5).setDepth(46);
-    const dur=Math.max(24000, tk.width*30);
+    const dur=Math.max(19200, tk.width*24);
     this.tweens.add({targets:tk,x:-(tk.width+120),duration:dur,ease:'Linear',
       onComplete:()=>{tk.destroy();bg.destroy();br.destroy();sep.destroy();this.tickerActive=false;}});
   }
@@ -920,19 +922,19 @@ class GameScene extends Phaser.Scene {
   // slower, gentler fade than the default so it doesn't visually collide
   // with whatever appears right after it.
   _tempMessage(text,dur,fadeDur){
-    fadeDur = fadeDur || 1000;
+    fadeDur = fadeDur || 800;
     const m=this.add.text(this._cx(),this.H-this.s(120),text,{
       fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#173b40',
       align:'center',backgroundColor:'#fffbf1',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5)
     }).setOrigin(0.5).setDepth(66).setAlpha(0);
-    this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur||5000,yoyo:true,onComplete:()=>m.destroy()});
+    this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur?dur*.8:4000,yoyo:true,onComplete:()=>m.destroy()});
   }
 
   // Consequences remain visible long enough to read, then advance without
   // requiring a second acknowledgement click.
   _showConsequence(text,onContinue,opts){
     // Short, readable pause scaled to the text; a tap skips ahead.
-    const readMs=Math.max(2200,Math.min(4000,1300+String(text||'').length*20));
+    const readMs=Math.max(1760,Math.min(3200,1040+String(text||'').length*16));
     opts = Object.assign({auto:true,autoDelay:readMs},opts||{});
     // Clearing any existing world button/timer here (not just on level
     // transitions) is what stops Continue buttons from stacking if this
@@ -982,7 +984,7 @@ class GameScene extends Phaser.Scene {
     this.consequencePanel=this.add.container(0,0).setDepth(62);
     this.consequencePanel.add(elements);
     this.consequencePanel.setAlpha(0);
-    this.tweens.add({targets:this.consequencePanel,alpha:1,duration:650});
+    this.tweens.add({targets:this.consequencePanel,alpha:1,duration:520});
 
     if(opts.auto){
       let done=false;
@@ -991,7 +993,7 @@ class GameScene extends Phaser.Scene {
         if(onContinue) onContinue(); };
       const panel=this.consequencePanel;
       const skip=()=>{ if(this.consequencePanel===panel) go(); else this.input.off('pointerdown',skip); };
-      this.time.delayedCall(700,()=>{ if(!done) this.input.on('pointerdown',skip); });
+      this.time.delayedCall(560,()=>{ if(!done) this.input.on('pointerdown',skip); });
       this.worldBtnTimer = this.time.delayedCall(opts.autoDelay||2600, go);
       return;
     }

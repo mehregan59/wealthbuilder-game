@@ -1,7 +1,7 @@
 class District {
   constructor(scene,config){
     Object.assign(this,config); this.scene=scene; this.S=config.scale||scene.S||1;
-    this.health=config.health||45; this.resources=0; this.selectable=false; this.onSelect=null;
+    this.health=config.health||45; this.resources=0; this.visualCapacity=0; this.selectable=false; this.onSelect=null;
     this.isHovered=false; this.animTime=Math.random()*1000; this.turbineAngle=Math.random()*Math.PI*2;
     this.gfx=scene.add.graphics().setDepth(8); this.animGfx=scene.add.graphics().setDepth(10);
     this.citizens=[]; this._buildLabel(); this.draw(); this._addInteraction(); this._initCitizens();
@@ -14,7 +14,8 @@ class District {
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
-    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(this.scene.hasMetro?45:13);
+    const transportLift=this.id==='transport'?Math.round(this.scene.H*.03):0;
+    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?74:this.id==='energy'?30:44)-transportLift:this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(this.scene.hasMetro?45:13);
     // High-contrast card: a busy drawn city behind it must never make the
     // district name hard to read.
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);
@@ -36,12 +37,12 @@ class District {
       this.labelContainer.addAt(posts,0);
     }
     this.labelHit=this.scene.add.rectangle(this.labelContainer.x,this.labelContainer.y,w,h,0xffffff,0).setDepth(46).setInteractive({useHandCursor:true});
-    this.labelHit.on('pointerdown',(pointer,localX,localY,event)=>{if(event&&event.stopPropagation)event.stopPropagation();if(this.selectable&&this.onSelect)this.onSelect(this);else if(this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.labelContainer.x,this.labelBaseY-this.s(8));});
+    this.labelHit.on('pointerdown',(pointer,localX,localY,event)=>{if(event&&event.stopPropagation)event.stopPropagation();if(this.selectable&&this.onSelect)this.onSelect(this);else if(this._touchPointer(pointer)&&this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.labelContainer.x,this.labelBaseY-this.s(8));});
 
   }
 
   subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(this.scene.hasMetro?36:19);}
-  _grow(){return Math.min(8,Math.max(0,Math.round(this.resources||0)));}
+  _grow(){return Math.min(10,Math.max(0,Math.round(this.visualCapacity||0)));}
   _stage(){return this.health>=78?4:this.health>=58?3:this.health>=34?2:1;}
   draw(){
     this.gfx.clear();
@@ -164,9 +165,10 @@ class District {
     // arched windows along the facade
     g.fillStyle(0x6d8d93,1);for(let i=0;i<6;i++){const x=this.ix(gx+.2+i*.34,gy+d),y=this.iy(gx+.2+i*.34,gy+d,h*.45);g.fillRoundedRect(x-this.s(3),y-this.s(6),this.s(6),this.s(11),{tl:this.s(3),tr:this.s(3),bl:0,br:0});}
     // clock tower
-    const tb=this._box(-.15,.95,.38,.38,1.55+.12*st,0xe2cb9c,0xbf9c6c,0xd4b585);
-    const cx=this.ix(-.15+.19,1.33),cy=this.iy(-.15+.19,1.33,1.25+.12*st);g.fillStyle(0xf7f1e1,1);g.fillCircle(cx,cy,this.s(6));g.lineStyle(this.s(1.2),0x2e2e2e,1);g.strokeCircle(cx,cy,this.s(6));g.lineBetween(cx,cy,cx,cy-this.s(4));g.lineBetween(cx,cy,cx+this.s(3),cy);
-    const top=tb.h,tp=P(-.15+.19,.95+.19,top+.55);g.fillStyle(0x3f6a6c,1);[[P(-.15,1.33,top),P(.23,1.33,top)],[P(.23,1.33,top),P(.23,.95,top)]].forEach(([a,b])=>{g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(tp.x,tp.y);g.closePath();g.fillPath();});
+    const tgx=-.8,tgy=.3,tw=.38,td=.38;
+    const tb=this._box(tgx,tgy,tw,td,1.55+.12*st,0xe2cb9c,0xbf9c6c,0xd4b585);
+    const cx=this.ix(tgx+tw/2,tgy+td),cy=this.iy(tgx+tw/2,tgy+td,1.25+.12*st);g.fillStyle(0xf7f1e1,1);g.fillCircle(cx,cy,this.s(6));g.lineStyle(this.s(1.2),0x2e2e2e,1);g.strokeCircle(cx,cy,this.s(6));g.lineBetween(cx,cy,cx,cy-this.s(4));g.lineBetween(cx,cy,cx+this.s(3),cy);
+    const top=tb.h,tp=P(tgx+tw/2,tgy+td/2,top+.55);g.fillStyle(0x3f6a6c,1);[[P(tgx,tgy+td,top),P(tgx+tw,tgy+td,top)],[P(tgx+tw,tgy+td,top),P(tgx+tw,tgy,top)]].forEach(([a,b])=>{g.beginPath();g.moveTo(a.x,a.y);g.lineTo(b.x,b.y);g.lineTo(tp.x,tp.y);g.closePath();g.fillPath();});
     if(st>=2)this._box(1.9,1.6,.5,.2,.18,0xe0a82e,0x9a7a2a,0xc29530);
     if(st>=3)this._box(.4,2.05,.9,.18,.16,0xc9423a,0x8e2e28,0xa9362f);
     // every allocation adds a train on the platforms
@@ -209,7 +211,8 @@ class District {
     this.chimneyPos=[P(1.7,1.4,1.3),P(2.0,1.4,1.3)];
     this.turbinePos=[];for(let i=0;i<Math.min(2+st+gr,8);i++){const gx=-.2+(i%4)*.6+(i>=4?.3:0),gy=i>=4?-.9:-.45,tx=this.ix(gx,gy),ty=this.iy(gx,gy,0);g.fillStyle(0xeef1e9,1);g.fillRect(tx-this.s(1.6),ty-this.s(48),this.s(3.2),this.s(48));this.turbinePos.push({x:tx,y:ty-this.s(49)});}
   }
-  _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.cx,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide();});this.hitZone.on('pointerdown',()=>{if(this.selectable&&this.onSelect)this.onSelect(this);else if(this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.cx,this.labelBaseY-this.s(8));});}
+  _touchPointer(pointer){const e=pointer&&pointer.event;return !!(pointer&&pointer.wasTouch)||(e&&e.pointerType==='touch');}
+  _addInteraction(){this.hitZone=this.scene.add.rectangle(this.cx,this.cy+this.s(4),this.s(205),this.s(145),0xffffff,0).setDepth(11).setInteractive({useHandCursor:true});this.hitZone.on('pointerover',()=>{this.isHovered=true;this._glowOn();if(this.scene.tooltipManager)this.scene.tooltipManager.show(this,this.labelContainer.x,this.labelBaseY-this.s(8));});this.hitZone.on('pointerout',()=>{this.isHovered=false;this._glowOff();if(this.scene.tooltipManager)this.scene.tooltipManager.hide(this,true);});this.hitZone.on('pointerdown',(pointer)=>{if(this.selectable&&this.onSelect)this.onSelect(this);else if(this._touchPointer(pointer)&&this.scene.tooltipManager)this.scene.tooltipManager.toggle(this,this.labelContainer.x,this.labelBaseY-this.s(8));});}
   setSelectable(on,cb){this.selectable=on;this.onSelect=cb||null;if(on)this._pulseOn();else this._pulseOff();}
   _ringPts(){return [{x:this.ix(-.25,2.5),y:this.iy(-.25,2.5,0)},{x:this.ix(2.5,2.5),y:this.iy(2.5,2.5,0)},{x:this.ix(2.5,-.25),y:this.iy(2.5,-.25,0)},{x:this.ix(-.25,-.25),y:this.iy(-.25,-.25,0)}];}
   _showGlow(){this._glowOn();} _hideGlow(){this._glowOff();}
@@ -220,10 +223,11 @@ class District {
   _initCitizens(){for(let i=0;i<12;i++)this.citizens.push(this._newCitizen());}
   _newCitizen(){return {gx:.15+Math.random()*1.95,gy:.08+Math.random()*1.95,tgx:.15+Math.random()*1.95,tgy:.08+Math.random()*1.95,speed:.00012+Math.random()*.00016,bob:Math.random()*6.2,pause:0,skin:[0xe7b98f,0x9d6847,0x6f4938,0xf0c9a4][Phaser.Math.Between(0,3)],shirt:[0x296b72,0xe0a82e,0xc96b4b,0xf2e7c9][Phaser.Math.Between(0,3)]};}
   _updateCitizens(delta){const g=this.animGfx,active=Math.max(5,Math.min(12,this._stage()*2+3));this.citizens.forEach((c,i)=>{if(i>=active)return;if(c.pause>0)c.pause-=delta;else{const dx=c.tgx-c.gx,dy=c.tgy-c.gy,dist=Math.hypot(dx,dy);if(dist<.06){c.tgx=.15+Math.random()*1.95;c.tgy=.08+Math.random()*1.95;c.pause=180+Math.random()*600;}else{c.gx+=dx/dist*c.speed*delta;c.gy+=dy/dist*c.speed*delta;}}c.bob+=delta*.01;const x=this.ix(c.gx,c.gy),y=this.iy(c.gx,c.gy,0)-Math.abs(Math.sin(c.bob))*this.s(1.5);g.fillStyle(0x173b40,.2);g.fillEllipse(x,y+this.s(3),this.s(8),this.s(3));g.fillStyle(c.shirt,1);g.fillRoundedRect(x-this.s(2.7),y-this.s(9),this.s(5.4),this.s(8),1);g.fillStyle(c.skin,1);g.fillCircle(x,y-this.s(12),this.s(2.8));g.lineStyle(this.s(1.2),0x334f4d,.9);g.lineBetween(x-this.s(1),y-this.s(1),x-this.s(3),y+this.s(5));g.lineBetween(x+this.s(1),y-this.s(1),x+this.s(3),y+this.s(5));});}
-  receiveResource(a){this.resources+=a;this.lastEffect='Investment added capacity and improved district condition by '+Math.round(a*9)+' points.';this._animHealth(this.health,Math.min(100,this.health+a*9),850,'Back.easeOut');this._construction();this.scene.tweens.add({targets:this.labelContainer,scaleX:1.08,scaleY:1.08,duration:180,yoyo:true});}
-  takeDamage(a){this.lastEffect='A recent event reduced district condition by '+Math.round(a)+' points.';this._animHealth(this.health,Math.max(6,this.health-a),950,'Power2.easeIn');this._cracks();}
+  receiveResource(a){this.resources+=a;this.visualCapacity+=a;this.lastEffect='Investment added capacity and improved district condition by '+Math.round(a*9)+' points.';this._animHealth(this.health,Math.min(100,this.health+a*9),680,'Back.easeOut');this._construction();this.scene.tweens.add({targets:this.labelContainer,scaleX:1.08,scaleY:1.08,duration:150,yoyo:true});}
+  takeDamage(a){const lost=Math.min(this.visualCapacity,Math.max(1,Math.round(a/9)));this.visualCapacity=Math.max(0,this.visualCapacity-lost);this.lastEffect='A recent event reduced district condition by '+Math.round(a)+' points and removed '+lost+' capacity.';this._animHealth(this.health,Math.max(6,this.health-a),760,'Power2.easeIn');this._deconstruction(lost);this._cracks();}
   _animHealth(from,to,dur,ease){const o={h:from};this.scene.tweens.add({targets:o,h:to,duration:dur,ease,onUpdate:()=>{this.health=o.h;this.draw();},onComplete:()=>{this.health=to;this.draw();if(this.scene.statsPanel)this.scene.statsPanel.refreshPerformance();}});}
   _construction(){if(this.scene.reducedMotion)return;const crane=this.scene.add.graphics().setDepth(20),x=this.cx+this.s(18),y=this.cy-this.s(20);crane.lineStyle(this.s(2),0xe0a82e,.9);crane.lineBetween(x,y,x,y-this.s(55));crane.lineBetween(x-this.s(24),y-this.s(48),x+this.s(30),y-this.s(48));crane.lineBetween(x+this.s(20),y-this.s(48),x+this.s(20),y-this.s(24));this.scene.tweens.add({targets:crane,alpha:0,duration:850,delay:450,onComplete:()=>crane.destroy()});}
+  _deconstruction(count){if(this.scene.reducedMotion||!count)return;for(let i=0;i<Math.min(5,count);i++){const p=this.scene.add.graphics().setDepth(21),x=this.cx+Phaser.Math.Between(-55,55),y=this.cy+Phaser.Math.Between(-35,25);p.fillStyle(0xd8d0bf,.75);p.fillCircle(x,y,this.s(7+i));this.scene.tweens.add({targets:p,y:y-this.s(24),scaleX:1.8,scaleY:1.8,alpha:0,duration:620,delay:i*90,onComplete:()=>p.destroy()});}}
   _cracks(){for(let i=0;i<3;i++){const c=this.scene.add.graphics().setDepth(20),x=this.cx+Phaser.Math.Between(-50,50),y=this.cy+Phaser.Math.Between(-12,30);c.lineStyle(this.s(2),0xc85848,.9);c.beginPath();c.moveTo(x,y);c.lineTo(x+Phaser.Math.Between(-12,12),y+this.s(15));c.strokePath();this.scene.tweens.add({targets:c,alpha:0,duration:2400,delay:500,onComplete:()=>c.destroy()});}}
   celebrate(){this._construction();}
   setStorm(on){this.scene.tweens.add({targets:[this.gfx,this.animGfx],alpha:on?.48:1,duration:1200});this.scene.tweens.add({targets:this.labelContainer,alpha:on?.65:1,duration:1200});}
