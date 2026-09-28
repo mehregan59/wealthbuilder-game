@@ -25,7 +25,9 @@ class TooltipManager {
     this.titleText.setText(title); this.bodyText.setText(body);
     const titleH=this.titleText.height,bodyH=this.bodyText.height,H=titleH+bodyH+pad*3;
     let tx=Math.min(x-W/2,this.scene.scale.width-W-10); tx=Math.max(tx,10);
-    let ty=y-H-10; if(ty<10) ty=y+30;
+    const safeTop=Math.max(88,Math.round(this.scene.scale.height*.1));
+    let ty=y-H-10; if(ty<safeTop) ty=y+30;
+    ty=Math.min(ty,this.scene.scale.height-H-18);
     this.bg.clear();
     this.bg.fillStyle(0xfffbf1,0.95); this.bg.fillRoundedRect(0,0,W,H,8);
     this.bg.lineStyle(1,0xe0a82e,0.6); this.bg.strokeRoundedRect(0,0,W,H,8);
