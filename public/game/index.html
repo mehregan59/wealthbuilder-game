@@ -118,10 +118,10 @@
 
       function showLanding() {
         if (window.WS_game) {
+          // Phaser owns the canvas and removes it during shutdown.
           window.WS_game.destroy(true);
           window.WS_game = null;
         }
-        gameRoot.replaceChildren();
         document.body.classList.remove('playing');
         window.scrollTo(0, 0);
         startButton.focus({ preventScroll: true });

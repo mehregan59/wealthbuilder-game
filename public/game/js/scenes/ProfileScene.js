@@ -1,9 +1,7 @@
-// Return to the game home: the embedded app listens for 'wealthsim:home';
-// the standalone build has no listener, so it restarts at the first screen.
+// Both the embedded app and standalone GitHub Pages shell listen for this
+// event and restore their landing page.
 function WealthSimHome(scene){
-  if(window.WS_embedded){ window.dispatchEvent(new CustomEvent('wealthsim:home')); return; }
-  const mgr=scene.game.scene; mgr.getScenes(true).forEach(sc=>{ if(sc!==scene) mgr.stop(sc.scene.key); });
-  scene.scene.start('Boot');
+  window.dispatchEvent(new CustomEvent('wealthsim:home'));
 }
 class ProfileScene extends Phaser.Scene {
   constructor(){ super({ key:'ProfileScene' }); }

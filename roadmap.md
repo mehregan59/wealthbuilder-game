@@ -16,3 +16,4 @@
 - [x] Add the landing page and working return-home flow to the standalone GitHub Pages build.
 - [x] Make district details dwell-only, shorten automatic text, correct station/solar/ship art, animate capacity changes, and fix short-screen results overlap.
 - [x] Remove the stray Energy solar panel, move the fossil-fuel plant lower-right, and auto-dismiss level guides after six seconds.
+- [x] Make the final Back to home action restore the landing page in both the app and GitHub Pages build.
