@@ -39,7 +39,18 @@ class PlayerSetup extends Phaser.Scene {
     this._buildSection(270,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],5);
     this._buildSection(410,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
     this._buildContinueBtn(560);
+    this._buildSkipLink(624, de);
   }
+
+  // These answers only personalise the closing text, so a player who wants
+  // to start playing immediately can skip them without losing anything
+  // that affects the game or the behavioural result.
+  _buildSkipLink(y, de) {
+    const t=this.add.text(this.W/2,y,de?'Überspringen und direkt bauen \u2192':'Skip and start building \u2192',
+      {fontFamily:'Arial,sans-serif',fontSize:12,color:'#6b8aaa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    t.on('pointerover',()=>t.setColor('#c8d4e8'));
+    t.on('pointerout',()=>t.setColor('#6b8aaa'));
+    t.on('pointerdown',()=>{ this._skipped=true; this._goNext(); });
 
   _drawStepDots(active) {
     const cx=this.W/2,steps=3,spacing=28;
