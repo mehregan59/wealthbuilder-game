@@ -532,9 +532,11 @@ class GameScene extends Phaser.Scene {
       ScoringEngine.recordDecision(4,c,{phase:'build'}); this._clearPersistentMessage();
       if(c==='university'){
         this.hasUniversity=true; this._updateStats(0,0,-8);
+        this._addLandmark(this.districts[2],'\uD83C\uDFD7','University — under construction',0x4ecdc4);
         this._showConsequence('Construction begins quietly.\nNo result yet. The city waits.\nSomething is being built that may matter greatly later.',()=>this._nextLevel());
       } else {
         this._updateStats(18,0,0); this.districts[0].receiveResource(1);
+        this._addLandmark(this.districts[0],'\uD83C\uDFAA','Festival Square',0xe2a840);
         this._showConsequence('The square is built. Citizens celebrate today.\nThe city is happy — but only for now.',()=>this._nextLevel());
       }
     });
