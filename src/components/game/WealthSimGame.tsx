@@ -8,6 +8,8 @@ const SCRIPTS = [
   "city/CityTheme",
   "city/UrbanFabric",
   "city/CityScape",
+  "city/Metropolis",
+
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",

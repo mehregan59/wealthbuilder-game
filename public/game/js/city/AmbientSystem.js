@@ -13,10 +13,14 @@ class AmbientSystem {
       { x: this.W*0.64, y: 92,  speed: 0.20, scale: 1.15 },
       { x: this.W*0.85, y: 66,  speed: 0.13, scale: 0.85 }
     ];
-    this.skyGfx   = scene.add.graphics().setDepth(-10);
-    this.cloudGfx = scene.add.graphics().setDepth(-8);
-    this.sunMoon  = scene.add.graphics().setDepth(-9);
+    // In the connected metropolis the city fills the whole view, so the old
+    // sky band, sun and clouds sit behind the land instead of over the city.
+    const back = scene.hasMetro ? -30 : 0;
+    this.skyGfx   = scene.add.graphics().setDepth(back ? back : -10);
+    this.cloudGfx = scene.add.graphics().setDepth(back ? back+1 : -8);
+    this.sunMoon  = scene.add.graphics().setDepth(back ? back+2 : -9);
     this.nightShade = scene.add.graphics().setDepth(41);
+
     for (let i = 0; i < 70; i++) {
       this.stars.push({ x: Phaser.Math.Between(0, this.W), y: Phaser.Math.Between(0, 230), r: Math.random()*1.4+0.4, tw: Math.random()*Math.PI*2 });
     }
