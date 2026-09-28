@@ -72,8 +72,8 @@ class GameScene extends Phaser.Scene {
     // Extra margin off both the panel and the right edge of the screen,
     // and Housing/Energy pulled ~20% closer to their inner neighbours
     // (Transport/Technology) instead of sitting right at the outer bounds.
-    const L = this.PANEL + this.s(112);
-    const R = this.W - this.s(108);
+    const L = this.PANEL + this.s(132);
+    const R = this.W - this.s(128);
     const span = R - L;
     const px = f => Math.round(L + span * f);
     const baseY = this.isCompact ? Math.round(this.H*0.53) : this.s(482);
@@ -82,26 +82,26 @@ class GameScene extends Phaser.Scene {
       {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
     ] : null;
     const at=(index,f,y)=>compactPoints ? {cx:compactPoints[index].x,cy:compactPoints[index].y} : {cx:px(f),cy:y};
-    const p0=at(0,.08,baseY+this.s(10)),p1=at(1,.36,baseY-this.s(42));
-    const p2=at(2,.64,baseY-this.s(42)),p3=at(3,.92,baseY+this.s(10));
+    const p0=at(0,.12,baseY+this.s(18)),p1=at(1,.38,baseY-this.s(34));
+    const p2=at(2,.62,baseY-this.s(34)),p3=at(3,.88,baseY+this.s(18));
     // Warmer, clearly distinct district palette: housing coral/cream,
     // transport blue/teal, technology violet, energy amber. Icons and text
     // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
-        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S,
+        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.08,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
       new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
-        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S,
+        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S*1.08,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
       new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S,
+        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.08,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
-        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S,
+        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S*1.08,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
     ];

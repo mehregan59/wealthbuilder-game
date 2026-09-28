@@ -114,12 +114,12 @@ class RoadNetwork {
   }
 
   _seed() {
-    [0,2,4,6].forEach((n,i)=>{
+    [0,1,2,3,4,5,6].forEach((n,i)=>{
       this.scene.time.delayedCall(i*420,      ()=>this._spawn(0,n));
       this.scene.time.delayedCall(i*420+1300, ()=>this._spawn(1,n));
     });
     this.scene.time.addEvent({delay:4200, loop:true, callback:()=>{
-      if(this.cars.length<7) this._spawn(Math.random()>0.5?0:1,0);
+       if(this.cars.length<12) this._spawn(Math.random()>0.5?0:1,0);
     }});
   }
 
@@ -206,7 +206,7 @@ class RoadNetwork {
   _car(x,y,ang,c,isNight,big) {
     const g=this.carGfx;
     const cos=Math.cos(ang),sin=Math.sin(ang);
-    const L=big?this.s(34):this.s(17), W=big?this.s(15):this.s(9);
+    const L=big?this.s(38):this.s(22), W=big?this.s(16):this.s(11);
     const put=(ox,oy)=>({x:x+ox*cos-oy*sin, y:y+ox*sin+oy*cos});
     g.fillStyle(0x173b40,0.22); g.fillEllipse(x,y+this.s(4),L,W*0.6);
     g.fillStyle(c.col,0.97);
