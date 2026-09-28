@@ -26,11 +26,13 @@ class HUD {
       fontFamily:CityTheme.body, fontSize:this.s(13), color:'#55777a'
     }).setOrigin(0,0.5);
     this.container.add(this.titleText);
+    if (W < 700) this.titleText.setVisible(false);
 
     this.yearText = this.scene.add.text(W - this.s(20), H/2, 'Year 2024', {
       fontFamily:CityTheme.body, fontSize:this.s(13), color:'#55777a'
     }).setOrigin(1,0.5);
     this.container.add(this.yearText);
+    if (W < 700) this.yearText.setText(String(this.year));
 
     // City name, sitting right next to the year rather than as a separate
     // element elsewhere on screen.
@@ -41,6 +43,7 @@ class HUD {
         color:'#296b72', fontStyle:'600'
       }).setOrigin(1,0.5);
       this.container.add(this.cityText);
+      if (W < 700) this.cityText.setVisible(false);
       const sep = this.scene.add.graphics();
       sep.fillStyle(0x7ca5a1,1);
       sep.fillCircle(this.cityText.x - this.cityText.width - this.s(8), H/2, this.s(1.6));
@@ -57,7 +60,7 @@ class HUD {
 
   advanceYear(y) {
     this.year += (y || 1);
-    this.yearText.setText('Year ' + this.year);
+    this.yearText.setText(this.scene.scale.width < 700 ? String(this.year) : 'Year ' + this.year);
   }
 
   showMessage(text, dur) {

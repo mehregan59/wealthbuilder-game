@@ -4,8 +4,11 @@ class GameScene extends Phaser.Scene {
   create() {
     this.W = this.scale.width;
     this.H = this.scale.height;
-    this.S = Math.max(0.85, Math.min(1.9, this.H / 720));
-    this.PANEL = Math.round(Math.min(232, Math.max(168, this.W * 0.14)));
+    this.isCompact = this.W < 700;
+    this.S = this.isCompact
+      ? Math.max(0.54, Math.min(0.72, this.W / 620))
+      : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
+    this.PANEL = this.isCompact ? 0 : Math.round(Math.min(232, Math.max(168, this.W * 0.14)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
 
@@ -13,7 +16,7 @@ class GameScene extends Phaser.Scene {
     // consequence still shows as text, so no information is lost.
     this.reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
-    const groundY = this.s(352);
+    const groundY = this.isCompact ? Math.round(this.H * 0.29) : this.s(352);
     this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
     const ground = this.add.graphics().setDepth(-5);
     // Warmer, lighter land so the city reads as a living place rather than
@@ -45,6 +48,7 @@ class GameScene extends Phaser.Scene {
     this.roads = new RoadNetwork(this, this.districts);
     this.hud = new HUD(this);
     this.statsPanel = new StatsPanel(this);
+    if(this.isCompact) this.statsPanel.container.setVisible(false);
     this.statsPanel.updateStats(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources);
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,0);
 
@@ -72,25 +76,32 @@ class GameScene extends Phaser.Scene {
     const R = this.W - this.s(108);
     const span = R - L;
     const px = f => Math.round(L + span * f);
-    const baseY = this.s(482);
+    const baseY = this.isCompact ? Math.round(this.H*0.53) : this.s(482);
+    const compactPoints = this.isCompact ? [
+      {x:this.W*.27,y:baseY}, {x:this.W*.72,y:baseY-this.s(22)},
+      {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
+    ] : null;
+    const at=(index,f,y)=>compactPoints ? {cx:compactPoints[index].x,cy:compactPoints[index].y} : {cx:px(f),cy:y};
+    const p0=at(0,.08,baseY+this.s(10)),p1=at(1,.36,baseY-this.s(42));
+    const p2=at(2,.64,baseY-this.s(42)),p3=at(3,.92,baseY+this.s(10));
     // Warmer, clearly distinct district palette: housing coral/cream,
     // transport blue/teal, technology violet, energy amber. Icons and text
     // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
-        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:px(0.08),cy:baseY+this.s(10),health:45,scale:this.S,
+        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
       new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
-        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:px(0.36),cy:baseY-this.s(42),health:45,scale:this.S,
+        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
       new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:px(0.64),cy:baseY-this.s(42),health:45,scale:this.S,
+        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
-        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:px(0.92),cy:baseY+this.s(10),health:45,scale:this.S,
+        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
     ];
