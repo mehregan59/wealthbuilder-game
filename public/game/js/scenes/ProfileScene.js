@@ -256,7 +256,8 @@ class ProfileScene extends Phaser.Scene {
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
-    let y=[by+this.s(86),by+this.s(86)];
+    const rowsTop=intro.y+intro.height+this.s(16);
+    let y=[rowsTop,rowsTop];
     rows.forEach((r,i)=>{
       const col=i%2, x=bx+this.s(26)+col*(colW+this.s(26));
       const hd=this.add.text(x,y[col],r.trait,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#f0c060',fontStyle:'700'});
