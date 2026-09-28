@@ -633,8 +633,10 @@ class GameScene extends Phaser.Scene {
       const dl={accept:[-8,5,-8],independent:[-5,8,-15],decline:[0,0,5]}[c]||[0,0,0];
       this._updateStats(dl[0],dl[1],dl[2]);
       if(c==='accept'){
+        this._addLandmark(this.districts[1],'\uD83E\uDD1D','Shared infrastructure',0x62c4dd);
         this.roads.visitorAccept(this.districts[0], ()=>{ this.districts[0].receiveResource(1); this._celebrateCity('🎉 Partnership Celebrated!'); });
       } else {
+        if(c==='independent') this._addLandmark(this.districts[1],'\uD83C\uDFD7','Own infrastructure',0x8aa4c0);
         this.roads.visitorDecline(); if(c==='independent') this.districts[0].receiveResource(1);
       }
       this._showConsequence(m[c]||m.decline,()=>this._nextLevel());
