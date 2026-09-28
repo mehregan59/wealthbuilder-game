@@ -29,7 +29,7 @@ export const Route = createFileRoute("/api/explain")({
         const parsed = Body.safeParse(await request.json().catch(() => null));
         if (!parsed.success) return new Response("Invalid request", { status: 400 });
         const { lang, context, messages } = parsed.data;
-        const key = process.env.LOVABLE_API_KEY;
+        const key = process.env['LOVABLE_API_KEY'];
         if (!key) return new Response("AI is not configured", { status: 500 });
 
         const input = [
