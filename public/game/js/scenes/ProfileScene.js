@@ -208,7 +208,12 @@ class ProfileScene extends Phaser.Scene {
 
     // Exit to the game home plus a next-step education preview.
     const bW=this.s(220), bH=this.s(48), gap=this.s(20);
-    const bY=Math.max(discY+disc.height+this.s(82),this.H-this.s(70));
+    // Keep the final actions fixed inside the visible bottom edge. Previously
+    // Math.max could place them below the canvas on shorter screens.
+    const bY=this.H-bH-this.s(18);
+    const actionShade=this.add.graphics().setDepth(98).setAlpha(0);
+    actionShade.fillStyle(0xfffbf1,0.97);actionShade.fillRect(0,bY-this.s(14),W,bH+this.s(32));
+    actionShade.lineStyle(1,0x7ca5a1,0.55);actionShade.lineBetween(0,bY-this.s(14),W,bY-this.s(14));
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
     btnBg.fillStyle(0xe0a82e,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
     const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Zur Startseite':'Back to home',{
@@ -224,14 +229,14 @@ class ProfileScene extends Phaser.Scene {
     const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
     ctaBg.fillStyle(0xf8f2df,1); ctaBg.fillRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     ctaBg.lineStyle(1,0x296b72,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
-    this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
+    this.tweens.add({targets:[actionShade,btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); WealthSimHome(this); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
     const eduW=Math.min(this.s(520),W-this.s(40));
-    const eduX=cx-eduW/2, eduY=bY-this.s(62);
+    const eduX=cx-eduW/2, eduY=bY-this.s(68);
     const eduBg=this.add.graphics().setDepth(99).setAlpha(0);
     eduBg.fillStyle(0xdce9df,1); eduBg.fillRoundedRect(eduX,eduY,eduW,bH,this.s(8));
     eduBg.lineStyle(1,0x7ca5a1,1); eduBg.strokeRoundedRect(eduX,eduY,eduW,bH,this.s(8));

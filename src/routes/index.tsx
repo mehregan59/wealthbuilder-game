@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { lazy, Suspense, useState } from "react";
+import { lazy, Suspense, useEffect, useState } from "react";
 import { ClientOnly } from "@tanstack/react-router";
 import { ArrowRight, Building2, ChartNoAxesCombined, ShieldCheck } from "lucide-react";
 import cityImage from "@/assets/wealthsim-eco-city.jpg";
@@ -40,6 +40,17 @@ function Loading() {
 
 function Index() {
   const [playing, setPlaying] = useState(false);
+
+  // A browser refresh or back/forward cache restore always returns to the
+  // public landing page rather than reviving an unfinished Phaser session.
+  useEffect(() => {
+    setPlaying(false);
+    const showLanding = (event: PageTransitionEvent) => {
+      if (event.persisted) setPlaying(false);
+    };
+    window.addEventListener("pageshow", showLanding);
+    return () => window.removeEventListener("pageshow", showLanding);
+  }, []);
 
   if (!playing) {
     return (
