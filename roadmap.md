@@ -15,3 +15,4 @@
 - [x] Always open the landing page after refresh and keep Back to home visible on the final screen.
 - [x] Add the landing page and working return-home flow to the standalone GitHub Pages build.
 - [x] Make district details dwell-only, shorten automatic text, correct station/solar/ship art, animate capacity changes, and fix short-screen results overlap.
+- [x] Remove the stray Energy solar panel, move the fossil-fuel plant lower-right, and auto-dismiss level guides after six seconds.

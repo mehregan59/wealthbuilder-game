@@ -1,6 +1,6 @@
 // Level tutorials plus a longer welcome briefing shown before the questions.
 class Tutorial {
-  constructor(scene){ this.scene=scene; this.S=scene.S||1; this.card=null; }
+  constructor(scene){ this.scene=scene; this.S=scene.S||1; this.card=null; this.autoCloseTimer=null; }
   s(v){ return Math.round(v*this.S); }
 
   static copy(level, de) {
@@ -154,14 +154,27 @@ class Tutorial {
       .setDepth(133).setInteractive({useHandCursor:true});
     hit.on('pointerover',()=>drawBtn(true));
     hit.on('pointerout', ()=>drawBtn(false));
-    hit.on('pointerdown',()=>{ this.hide(); if(onClose) onClose(); });
+    let completed=false;
+    const complete=()=>{
+      if(completed)return;
+      completed=true;
+      this.hide();
+      if(onClose)onClose();
+    };
+    hit.on('pointerdown',complete);
 
     this.card=this.scene.add.container(0,0).setDepth(130);
     this.card.add([bg,title,body,btn,btnTxt,hit].concat(extras));
     this.card.setAlpha(0);
     this.scene.tweens.add({targets:this.card,alpha:1,duration:420});
+    // Per-level guides should help briefly, then reveal the playable city
+    // without waiting indefinitely for a click.
+    if(!centred)this.autoCloseTimer=this.scene.time.delayedCall(6000,complete);
   }
 
-  hide(){ if(this.card){ this.scene.tweens.killTweensOf(this.card); this.card.destroy(); this.card=null; } }
+  hide(){
+    if(this.autoCloseTimer){this.autoCloseTimer.remove(false);this.autoCloseTimer=null;}
+    if(this.card){ this.scene.tweens.killTweensOf(this.card); this.card.destroy(); this.card=null; }
+  }
 }
 Tutorial.skipAll = false;
