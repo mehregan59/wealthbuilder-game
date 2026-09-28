@@ -20,7 +20,7 @@ Rules:
 - Never invent scores or decisions; if a trait is null say it was not observed.
 - Scoring facts: risk, loss aversion and patience blend 90% gameplay + 10% starting answers; other traits are 100% gameplay. Market events are random each run, so runs are not directly comparable.
 - Reform status: the 48% Rentenniveau extension to 2031 is law. Frühstart-Rente, raising the retirement age to 67.5 and a 70% target are only proposals. The 2027 private-pension reform (Altersvorsorgedepot) should be described conditionally. Do not mention Generationenkapital.
-- Results describe this session only, not a fixed personality. Keep answers under 180 words, plain language, warm and non-judgemental.`;
+- Results describe this session only, not a fixed personality. Keep answers under 180 words, plain text without markdown symbols, warm and non-judgemental.`;
 
 export const Route = createFileRoute("/api/explain")({
   server: {
