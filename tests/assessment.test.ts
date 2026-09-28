@@ -150,8 +150,7 @@ describe("ScoringEngine", () => {
 });
 
 describe('previously unwired beats', () => {
-  // eslint-disable-next-line @typescript-eslint/no-var-requires
-  const A2 = require('../public/game/js/assessment.js');
+  const A2 = A;
   const base = [
     { level: 6, value: 'accept' }, { level: 7, value: 'hold', elapsed: 8000 },
     { level: 8, value: 'hold' }, { level: 4, value: 'university', phase: 'build' },
