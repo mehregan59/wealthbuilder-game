@@ -149,7 +149,7 @@ class ProfileScene extends Phaser.Scene {
       hit.on('pointerout', ()=>{ q.setColor('#3f6288'); this._hideTip(); });
     });
 
-    // Retirement note
+    // Retirement note (existing context note) + new retirement section
     const noteY=startY+Math.ceil(keys.length/2)*rowH+this.s(14);
     const nW=Math.min(this.s(760),W-this.s(110));
     const nBg=this.add.graphics().setDepth(99).setAlpha(0);
@@ -162,22 +162,62 @@ class ProfileScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[nBg,nTx],alpha:1,duration:900,delay:1700});
 
-    const disc=this.add.text(cx,noteY+this.s(98),de
-      ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung.'
-      : 'This profile reflects this session only. It is not financial advice.',{
+    // ── Retirement in Germany: personalised, badged, educational ──
+    const retY=noteY+this.s(92);
+    const ret=this._retirementLines(de);
+    const rBg=this.add.graphics().setDepth(99).setAlpha(0);
+    const rTx=this.add.text(cx,retY+this.s(14),ret.body,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#b8cde0',
+      align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(5)
+    }).setOrigin(0.5,0).setDepth(100).setAlpha(0);
+    const rH=rTx.height+this.s(58);
+    rBg.fillStyle(0x0b1725,0.92); rBg.fillRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(1,0x2c4767,1); rBg.strokeRoundedRect(cx-nW/2,retY,nW,rH,this.s(12));
+    rBg.lineStyle(this.s(4),0xe2a840,0.75); rBg.lineBetween(cx-nW/2,retY+this.s(12),cx-nW/2,retY+rH-this.s(12));
+    // Status badges row
+    const badgeY=retY+rTx.height+this.s(24);
+    let bxOff=cx-(ret.badges.length*this.s(118))/2;
+    const badgeObjs=[];
+    ret.badges.forEach(b=>{
+      const col=b.status==='LAW'?0x4ecdc4:(b.status==='EFFECTIVE 2027'?0xe2a840:0x7fa6c9);
+      const bg=this.add.graphics().setDepth(100).setAlpha(0);
+      bg.fillStyle(col,0.16); bg.fillRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
+      bg.lineStyle(1,col,0.8); bg.strokeRoundedRect(bxOff,badgeY,this.s(110),this.s(20),this.s(10));
+      const bt=this.add.text(bxOff+this.s(55),badgeY+this.s(10),b.status,{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(10),color:'#dbe8f4',fontStyle:'700'
+      }).setOrigin(0.5).setDepth(100).setAlpha(0);
+      badgeObjs.push(bg,bt);
+      bxOff+=this.s(118);
+    });
+    this.tweens.add({targets:[rBg,rTx].concat(badgeObjs),alpha:1,duration:900,delay:1900});
+
+    const disc=this.add.text(cx,retY+rH+this.s(14),de
+      ? 'Dieses Profil spiegelt nur diese Sitzung wider. Es ist keine Finanzberatung. Rentenangaben zuletzt geprüft: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—')
+      : 'This profile reflects this session only. It is not financial advice. Pension facts last verified: '+(typeof PensionContent!=='undefined'?PensionContent.lastVerified:'—'),{
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#456a8c',align:'center'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
-    const bY=noteY+this.s(126), bW=this.s(220), bH=this.s(48);
+    // Buttons: Play Again + real-world CTA adapted to the player's situation
+    const bY=retY+rH+this.s(40), bW=this.s(220), bH=this.s(48), gap=this.s(20);
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
-    btnBg.fillStyle(0xe2a840,1); btnBg.fillRoundedRect(cx-bW/2,bY,bW,bH,this.s(11));
-    const btnTx=this.add.text(cx,bY+bH/2,de?'Nochmal spielen':'Play Again',{
+    btnBg.fillStyle(0xe2a840,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
+    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(18),color:'#0b1725',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
-    this.tweens.add({targets:[btnBg,btnTx],alpha:1,duration:800,delay:2300});
-    const hit=this.add.rectangle(cx,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
+    const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
+    const ctaLabel=this._ctaLabel(de);
+    const ctaW=Math.max(bW,this.s(24)+ctaLabel.length*this.s(7));
+    ctaBg.fillStyle(0x0b1725,1); ctaBg.fillRoundedRect(cx+gap/2,bY,ctaW,bH,this.s(11));
+    ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(cx+gap/2,bY,ctaW,bH,this.s(11));
+    const ctaTx=this.add.text(cx+gap/2+ctaW/2,bY+bH/2,ctaLabel,{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#4ecdc4',fontStyle:'600'
+    }).setOrigin(0.5).setDepth(100).setAlpha(0);
+    this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
+    const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
+    const ctaHit=this.add.rectangle(cx+gap/2+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
+    ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),cx+gap/2+ctaW/2,bY));
 
     this._detailsButton(de);
     console.log('[WealthSim] Scores:',this.scores,'Persona:',this.persona.key);
