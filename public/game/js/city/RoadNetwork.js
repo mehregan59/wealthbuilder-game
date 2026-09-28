@@ -80,12 +80,12 @@ class RoadNetwork {
 
   _draw() {
     const main=this.lanes[0].pts, branch=this.lanes[2].pts;
-    this._band(branch,this.s(11),0x1e2026,0.85);
-    this._dashes(branch,0xf5dd88,0.2,this.s(26));
-    this._band(main,this.s(15),0x23252b,0.92);
-    this._dashes(main,0xf5dd88,0.28,this.s(24));
+    this._band(branch,this.s(12),0x485b5b,0.94);
+    this._dashes(branch,0xf2d77d,0.68,this.s(26));
+    this._band(main,this.s(17),0x485b5b,0.98);
+    this._dashes(main,0xf2d77d,0.78,this.s(24));
     const g=this.gfx;
-    g.lineStyle(1,0x3d4048,0.6);
+    g.lineStyle(this.s(4),0xc9c9b7,0.95);
     g.beginPath(); g.moveTo(main[0].x,main[0].y-this.s(15));
     main.forEach(p=>g.lineTo(p.x,p.y-this.s(15))); g.strokePath();
     g.beginPath(); g.moveTo(main[0].x,main[0].y+this.s(15));
@@ -208,11 +208,11 @@ class RoadNetwork {
     const cos=Math.cos(ang),sin=Math.sin(ang);
     const L=big?this.s(34):this.s(17), W=big?this.s(15):this.s(9);
     const put=(ox,oy)=>({x:x+ox*cos-oy*sin, y:y+ox*sin+oy*cos});
-    g.fillStyle(0x000000,0.3); g.fillEllipse(x,y+this.s(4),L,W*0.6);
+    g.fillStyle(0x173b40,0.22); g.fillEllipse(x,y+this.s(4),L,W*0.6);
     g.fillStyle(c.col,0.97);
     const b=[put(-L/2,-W/2),put(L/2,-W/2),put(L/2,W/2),put(-L/2,W/2)];
     g.beginPath(); g.moveTo(b[0].x,b[0].y); b.forEach(p=>g.lineTo(p.x,p.y)); g.closePath(); g.fillPath();
-    g.fillStyle(0x101820,0.5);
+    g.fillStyle(0xbfe4e6,0.85);
     const r=[put(-L*0.12,-W/2+1),put(L*0.3,-W/2+1),put(L*0.3,W/2-1),put(-L*0.12,W/2-1)];
     g.beginPath(); g.moveTo(r[0].x,r[0].y); r.forEach(p=>g.lineTo(p.x,p.y)); g.closePath(); g.fillPath();
     g.fillStyle(0x14161a,0.9);
