@@ -106,7 +106,7 @@ export default function WealthSimGame() {
         for (const src of SCRIPTS) await loadScript(src);
         if (!containerRef.current || gameInstance) return;
 
-        gameInstance = new Phaser.Game({
+        gameInstance = (window as any).__wealthsim = new Phaser.Game({
           type: Phaser.AUTO,
           backgroundColor: "#0a1420",
           scale: {
