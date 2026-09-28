@@ -11,10 +11,11 @@ class RoadNetwork {
     this.carGfx  = scene.add.graphics().setDepth(6);
     this.signGfx = scene.add.graphics().setDepth(11).setAlpha(0);
     this.lanes   = this._lanes();
-    // With the painted city in place the drawn highway and its toy cars are
-    // dropped entirely: traffic lives on the real streets of the artwork.
-    this.quiet   = !!scene.hasPanorama;
+    // The metropolis draws and runs every street itself, so this older
+    // stand-alone highway stays silent; only the Level 6 visitor uses it.
+    this.quiet   = !!(scene.hasMetro || scene.hasPanorama);
     if(!this.quiet){ this._draw(); this._seed(); }
+
     this._buildSign();
   }
 

@@ -15,31 +15,42 @@ class District {
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
     this.labelBaseY=this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
-    const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'700'}).setOrigin(0.5);
-    const w=t.width+this.s(26),h=this.s(30),bg=this.scene.add.graphics();
-    bg.fillStyle(CityTheme.colors.paper,0.94); bg.fillRoundedRect(-w/2,-h/2,w,h,this.s(6));
-    bg.lineStyle(1,this.accentColor,0.56); bg.strokeRoundedRect(-w/2,-h/2,w,h,this.s(6));
+    // High-contrast card: a busy drawn city behind it must never make the
+    // district name hard to read.
+    const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);
+    const w=t.width+this.s(30),h=this.s(32),bg=this.scene.add.graphics();
+    bg.fillStyle(0x0e2b2c,0.92); bg.fillRoundedRect(-w/2,-h/2,w,h,this.s(7));
+    bg.lineStyle(this.s(2),this.accentColor,0.95); bg.strokeRoundedRect(-w/2,-h/2,w,h,this.s(7));
     this.labelContainer.add([bg,t]); this.labelH=h;
+    // Keep the name fully on screen: never tucked behind the side panel or
+    // cut off at the right edge.
+    const minX=(this.scene.PANEL||0)+w/2+this.s(10), maxX=this.scene.W-w/2-this.s(10);
+    this.labelContainer.x=Math.max(minX,Math.min(maxX,this.cx));
+    this.labelBaseY=Math.max(this.s(58),this.labelBaseY);
+    this.labelContainer.y=this.labelBaseY;
+
   }
+
   subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(19);}
   _stage(){return this.health>=78?4:this.health>=58?3:this.health>=34?2:1;}
   draw(){
     this.gfx.clear();
-    // On the painted city the districts are quarters of the illustration,
-    // not separate plots: no green island, no drawn street — only a soft
-    // plaza shading so the buildings sit on the artwork.
-    if(this.scene.hasPanorama) this._plaza(); else { this._parcel(); this._streets(); }
+    // In the connected metropolis a district is a quarter of the city, not a
+    // separate plot: a paved block that sits flush in the surrounding streets.
+    if(this.scene.hasMetro||this.scene.hasPanorama) this._plaza(); else { this._parcel(); this._streets(); }
     if(this.id==='housing')this._housing(); else if(this.id==='transport')this._transport();
     else if(this.id==='technology')this._technology(); else this._energy();
   }
   _poly(g,pts,color,alpha){g.fillStyle(color,alpha===undefined?1:alpha);g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)g.lineTo(pts[i].x,pts[i].y);g.closePath();g.fillPath();}
   _plaza(){
     const g=this.gfx,p=this._ringPts();
-    // Warm ground-contact shadow only — it reads as the quarter resting in
-    // the painted city rather than a cut-out tile placed on top of it.
-    this._poly(g,p,0x1d2e2a,.17);
-    this._poly(g,p.map(q=>({x:this.cx+(q.x-this.cx)*.88,y:this.cy+(q.y-this.cy)*.88})),0xe8dcc0,.10);
+    // A paved block flush with the surrounding streets — no raised tile, no
+    // drop shadow, so the quarter is simply part of the city ground.
+    this._poly(g,p,0xc4c2b1,.96);
+    this._poly(g,p.map(q=>({x:this.cx+(q.x-this.cx)*.92,y:this.cy+(q.y-this.cy)*.92})),0xd9d6c3,.95);
   }
+
+
   _parcel(){
     const g=this.gfx,p=[{x:this.ix(-.25,2.5),y:this.iy(-.25,2.5,0)},{x:this.ix(2.5,2.5),y:this.iy(2.5,2.5,0)},{x:this.ix(2.5,-.25),y:this.iy(2.5,-.25,0)},{x:this.ix(-.25,-.25),y:this.iy(-.25,-.25,0)}];
     this._poly(g,p,0x83ad73,.82); g.lineStyle(1,0xe7eed9,.5);g.strokePath();

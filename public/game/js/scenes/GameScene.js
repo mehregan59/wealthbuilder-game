@@ -18,16 +18,11 @@ class GameScene extends Phaser.Scene {
 
     const groundY = this.isCompact ? Math.round(this.H * 0.29) : this.s(352);
     this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
-    // The painted regional city replaces the flat drawn land when its
-    // artwork is available; the drawn fallback keeps the game playable
-    // if the image ever fails to load.
-    this.hasPanorama = this.textures.exists('cityPanorama');
-    if(!this.hasPanorama){
-      const ground = this.add.graphics().setDepth(-5);
-      ground.fillStyle(CityTheme.colors.land,1); ground.fillRect(0,groundY,this.W,this.H-groundY);
-      ground.fillStyle(0xa6c78b,1); ground.fillRect(0,groundY,this.W,this.s(9));
-      ground.fillStyle(CityTheme.colors.landDark,1); ground.fillRect(0,groundY+this.s(10),this.W,this.s(14));
-    }
+    // One continuous drawn metropolis fills the whole canvas: river, bridges,
+    // boulevards, rail line and city blocks. Every quarter is part of it.
+    this.hasPanorama = false;
+    this.hasMetro = true;
+
 
 
     this.ambient = new AmbientSystem(this);
@@ -46,12 +41,9 @@ class GameScene extends Phaser.Scene {
     this._panelIntroShown = false;
     this._level3IdleTimer = null;
 
-    if(this.hasPanorama) this.cityscape = new CityScape(this);
+    this.metro = new Metropolis(this);
     this._buildDistricts();
-    if(!this.hasPanorama){
-      this._drawCityBoundary();
-      this.fabric = new UrbanFabric(this, this.districts);
-    }
+
     this.roads = new RoadNetwork(this, this.districts);
     this.hud = new HUD(this);
     this.statsPanel = new StatsPanel(this);
@@ -88,19 +80,15 @@ class GameScene extends Phaser.Scene {
       {x:this.W*.27,y:baseY}, {x:this.W*.72,y:baseY-this.s(22)},
       {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
     ] : null;
-    // On the painted city each quarter sits on its real landmark: the old
-    // town by the river, the glass station, the office campus, the hills
-    // with solar panels and wind turbines.
-    const panoramaPoints = (this.hasPanorama && !this.isCompact) ? [
-      {x:this.PANEL+(this.W-this.PANEL)*0.115, y:this.H*0.505},
-      {x:this.PANEL+(this.W-this.PANEL)*0.335, y:this.H*0.455},
-      {x:this.PANEL+(this.W-this.PANEL)*0.645, y:this.H*0.545},
-      {x:this.PANEL+(this.W-this.PANEL)*0.865, y:this.H*0.495}
+    // Each quarter is anchored to its place in the one continuous city: the
+    // old town on the west bank, the terminal on the north avenue, the office
+    // quarter to the south-east, the hills with wind and solar to the north-east.
+    const metroPoints = (this.metro && !this.isCompact)
+      ? this.metro.districtPoints.map(p => ({x:p.x, y:p.y}))
+      : null;
 
+    const pts = metroPoints || compactPoints;
 
-    ] : null;
-
-    const pts = panoramaPoints || compactPoints;
     const at=(index,f,y)=>pts ? {cx:pts[index].x,cy:pts[index].y} : {cx:px(f),cy:y};
     const p0=at(0,.12,baseY+this.s(18)),p1=at(1,.38,baseY-this.s(34));
     const p2=at(2,.62,baseY-this.s(34)),p3=at(3,.88,baseY+this.s(18));
@@ -110,19 +98,19 @@ class GameScene extends Phaser.Scene {
     // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
-        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.08,
+        color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.16,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
       new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
-        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S*1.08,
+        color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S*1.16,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
       new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
-        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.08,labelLift:46,
+        color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.16,labelLift:46,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
       new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
-        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S*1.08,
+        color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S*1.16,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
     ];
@@ -1063,7 +1051,7 @@ class GameScene extends Phaser.Scene {
 
   update(time,delta){
     const night=this.ambient.isNightTime();
-    if(this.cityscape){ this.cityscape.setNight(night?1:0); this.cityscape.update(time,delta); }
+    if(this.metro){ this.metro.setNight(night?0.55:0); this.metro.update(time,delta); }
     this.ambient.update(time,delta);
     this.weather.update(delta);
     if(!this.roads.quiet || this.roads.visitor) this.roads.update(delta,night);
