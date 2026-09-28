@@ -217,7 +217,7 @@ class ProfileScene extends Phaser.Scene {
     ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
-    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
+    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); if(typeof AskResults!=='undefined') AskResults.reset(); this.scene.start('PlayerSetup'); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
@@ -235,6 +235,25 @@ class ProfileScene extends Phaser.Scene {
     this.tweens.add({targets:t,alpha:1,duration:800,delay:2400});
     t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#e2a840'));
     t.on('pointerdown',()=>this._openDetails(de));
+    if (typeof AskResults==='undefined') return;
+    const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'?  Frag nach deinem Ergebnis':'?  Ask about my result',{
+      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#e2a840',fontStyle:'600',
+      backgroundColor:'#0b1725',padding:{x:this.s(12),y:this.s(8)}
+    }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
+    this.tweens.add({targets:a,alpha:1,duration:800,delay:2600});
+    a.on('pointerover',()=>a.setColor('#ffe090')); a.on('pointerout',()=>a.setColor('#e2a840'));
+    a.on('pointerdown',()=>{ this._hideTip(); AskResults.open(this._askContext(), de); });
+    this.events.once('shutdown',()=>AskResults.close());
+  }
+
+  _askContext() {
+    const D=(typeof ScoringEngine!=='undefined'&&ScoringEngine.decisions)?ScoringEngine.decisions:[];
+    const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
+    const scores={}; Object.keys(this.scores).forEach(k=>{ if(k[0]!=='_') scores[k]=this.scores[k]; });
+    const p=(typeof GameState!=='undefined'&&GameState.player)||{};
+    return { persona:String(this.persona.key), scores,
+      evidence:Assessment.evidence(D,A,this.scores).map(r=>({trait:r.trait,did:r.did,how:r.how})),
+      age:p.age!=null?String(p.age):null, employment:p.employment!=null?String(p.employment):null };
   }
 
   _openDetails(de) {
