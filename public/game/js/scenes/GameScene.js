@@ -46,9 +46,12 @@ class GameScene extends Phaser.Scene {
     this._panelIntroShown = false;
     this._level3IdleTimer = null;
 
+    if(this.hasPanorama) this.cityscape = new CityScape(this);
     this._buildDistricts();
-    this._drawCityBoundary();
-    this.fabric = new UrbanFabric(this, this.districts);
+    if(!this.hasPanorama){
+      this._drawCityBoundary();
+      this.fabric = new UrbanFabric(this, this.districts);
+    }
     this.roads = new RoadNetwork(this, this.districts);
     this.hud = new HUD(this);
     this.statsPanel = new StatsPanel(this);
