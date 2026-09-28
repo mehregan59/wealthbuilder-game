@@ -143,8 +143,8 @@ const Assessment = {
     const add = (trait, did, how) => rows.push({ trait, did, how });
 
     const l1 = last(1);
-    add('Risk preference', l1 ? 'Level 1: you built first in ' + L(l1.value) + '.' : null,
-      'Safer first district = lower, riskier = higher. Your starting answer nudges it by 20%.');
+    add('Risk preference', l1 ? 'Level 1: you built first in ' + L(l1.value) + '.' + (A[0] ? ' You said: ' + L(A[0]) + '.' : ' (No starting answer given — gameplay only.)') : null,
+      'Safer first district = lower, riskier = higher. Your starting answer nudges it by 10%.');
     const dip = last(2, d => d.phase === 'dip' || !d.phase), news = last(2, d => d.phase === 'news');
     add('Loss aversion', dip ? 'Level 2: after a drop with no real news you chose to ' + L(dip.value) + '.' : null,
       'Pulling out of a temporary dip scores high; staying the course scores low.');
