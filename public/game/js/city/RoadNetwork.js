@@ -105,7 +105,7 @@ class RoadNetwork {
     sg.lineStyle(1,0x5c8ab0,0.9);  sg.strokeRoundedRect(b.x-this.s(6*K), b.y-this.s(56*K), this.s(84*K), this.s(21*K), this.s(4*K));
     this.signText=this.scene.add.text(b.x+this.s(36*K), b.y-this.s(45*K),
       (typeof currentLang!=='undefined'&&currentLang==='de')?'Nachbarstadt \u203A':'Neighbour city \u203A',{
-      fontFamily:'Inter, Arial, sans-serif', fontSize:this.s(11*K), color:'#bcd8f0'
+      fontFamily:CityTheme.body, fontSize:this.s(11*K), color:'#173b40'
     }).setOrigin(0.5).setDepth(12).setAlpha(0);
   }
 

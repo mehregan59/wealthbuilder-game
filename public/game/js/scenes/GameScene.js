@@ -280,7 +280,7 @@ class GameScene extends Phaser.Scene {
 
   _choiceLabel(x,y,text,color) {
     const c=this.add.container(x,y).setDepth(14);
-    const t=this.add.text(0,0,text,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#ffffff',fontStyle:'600'}).setOrigin(0.5);
+    const t=this.add.text(0,0,text,{fontFamily:CityTheme.body,fontSize:this.s(13),color:'#173b40',fontStyle:'600'}).setOrigin(0.5);
     const w=t.width+this.s(22), h=this.s(25);
     const bg=this.add.graphics();
     bg.fillStyle(color,0.32); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
@@ -303,7 +303,7 @@ class GameScene extends Phaser.Scene {
     if(!this.landmarks) this.landmarks=[];
     const y = district.subLabelY() + this.s(22) * this.landmarks.filter(l=>l._districtId===district.id).length;
     const c=this.add.container(district.cx, y).setDepth(14);
-    const t=this.add.text(0,0,icon+'  '+text,{fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(11),color:'#eef5ff'}).setOrigin(0.5);
+    const t=this.add.text(0,0,icon+'  '+text,{fontFamily:CityTheme.body,fontSize:this.s(11),color:'#173b40'}).setOrigin(0.5);
     const w=t.width+this.s(18), h=this.s(21);
     const bg=this.add.graphics();
     bg.fillStyle(0x08131f,0.82); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
@@ -513,7 +513,7 @@ class GameScene extends Phaser.Scene {
     this._shake(180,0.003);
     this._showPersistentMessage('A water main has burst under the housing district.\nFamilies have no running water. The city has cash set aside.');
     this._showDecisionPanel([
-      {icon:'🔧',label:'Repair it now',desc:'Uses reserve cash today.\nFixes the problem.',value:'repair_now',color:0x4ecdc4},
+      {icon:'🔧',label:'Repair it now',desc:'Uses reserve cash today.\nFixes the problem.',value:'repair_now',color:0x296b72},
       {icon:'⏳',label:'Postpone repair',desc:'Keep the cash for now.\nDeal with it later.',value:'defer',color:0xe2a840}
     ],(c)=>{
       ScoringEngine.recordDecision(4,c,{phase:'repair'}); this._clearPersistentMessage();
@@ -531,12 +531,12 @@ class GameScene extends Phaser.Scene {
     this._showPersistentMessage('With the emergency behind it, the city can build one of two facilities.\nThis decision will echo through the rest of the game.');
     this._showDecisionPanel([
       {icon:'🎪',label:'Festival Square',desc:'Happy citizens now.\nLittle long-term value.',value:'festival',color:0xe2a840},
-      {icon:'🎓',label:'Research University',desc:'No reward for several levels.\nPowerful later.',value:'university',color:0x4ecdc4}
+      {icon:'🎓',label:'Research University',desc:'No reward for several levels.\nPowerful later.',value:'university',color:0x296b72}
     ],(c)=>{
       ScoringEngine.recordDecision(4,c,{phase:'build'}); this._clearPersistentMessage();
       if(c==='university'){
         this.hasUniversity=true; this._updateStats(0,0,-8);
-        this._addLandmark(this.districts[2],'\uD83C\uDFD7','University — under construction',0x4ecdc4);
+        this._addLandmark(this.districts[2],'\uD83C\uDFD7','University — under construction',0x296b72);
         this._showConsequence('Construction begins quietly.\nNo result yet. The city waits.\nSomething is being built that may matter greatly later.',()=>this._nextLevel());
       } else {
         this._updateStats(18,0,0); this.districts[0].receiveResource(1);
@@ -558,7 +558,7 @@ class GameScene extends Phaser.Scene {
         this._showPersistentMessage('Technology is booming. Other districts suddenly look boring.\nWhat does the city do?');
         this._showDecisionPanel([
           {icon:'🚀',label:'All in',desc:'Move everything\nto technology',value:'all_in',color:0x9966cc},
-          {icon:'➕',label:'Invest more',desc:'Increase exposure\nkeep some balance',value:'increase',color:0x4ecdc4},
+          {icon:'➕',label:'Invest more',desc:'Increase exposure\nkeep some balance',value:'increase',color:0x296b72},
           {icon:'⚖',label:'Stay diversified',desc:'Resist momentum\nhold the balance',value:'hold',color:0x4aaa5c},
           {icon:'📉',label:'Take profits',desc:'Reduce tech\nsecure gains',value:'reduce',color:0xe2a840}
         ],(c)=>{
@@ -597,7 +597,7 @@ class GameScene extends Phaser.Scene {
     });
     this._shake(260,0.004);
     const banner=this.add.text(this._cx(),this.H*0.32,bannerText,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(30),color:'#ffe9ab',
+      fontFamily:CityTheme.heading,fontSize:this.s(30),color:'#173b40',
       align:'center',stroke:'#3a2600',strokeThickness:this.s(3)
     }).setOrigin(0.5).setDepth(80).setAlpha(0).setScale(0.7);
     this.tweens.add({targets:banner,alpha:1,scaleX:1,scaleY:1,duration:500,ease:'Back.easeOut',hold:1600,yoyo:true,onComplete:()=>banner.destroy()});
@@ -616,7 +616,7 @@ class GameScene extends Phaser.Scene {
       ? 'You have the full picture. What does the city do?'
       : 'They offer to share their water infrastructure.\nWhat does the city do?');
     const opts=[
-      {icon:'🤝',label:'Accept offer',desc:'200 resources now.\nSome dependency risk.',value:'accept',color:0x4ecdc4},
+      {icon:'🤝',label:'Accept offer',desc:'200 resources now.\nSome dependency risk.',value:'accept',color:0x296b72},
       {icon:'🏗',label:'Build own',desc:'400 resources.\nFull control.',value:'independent',color:0x4aaa5c},
       {icon:'❌',label:'Decline both',desc:'Keep resources\nfor other priorities.',value:'decline',color:0x6b7a8d}
     ];
@@ -701,7 +701,7 @@ class GameScene extends Phaser.Scene {
         this.time.delayedCall(UNI_START,()=>{
           this._tempMessage('The Research University opens its doors.\nGraduates create companies. Income rises. Your patience pays off.',UNI_HOLD,UNI_FADE);
           this.districts[0].receiveResource(2); this.districts[1].receiveResource(1);
-          this._addLandmark(this.districts[2],'\uD83C\uDF93','University open',0x4ecdc4);
+          this._addLandmark(this.districts[2],'\uD83C\uDF93','University open',0x296b72);
           this._updateStats(10,15,0);
         });
       }
@@ -710,7 +710,7 @@ class GameScene extends Phaser.Scene {
         this._showDecisionPanel([
           {icon:'🏃',label:'Sell all',desc:'Protect remaining\nresources.',value:'sell_all',color:0xe74c3c},
           {icon:'🏛',label:'Protect essentials',desc:'Shield critical services.\nHold the plan.',value:'hold',color:0x4aaa5c},
-          {icon:'⚖',label:'Rebalance',desc:'Restructure\nthoughtfully.',value:'rebalance',color:0x4ecdc4},
+          {icon:'⚖',label:'Rebalance',desc:'Restructure\nthoughtfully.',value:'rebalance',color:0x296b72},
           {icon:'📈',label:'Buy the dip',desc:'Invest selectively\nwhile low.',value:'opportunistic',color:0xe2a840}
         ],(c)=>{
           ScoringEngine.recordDecision(8,c); this._clearPersistentMessage();
@@ -775,7 +775,7 @@ class GameScene extends Phaser.Scene {
   _forecastOptions(){
     return [
       {icon:'\u2714',label:'Yes \u2014 very sure',desc:'90% confident',value:'y90',color:0x4aaa5c},
-      {icon:'\u2713',label:'Yes \u2014 probably',desc:'65% confident',value:'y65',color:0x4ecdc4},
+      {icon:'\u2713',label:'Yes \u2014 probably',desc:'65% confident',value:'y65',color:0x296b72},
       {icon:'\u2753',label:'No idea',desc:'50 / 50',value:'n50',color:0x6b7a8d},
       {icon:'\u2717',label:'No \u2014 probably',desc:'65% confident',value:'x65',color:0xe2a840},
       {icon:'\u2718',label:'No \u2014 very sure',desc:'90% confident',value:'x90',color:0xe74c3c}
@@ -840,12 +840,12 @@ class GameScene extends Phaser.Scene {
     bg.fillStyle(0x9e1600,0.96); bg.fillRect(0,top,this.W,h);
     bg.lineStyle(1,0xff4422,0.85); bg.lineBetween(0,top+h,this.W,top+h);
     const br=this.add.text(this.s(16),top+h/2,'BREAKING',{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#ffeecc',fontStyle:'700',letterSpacing:2
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#296b72',fontStyle:'700',letterSpacing:2
     }).setOrigin(0,0.5).setDepth(46);
     const sep=this.add.graphics().setDepth(46);
     sep.fillStyle(0xffffff,0.35); sep.fillRect(this.s(96),top+this.s(8),1,h-this.s(16));
     const tk=this.add.text(this.W+20,top+h/2,lines.join('   ★   '),{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#ffffff',fontStyle:'600'
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'600'
     }).setOrigin(0,0.5).setDepth(46);
     const dur=Math.max(24000, tk.width*30);
     this.tweens.add({targets:tk,x:-(tk.width+120),duration:dur,ease:'Linear',
@@ -857,7 +857,7 @@ class GameScene extends Phaser.Scene {
     const ov=this.add.graphics().setDepth(90); ov.fillStyle(0x000000,0.7); ov.fillRect(0,0,W,H);
     const bw=Math.min(this.s(620),W-this.s(80));
     const b=this.add.text(W/2,0,text,{
-      fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(15),color:'#b8cde0',
+      fontFamily:CityTheme.body,fontSize:this.s(15),color:'#365d60',
       wordWrap:{width:bw-this.s(70)},align:'center',lineSpacing:this.s(6)}).setOrigin(0.5,0).setDepth(92);
     const bh=Math.max(this.s(250), b.height+this.s(150)), bx=(W-bw)/2, by=(H-bh)/2;
     b.setY(by+this.s(66));
@@ -865,11 +865,11 @@ class GameScene extends Phaser.Scene {
     box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
     box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const t=this.add.text(W/2,by+this.s(34),title,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(19),color:'#e2a840'}).setOrigin(0.5).setDepth(92);
+      fontFamily:CityTheme.heading,fontSize:this.s(19),color:'#296b72'}).setOrigin(0.5).setDepth(92);
     const btn=this.add.text(W/2,by+bh-this.s(36),'Continue \u2192',{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(17),color:'#f0c060'})
+      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#9b6c12'})
       .setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
-    btn.on('pointerover',()=>btn.setColor('#ffe090')); btn.on('pointerout',()=>btn.setColor('#f0c060'));
+    btn.on('pointerover',()=>btn.setColor('#ffe090')); btn.on('pointerout',()=>btn.setColor('#9b6c12'));
     btn.on('pointerdown',()=>{ov.destroy();box.destroy();t.destroy();b.destroy();btn.destroy();if(cb)cb();});
   }
 
@@ -879,7 +879,7 @@ class GameScene extends Phaser.Scene {
     this._clearPersistentMessage();
     const y=this._msgY();
     this.persistentMsg=this.add.text(this._cx(),y-this.s(6),text,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(18),color:'#eaf2ff',
+      fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',
       align:'center',wordWrap:{width:Math.min(this.s(760),this._availW())},
       backgroundColor:'#040a14',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5)
     }).setOrigin(0.5).setDepth(48).setAlpha(0);
@@ -893,7 +893,7 @@ class GameScene extends Phaser.Scene {
   _tempMessage(text,dur,fadeDur){
     fadeDur = fadeDur || 1000;
     const m=this.add.text(this._cx(),this.H-this.s(120),text,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(17),color:'#e2a840',
+      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72',
       align:'center',backgroundColor:'#040a14',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5)
     }).setOrigin(0.5).setDepth(66).setAlpha(0);
     this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur||5000,yoyo:true,onComplete:()=>m.destroy()});
@@ -924,11 +924,11 @@ class GameScene extends Phaser.Scene {
 
 
     const bg=this.add.graphics();
-    bg.fillStyle(0x040a14,0.95); bg.fillRoundedRect(px,py,pw,ph,this.s(12));
-    bg.lineStyle(1,0x4ecdc4,0.55); bg.strokeRoundedRect(px,py,pw,ph,this.s(12));
-    bg.lineStyle(this.s(4),0x4ecdc4,0.8); bg.lineBetween(px,py+this.s(10),px,py+ph-this.s(10));
+    bg.fillStyle(0xfffbf1,0.95); bg.fillRoundedRect(px,py,pw,ph,this.s(12));
+    bg.lineStyle(1,0x296b72,0.55); bg.strokeRoundedRect(px,py,pw,ph,this.s(12));
+    bg.lineStyle(this.s(4),0x296b72,0.8); bg.lineBetween(px,py+this.s(10),px,py+ph-this.s(10));
     const t=this.add.text(cx,py+ph/2,text,{
-      fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(17),color:'#dbe8f4',
+      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#173b40',
       align:'center',wordWrap:{width:pw-this.s(56)},lineSpacing:this.s(6)}).setOrigin(0.5);
 
     const elements=[dim,bg,t];
@@ -938,11 +938,11 @@ class GameScene extends Phaser.Scene {
       const rx=px+pw-rw-this.s(12), ry=py+ph+this.s(10);
       const rg=this.add.graphics();
       const rTxt=this.add.text(rx+rw/2, ry+rh/2, (typeof currentLang!=='undefined'&&currentLang==='de')?'↺ Wiederholen':'↺ Retry level',{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#7d97b3'}).setOrigin(0.5);
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a'}).setOrigin(0.5);
       const drawR=(hv)=>{ rg.clear();
         rg.fillStyle(0x0b1725,hv?1:0.85); rg.fillRoundedRect(rx,ry,rw,rh,this.s(7));
         rg.lineStyle(1,hv?0x8aa4c0:0x2c4767,1); rg.strokeRoundedRect(rx,ry,rw,rh,this.s(7));
-        rTxt.setColor(hv?'#c8d8ea':'#7d97b3'); };
+        rTxt.setColor(hv?'#c8d8ea':'#55777a'); };
       drawR(false);
       const rHit=this.add.rectangle(rx+rw/2,ry+rh/2,rw,rh,0xffffff,0).setInteractive({useHandCursor:true});
       rHit.on('pointerover',()=>drawR(true)); rHit.on('pointerout',()=>drawR(false));
@@ -986,7 +986,7 @@ class GameScene extends Phaser.Scene {
     const panelH=btnH+this.s(28), panelX=cx-panelW/2, panelY=this.H-panelH-this.s(18);
     this.decisionPanel=this.add.container(0,0).setDepth(60);
     const bg=this.add.graphics();
-    bg.fillStyle(0x040a14,0.96); bg.fillRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
+    bg.fillStyle(0xfffbf1,0.96); bg.fillRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
     bg.lineStyle(1,0x24405f,1); bg.strokeRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
     this.decisionPanel.add(bg);
     options.forEach((o,i)=>{
@@ -998,10 +998,10 @@ class GameScene extends Phaser.Scene {
       draw(false); this.decisionPanel.add(g);
       const ic=this.add.text(bx+btnW/2,by+this.s(20),o.icon,{fontSize:this.s(23)}).setOrigin(0.5);
       const lb=this.add.text(bx+btnW/2,by+this.s(50),o.label,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#f4f8ff',
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',
         fontStyle:'700',align:'center',wordWrap:{width:btnW-this.s(14)}}).setOrigin(0.5);
       const de=this.add.text(bx+btnW/2,by+this.s(78),o.desc,{
-        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#9ab5cf',
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a',
         align:'center',wordWrap:{width:btnW-this.s(14)},lineSpacing:this.s(3)}).setOrigin(0.5);
       this.decisionPanel.add([ic,lb,de]);
       const hit=this.add.rectangle(bx+btnW/2,by+btnH/2,btnW-this.s(4),btnH-this.s(2),0xffffff,0)
