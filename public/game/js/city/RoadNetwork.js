@@ -11,10 +11,13 @@ class RoadNetwork {
     this.carGfx  = scene.add.graphics().setDepth(6);
     this.signGfx = scene.add.graphics().setDepth(11).setAlpha(0);
     this.lanes   = this._lanes();
-    this._draw();
+    // With the painted city in place the drawn highway and its toy cars are
+    // dropped entirely: traffic lives on the real streets of the artwork.
+    this.quiet   = !!scene.hasPanorama;
+    if(!this.quiet){ this._draw(); this._seed(); }
     this._buildSign();
-    this._seed();
   }
+
   s(v){ return Math.round(v*this.S); }
   get W(){ return this.scene.scale.width; }
   get H(){ return this.scene.scale.height; }

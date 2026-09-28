@@ -24,11 +24,22 @@ class District {
   subLabelY(){return this.labelContainer.y+this.labelH/2+this.s(19);}
   _stage(){return this.health>=78?4:this.health>=58?3:this.health>=34?2:1;}
   draw(){
-    this.gfx.clear(); this._parcel(); this._streets();
+    this.gfx.clear();
+    // On the painted city the districts are quarters of the illustration,
+    // not separate plots: no green island, no drawn street — only a soft
+    // plaza shading so the buildings sit on the artwork.
+    if(this.scene.hasPanorama) this._plaza(); else { this._parcel(); this._streets(); }
     if(this.id==='housing')this._housing(); else if(this.id==='transport')this._transport();
     else if(this.id==='technology')this._technology(); else this._energy();
   }
   _poly(g,pts,color,alpha){g.fillStyle(color,alpha===undefined?1:alpha);g.beginPath();g.moveTo(pts[0].x,pts[0].y);for(let i=1;i<pts.length;i++)g.lineTo(pts[i].x,pts[i].y);g.closePath();g.fillPath();}
+  _plaza(){
+    const g=this.gfx,p=this._ringPts();
+    // Warm ground-contact shadow only — it reads as the quarter resting in
+    // the painted city rather than a cut-out tile placed on top of it.
+    this._poly(g,p,0x1d2e2a,.17);
+    this._poly(g,p.map(q=>({x:this.cx+(q.x-this.cx)*.88,y:this.cy+(q.y-this.cy)*.88})),0xe8dcc0,.10);
+  }
   _parcel(){
     const g=this.gfx,p=[{x:this.ix(-.25,2.5),y:this.iy(-.25,2.5,0)},{x:this.ix(2.5,2.5),y:this.iy(2.5,2.5,0)},{x:this.ix(2.5,-.25),y:this.iy(2.5,-.25,0)},{x:this.ix(-.25,-.25),y:this.iy(-.25,-.25,0)}];
     this._poly(g,p,0x83ad73,.82); g.lineStyle(1,0xe7eed9,.5);g.strokePath();
@@ -40,6 +51,7 @@ class District {
     g.beginPath();g.moveTo(this.ix(0,1.2),this.iy(0,1.2,.01));g.lineTo(this.ix(2.25,1.2),this.iy(2.25,1.2,.01));g.strokePath();
     g.lineStyle(1,0xf3d67b,.65);g.beginPath();g.moveTo(this.ix(.15,1.2),this.iy(.15,1.2,.02));g.lineTo(this.ix(2.1,1.2),this.iy(2.1,1.2,.02));g.strokePath();
   }
+
   _box(gx,gy,w,d,h,top,left,right){
     const g=this.gfx,shadow=[{x:this.ix(gx+.08,gy+d+.12),y:this.iy(gx+.08,gy+d+.12,0)},{x:this.ix(gx+w+.18,gy+d+.12),y:this.iy(gx+w+.18,gy+d+.12,0)},{x:this.ix(gx+w+.18,gy+.12),y:this.iy(gx+w+.18,gy+.12,0)}];
     this._poly(g,shadow,0x244840,.2);
