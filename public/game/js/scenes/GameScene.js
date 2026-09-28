@@ -913,6 +913,7 @@ class GameScene extends Phaser.Scene {
   _clearConsequence(){ if(this.consequencePanel){this.tweens.killTweensOf(this.consequencePanel);this.consequencePanel.destroy();this.consequencePanel=null;} }
 
   _showDecisionPanel(options,cb){
+    if (typeof ScoringEngine!=='undefined') ScoringEngine.startTimer(); // deliberation time starts when choices appear
     this._clearDecisionPanel(); this._clearConsequence();
     const cx=this._cx();
     const cols=options.length;

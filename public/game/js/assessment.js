@@ -17,8 +17,17 @@ const Assessment = {
     noise:  { sell: 90, reduce: 56, hold: 22, invest_more: 70 },
     // Level 9 — disposition effect
     dispPair: { sell_winner: 75, sell_loser: 25 },
-    dispTwin: { sell_gain: 85, sell_loss: 45, either: 15 }
+    dispTwin: { sell_gain: 85, sell_loss: 45, either: 15 },
+    // Level 2 beat B (real news): adjusts adaptability. Reacting to genuine
+    // bad fundamentals is adaptive; ignoring or doubling down is not.
+    newsAdapt: { cancel: 10, wait: 5, continue: -5, invest_more: -10 },
+    // Level 4 burst pipe: adjusts RESILIENCE only — never patience.
+    repairResil: { repair_now: 8, defer: -8 }
   },
+  // Level 7: deciding under loud headlines in under this many ms = reflex.
+  FAST_MS: 3000,
+  FAST_PENALTY: 10,
+  PRACTICE_WEIGHT: 0.1,
 
   // Level 10 forecasts. Outcomes are fixed so every replay faces the same facts.
   FORECASTS: [
@@ -82,14 +91,21 @@ const Assessment = {
     const loss = blend(pick(M.loss, 2, d => !d.phase || d.phase === 'dip'), M.lossStated, A[2]);
     const pat = blend(pick(M.patience, 4), M.patienceStated, A[1]);
     const greed = pick(M.greed, 5);
-    const resil = pick(M.resilience, 8);
+    let resil = pick(M.resilience, 8);
+    const rep = D.filter(d => d.level === 4 && d.phase === 'repair').pop();
+    if (resil !== null && rep && M.repairResil[rep.value] !== undefined) resil = Math.max(0, Math.min(100, resil + M.repairResil[rep.value]));
 
     const read6 = researched(6), read7 = researched(7);
     let learn = pick(M.learning, 6);
     if (learn !== null && read6) learn = Math.min(100, learn + 25);
+    const newsD = D.filter(d => d.level === 2 && d.phase === 'news').pop();
+    if (learn !== null && newsD && M.newsAdapt[newsD.value] !== undefined) learn = Math.max(0, Math.min(100, learn + M.newsAdapt[newsD.value]));
 
     let noise = pick(M.noise, 7);
     if (noise !== null && read7) noise = Math.max(6, noise - 20);
+    const c7 = D.filter(d => d.level === 7 && d.value !== 'research').pop();
+    const fast7 = !!(c7 && typeof c7.elapsed === 'number' && c7.elapsed >= 0 && c7.elapsed < this.FAST_MS);
+    if (noise !== null && fast7) noise = Math.min(100, noise + this.FAST_PENALTY);
 
     const divers = this.diversification(D.filter(d => d.level === 3).map(d => d.districtId || d.value));
 
@@ -99,14 +115,15 @@ const Assessment = {
     const disposition = dispParts.length ? Math.round(dispParts.reduce((a, b) => a + b, 0) / dispParts.length) : null;
 
     const fc = this.forecastResult(D.filter(d => d.level === 10 && d.phase === 'forecast'));
-    const overconfidence = fc ? fc.overconfidence : null;
+    const pfc = this.forecastResult(D.filter(d => d.level === 10 && d.phase === 'practice'));
+    const overconfidence = fc ? (pfc ? Math.round(fc.overconfidence * (1 - this.PRACTICE_WEIGHT) + pfc.overconfidence * this.PRACTICE_WEIGHT) : fc.overconfidence) : null;
 
     const all = [risk, loss, pat, divers, greed, noise, learn, resil, disposition, overconfidence];
     return {
       riskPreference: risk, lossAversion: loss, patience: pat, diversification: divers,
       greedFomo: greed, reactionToNoise: noise, learning: learn, resilience: resil,
       disposition, overconfidence,
-      _researched: read6 || read7, _forecast: fc,
+      _researched: read6 || read7, _forecast: fc, _fast7: fast7,
       _observed: all.filter(v => v !== null).length
     };
   },
@@ -157,15 +174,18 @@ const Assessment = {
     const l4 = last(4, d => d.phase !== 'repair');
     add('Patience', l4 ? 'Level 4: you built the ' + L(l4.value) + '.' : null,
       'The later, bigger reward (University) scores high. Fixing the burst pipe is never counted as impatience.');
+    const rp = last(4, d => d.phase === 'repair');
+    if (rp) add('Resilience (emergency)', 'Level 4: for the burst pipe you chose to ' + (rp.value === 'repair_now' ? 'repair it now' : 'postpone the repair') + '.',
+      'Using reserves for a real emergency is what they are for: repairing adds +8 to resilience, postponing −8. It never affects patience.');
     const l5 = last(5);
     add('FOMO response', l5 ? 'Level 5: during the boom you chose ' + L(l5.value) + '.' : null,
       'Piling in after prices already rose scores high.');
     const l7 = last(7, d => d.value !== 'research');
-    add('Reaction to news', l7 ? 'Level 7: under loud headlines you chose ' + L(l7.value) + (D.some(d => d.level === 7 && d.value === 'research') ? ', after reading the report.' : ', without reading the report.') : null,
-      'Big moves on headlines score high; reading the free report first lowers it.');
+    add('Reaction to news', l7 ? 'Level 7: under loud headlines you chose ' + L(l7.value) + (D.some(d => d.level === 7 && d.value === 'research') ? ', after reading the report.' : ', without reading the report.') + (s && s._fast7 ? ' You decided within ' + (Math.round(l7.elapsed / 100) / 10) + 's.' : '') : null,
+      'Big moves on headlines score high; reading the free report first lowers it. Deciding in under 3 seconds adds +10 (a reflex, not a considered choice).');
     const l6 = last(6, d => d.value !== 'research');
     add('Adaptability', l6 ? 'Level 6: you chose to ' + L(l6.value) + (D.some(d => d.level === 6 && d.value === 'research') ? ' after researching first.' : ' without researching.') + (news ? ' Level 2 real news: you chose to ' + L(news.value) + '.' : '') : null,
-      'Gathering information before deciding raises this.');
+      'Gathering information before deciding raises this. Level 2 real news: cutting losses +10, pausing +5, holding −5, doubling down −10.');
     const l8 = last(8);
     add('Resilience', l8 ? 'Level 8: in the storm you chose ' + L(l8.value) + '.' : null,
       'Keeping structure intact through a downturn scores high; selling everything scores low.');
@@ -175,7 +195,7 @@ const Assessment = {
     const fc = s && s._forecast;
     const pr = last(10, d => d.phase === 'practice');
     add('Overconfidence', fc ? 'Level 10: average confidence ' + Math.round(fc.avgConf * 100) + '%, correct ' + fc.hits + ' of ' + fc.n + ' (' + Math.round(fc.hitRate * 100) + '%).' + (pr ? ' Practice round confidence: ' + pr.conf + '%.' : '') : null,
-      'Confidence above your hit rate raises this. Four forecasts show this session only, not a trait.');
+      'Confidence above your hit rate raises this. The practice round counts 10%, the four forecasts 90%. This shows this session only, not a trait.');
     return rows;
   }
 };
