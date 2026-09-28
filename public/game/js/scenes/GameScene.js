@@ -81,7 +81,7 @@ class GameScene extends Phaser.Scene {
         color:0x2f86a8,darkColor:0x14414f,accentColor:0x62c4dd,cx:px(0.36),cy:baseY-this.s(38),health:45,scale:this.S,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
-      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technologieviertel',labelDE:'Technologieviertel',
+      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
         color:0x7a4fc9,darkColor:0x33206b,accentColor:0xa98bff,cx:px(0.64),cy:baseY-this.s(38),health:45,scale:this.S,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
