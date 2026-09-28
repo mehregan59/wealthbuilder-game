@@ -277,7 +277,20 @@ class ProfileScene extends Phaser.Scene {
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
-    const rowsTop=intro.y+intro.height+this.s(16);
+    // Factual record first: what actually happened, in order, with no
+    // interpretation attached. The trait rows below then point back to it.
+    const tl=Assessment.timeline?Assessment.timeline(D):[];
+    let rowsTop=intro.y+intro.height+this.s(16);
+    if (tl.length) {
+      const tlHd=this.add.text(bx+this.s(26),rowsTop,de?'Was du getan hast':'What you did, in order',{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(14),color:'#f0c060',fontStyle:'700'});
+      const tlBody=this.add.text(bx+this.s(26),tlHd.y+tlHd.height+this.s(6),
+        tl.map(e=>'Level '+e.level+' \u2014 '+e.text).join('\n'),{
+        fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(12),color:'#c8dcee',
+        wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(4)});
+      c.add([tlHd,tlBody]);
+      rowsTop=tlBody.y+tlBody.height+this.s(18);
+    }
     let y=[rowsTop,rowsTop];
     rows.forEach((r,i)=>{
       const col=i%2, x=bx+this.s(26)+col*(colW+this.s(26));
