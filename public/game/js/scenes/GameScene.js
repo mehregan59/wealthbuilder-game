@@ -396,9 +396,20 @@ class GameScene extends Phaser.Scene {
     this._level3PlacedCubes = new Set();
     this._level3Resolved = false;
     this._spawnResourceCubes(6);
-    this._showPersistentMessage('The city receives 600 new credits.\nPlace all six cubes — 0 of 6 placed.');
+    // Accessibility: dragging is not the only way through this level.
+    // Tapping a district sends the next waiting cube there, so the level
+    // is completable with a single tap per cube on touch screens too.
+    this.districts.forEach(d=>d.setSelectable(true,(dd)=>this._tapAllocate(dd)));
+    this._showPersistentMessage('The city receives 600 new credits.\nDrag a cube onto a district — or simply tap a district to send the next cube there.\n0 of 6 placed.');
     this._armLevel3Idle();
   }
+
+  _tapAllocate(district) {
+    if(this.currentLevel!==3 || this._level3Resolved) return;
+    const cube=(this.cubes||[]).find(c=>c && !c._used && !c.isDragging && c.container && c.container.active);
+    if(cube) cube._dropOnDistrict(district);
+  }
+
 
   _spawnResourceCubes(n) {
     this.cubeTotal=n; this.cubeDropped=0;
