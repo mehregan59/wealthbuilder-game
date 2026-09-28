@@ -205,14 +205,16 @@ class ProfileScene extends Phaser.Scene {
     const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(18),color:'#0b1725',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
-    const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
     const ctaLabel=this._ctaLabel(de);
-    const ctaW=Math.max(bW,this.s(24)+ctaLabel.length*this.s(7));
-    ctaBg.fillStyle(0x0b1725,1); ctaBg.fillRoundedRect(cx+gap/2,bY,ctaW,bH,this.s(11));
-    ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(cx+gap/2,bY,ctaW,bH,this.s(11));
-    const ctaTx=this.add.text(cx+gap/2+ctaW/2,bY+bH/2,ctaLabel,{
+    const ctaTx=this.add.text(0,0,ctaLabel,{
       fontFamily:'Inter, Arial, sans-serif',fontSize:this.s(13),color:'#4ecdc4',fontStyle:'600'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
+    const ctaW=Math.min(Math.max(bW,ctaTx.width+this.s(32)),W/2-this.s(30));
+    const ctaX=Math.min(cx+gap/2, W-ctaW-this.s(16));
+    ctaTx.setPosition(ctaX+ctaW/2,bY+bH/2);
+    const ctaBg=this.add.graphics().setDepth(99).setAlpha(0);
+    ctaBg.fillStyle(0x0b1725,1); ctaBg.fillRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
+    ctaBg.lineStyle(1,0x4ecdc4,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
