@@ -315,7 +315,7 @@ class GameScene extends Phaser.Scene {
     this._clearSiteMarkers(); this._clearPersistentMessage();
     this.districts.forEach(x=>x.setSelectable(false));
     ScoringEngine.recordDecision(1,v,{districtId:d.id});
-    d.receiveResource(2); if(!this.reducedMotion) this.cameras.main.shake(240,0.004); this._updateStats(5,10,-5);
+    d.receiveResource(2); this._shake(240,0.004); this._updateStats(5,10,-5);
     this._addLandmark(d,'\uD83C\uDFD7','Built first here', d.accentColor);
     const m={safe:'Construction begins carefully.\nThe city grows slowly but steadily.',
              balanced:'A balanced approach takes shape.\nThe city moves forward with measured confidence.',
@@ -348,7 +348,7 @@ class GameScene extends Phaser.Scene {
                  wait:{d:[-5,-5,0],m:'Construction stalls.\nResources are safe but idle. The cost of doing nothing.'}}[c]
                  ||{d:[0,5,-5],m:'The plan continues.'};
         this._updateStats(e.d[0],e.d[1],e.d[2]);
-        if(c==='invest_more'){this.districts[2].receiveResource(1);this.cameras.main.shake(190,0.003);}
+        if(c==='invest_more'){this.districts[2].receiveResource(1);this._shake(190,0.003);}
         else if(c==='cancel') this.districts[2].takeDamage(8);
         this._showConsequence(e.m,()=>this._level2Recovery(c));
       });
@@ -376,7 +376,7 @@ class GameScene extends Phaser.Scene {
   _level2News() {
     this.time.delayedCall(1200,()=>{
       this.districts[1].takeDamage(30); this._updateStats(-5,-8,0);
-      this.cameras.main.shake(200,0.003);
+      this._shake(200,0.003);
       this.time.delayedCall(1600,()=>{
         this._showPersistentMessage('Now the transport district is falling.\nThis time there is real news: its largest employer\nis leaving the city for good. What does the city do?');
         this._showDecisionPanel([
@@ -392,7 +392,7 @@ class GameScene extends Phaser.Scene {
                    wait:{d:[-3,-6,0],m:'The city waits.\nThe district keeps declining while decisions are postponed.'}}[c]
                    ||{d:[-8,-12,0],m:'The city holds on.\nThe district keeps declining.'};
           this._updateStats(e.d[0],e.d[1],e.d[2]);
-          if(c==='invest_more'){this.districts[1].takeDamage(10);this.cameras.main.shake(190,0.003);}
+          if(c==='invest_more'){this.districts[1].takeDamage(10);this._shake(190,0.003);}
           else if(c==='continue') this.districts[1].takeDamage(6);
           this._showConsequence(e.m,()=>this._nextLevel());
         });
@@ -488,7 +488,7 @@ class GameScene extends Phaser.Scene {
     const exposed=placed*100, lost=Math.round(exposed*0.4);
     const share=placed/(this.cubeTotal||6);
     loser.takeDamage(8+Math.round(40*share)); // visual damage scales with exposure
-    if(!this.reducedMotion) this.cameras.main.shake(120+Math.round(400*share),0.002+0.006*share);
+    this._shake(120+Math.round(400*share),0.002+0.006*share);
     this._updateStats(-Math.round(10*share),-Math.round(15*share),0);
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     const nm=de?(loser.nameDE||loser.name):loser.name;
@@ -506,7 +506,7 @@ class GameScene extends Phaser.Scene {
   _level4() {
     const housing=this.districts[0];
     housing.takeDamage(18);
-    this.cameras.main.shake(180,0.003);
+    this._shake(180,0.003);
     this._showPersistentMessage('A water main has burst under the housing district.\nFamilies have no running water. The city has cash set aside.');
     this._showDecisionPanel([
       {icon:'🔧',label:'Repair it now',desc:'Uses reserve cash today.\nFixes the problem.',value:'repair_now',color:0x4ecdc4},
@@ -591,7 +591,7 @@ class GameScene extends Phaser.Scene {
     this.districts.forEach((d,i)=>{
       for(let i2=0;i2<10;i2++) this.time.delayedCall(i*90+i2*90,()=>this._firework(d.cx+Phaser.Math.Between(-70,70),d.cy+Phaser.Math.Between(-70,0)));
     });
-    this.cameras.main.shake(260,0.004);
+    this._shake(260,0.004);
     const banner=this.add.text(this._cx(),this.H*0.32,bannerText,{
       fontFamily:'Playfair Display, Georgia, serif',fontSize:this.s(30),color:'#ffe9ab',
       align:'center',stroke:'#3a2600',strokeThickness:this.s(3)
@@ -686,7 +686,7 @@ class GameScene extends Phaser.Scene {
   _level8() {
     this.weather.startStorm(()=>{
       this.districts.forEach(d=>{d.setStorm(true);d.takeDamage(26);});
-      this._updateStats(-15,-20,-10); this.cameras.main.shake(900,0.012);
+      this._updateStats(-15,-20,-10); this._shake(900,0.012);
       // The university reveal (when it exists) now gets its own slow,
       // separate fade — it used to overlap with the decision panel
       // appearing right on top of it. It now fully fades out before
@@ -1002,7 +1002,7 @@ class GameScene extends Phaser.Scene {
       const hit=this.add.rectangle(bx+btnW/2,by+btnH/2,btnW-this.s(4),btnH-this.s(2),0xffffff,0)
         .setInteractive({useHandCursor:true});
       hit.on('pointerover',()=>draw(true)); hit.on('pointerout',()=>draw(false));
-      hit.on('pointerdown',()=>{this.cameras.main.shake(70,0.002);this._clearDecisionPanel();if(cb)cb(o.value);});
+      hit.on('pointerdown',()=>{this._shake(70,0.002);this._clearDecisionPanel();if(cb)cb(o.value);});
       this.decisionPanel.add(hit);
     });
     this.decisionPanel.y=this.s(80);
