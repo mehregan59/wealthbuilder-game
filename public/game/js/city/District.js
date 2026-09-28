@@ -14,7 +14,7 @@ class District {
     const txt=(typeof currentLang!=='undefined'&&currentLang==='de')?this.labelDE:this.label;
     // labelLift lets neighbouring districts stagger their names so two
     // labels can never sit on top of each other.
-    this.labelBaseY=this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
+    this.labelBaseY=this.scene.hasMetro?this.cy-this.s(this.id==='transport'?88:this.id==='energy'?78:62):this.cy-this.s(132)-this.s(this.labelLift||0); this.labelContainer=this.scene.add.container(this.cx,this.labelBaseY).setDepth(13);
     // High-contrast card: a busy drawn city behind it must never make the
     // district name hard to read.
     const t=this.scene.add.text(0,0,this._icon()+'  '+txt,{fontFamily:CityTheme.body,fontSize:this.s(15),color:'#ffffff',fontStyle:'700'}).setOrigin(0.5);

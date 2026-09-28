@@ -67,7 +67,7 @@ class Metropolis {
 
     // District anchors — quarters of this same city.
     this.districtPoints = [
-      p(0.072, 0.580),  // Housing — west bank old town
+      p(0.085, 0.440),  // Housing — west bank old town
       p(0.430, 0.345),  // Transport — around the terminal on the north avenue
       p(0.645, 0.720),  // Technology — south-east office quarter
       p(0.795, 0.380),  // Energy — north-east hills
@@ -228,6 +228,8 @@ class Metropolis {
     this.blockWindows = [];
     spots.forEach((sp, i) => {
       const q = this.p(sp[0], sp[1]), k = sp[2];
+      // leave the district quarters free: their landmarks stand there
+      if (this.districtPoints.some(d => Math.abs(d.x - q.x) < this.s(120) && Math.abs(d.y - q.y) < this.s(80))) return;
       const tall = i % 5 === 0;
       const hw = this.s(30 * k), hd = this.s(15 * k), h = this.s((tall ? 58 : 32) * k);
       const warm = i % 3 === 0;
