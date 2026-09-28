@@ -720,7 +720,7 @@ class GameScene extends Phaser.Scene {
       // separate fade — it used to overlap with the decision panel
       // appearing right on top of it. It now fully fades out before
       // anything else shows.
-      const UNI_START=2000, UNI_FADE=1500, UNI_HOLD=6000;
+      const UNI_START=700, UNI_FADE=450, UNI_HOLD=2400;
       const UNI_END = UNI_START + UNI_FADE + UNI_HOLD + UNI_FADE;
       if(this.hasUniversity){
         this.time.delayedCall(UNI_START,()=>{
@@ -730,7 +730,7 @@ class GameScene extends Phaser.Scene {
           this._updateStats(10,15,0);
         });
       }
-      this.time.delayedCall(this.hasUniversity?(UNI_END+600):3900,()=>{
+      this.time.delayedCall(this.hasUniversity?(UNI_END+250):1650,()=>{
         this._showPersistentMessage('An economic storm hits every city.\nYou cannot prevent it. What do you protect?');
         this._showDecisionPanel([
           {icon:'🏃',label:'Sell all',desc:'Protect remaining\nresources.',value:'sell_all',color:0xe74c3c},
@@ -739,8 +739,8 @@ class GameScene extends Phaser.Scene {
           {icon:'📈',label:'Buy the dip',desc:'Invest selectively\nwhile low.',value:'opportunistic',color:0xe2a840}
         ],(c)=>{
           ScoringEngine.recordDecision(8,c); this._clearPersistentMessage();
-          this.weather.stopStorm(1000);
-          this.time.delayedCall(1700,()=>{
+          this.weather.stopStorm(250);
+          this.time.delayedCall(700,()=>{
             this.districts.forEach(d=>d.setStorm(false));
             this.weather.startRecovery(()=>{ this.districts.forEach(d=>d.receiveResource(1)); this._updateStats(8,12,5); });
             const m={sell_all:'Resources secured.\nThe city stops building and waits for calmer times.',

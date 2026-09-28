@@ -8,4 +8,5 @@
 - [x] Add an end-page "Start your personal retirement investment education" coming-soon section and Back to home action.
 - [x] Verify desktop/mobile gameplay presentation and preserve all assessment logic.
 - [x] Guides below top bar, faster pacing with tap-to-skip, vertical city coins, per-coin growth in all districts, energy cleanup + power station, river offer ship, plain status labels, Back to home fix.
-- [ ] Energy quarter: move the street that still crosses the solar farm; verify results-screen spacing in a full playthrough.
+- [x] Move Energy, Transport, and Technology landmarks clear of roads; add outward Technology growth; shorten Level 8 storm; simplify result statuses and prevent text overlap.
+- [ ] Verify the complete Level 1–10 results flow in the preview.
