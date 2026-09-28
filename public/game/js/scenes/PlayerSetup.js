@@ -29,8 +29,12 @@ class PlayerSetup extends Phaser.Scene {
   _buildUI() {
     const cx = this.W/2;
     this._drawStepDots(1);
-    this.add.text(cx,55,'Tell us about your city',{fontFamily:'Georgia,serif',fontSize:24,color:'#e2a840'}).setOrigin(0.5);
-    this.add.text(cx,88,'This helps personalize your experience. It never changes the game.',{fontFamily:'Arial,sans-serif',fontSize:13,color:'#6b8aaa'}).setOrigin(0.5);
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    this.add.text(cx,55,de?'Erzähl uns von deiner Stadt':'Tell us about your city',{fontFamily:'Georgia,serif',fontSize:24,color:'#e2a840'}).setOrigin(0.5);
+    this.add.text(cx,88,de?'Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.':'This helps personalize your experience. It never changes the game.',{fontFamily:'Arial,sans-serif',fontSize:13,color:'#6b8aaa'}).setOrigin(0.5);
+    // Intake disclosure: the session observes decision patterns and explains
+    // them at the end — without revealing which level measures which trait.
+    this.add.text(cx,108,de?'Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.':'Note: this session observes your decision patterns and explains them to you in the final results.',{fontFamily:'Arial,sans-serif',fontSize:11,color:'#4a6080',fontStyle:'italic'}).setOrigin(0.5);
     this._buildSection(130,'Your age group','age',[{label:'18\u201327',value:'18-27'},{label:'28\u201337',value:'28-37'},{label:'38\u201347',value:'38-47'},{label:'48\u201357',value:'48-57'},{label:'58\u201365',value:'58-65'}],5);
     this._buildSection(270,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],5);
     this._buildSection(410,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
