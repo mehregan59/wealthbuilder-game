@@ -122,12 +122,40 @@ describe("level 10 forecast calibration", () => {
   it("50/50 answers count as half a hit and are perfectly calibrated", () => {
     expect(A.forecastResult([{ pick: null, conf: 50, outcome: true }]).overconfidence).toBe(0);
   });
-  it("practice round is not scored", () => {
+  it("practice round alone does not produce an overconfidence score", () => {
     const s = A.computeScores([{ level: 10, value: "y90", phase: "practice", pick: true, conf: 90, outcome: false }], []);
     expect(s.overconfidence).toBeNull();
   });
   it("forecast outcomes are fixed for fair replays", () => {
     expect(A.FORECASTS.map((f: any) => f.outcome)).toEqual([true, false, false, true]);
+  });
+});
+
+describe("decision timeline", () => {
+  it("records what happened in order without interpreting it", () => {
+    const tl = A.timeline([
+      { level: 1, value: "safe" },
+      { level: 2, value: "cancel", phase: "dip" },
+      { level: 4, value: "repair_now", phase: "repair" },
+      { level: 4, value: "university", phase: "build" }
+    ]);
+    expect(tl.map((e: any) => e.level)).toEqual([1, 2, 4, 4]);
+    expect(tl[3].text).toContain("Research University");
+  });
+  it("is empty when nothing was played", () => {
+    expect(A.timeline([])).toEqual([]);
+  });
+});
+
+describe("research table", () => {
+  it("gives every concept a stated limitation", () => {
+    expect(A.RESEARCH.length).toBeGreaterThan(4);
+    A.RESEARCH.forEach((r: any) => {
+      expect(r.finding.length).toBeGreaterThan(10);
+      expect(r.mechanic.length).toBeGreaterThan(10);
+      expect(r.limit.length).toBeGreaterThan(10);
+    });
+    expect(A.RESEARCH_NOTE).toContain("not been empirically validated");
   });
 });
 

@@ -81,6 +81,8 @@ class ResourceCube {
   }
 
   _dropOnDistrict(district) {
+    if (this._used) return;
+    this._used = true;
     this.scene.tweens.killTweensOf(this.container);
     this.scene.tweens.add({
       targets: this.container, x: district.cx, y: district.cy, scaleX: 0.1, scaleY: 0.1, alpha: 0, duration: 300, ease: 'Power2.easeIn',

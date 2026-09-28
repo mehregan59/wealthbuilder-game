@@ -74,6 +74,12 @@ class RetirementContext extends Phaser.Scene {
     ];
     this._buildSimpleSection(430,q2Label,'buildexp',expOpts,3);
     this._buildContinueBtn(570);
+    // Optional: these answers only shape the closing text, never the game.
+    const sk=this.add.text(cx,634,lang==='de'?'Überspringen und direkt bauen \u2192':'Skip and start building \u2192',
+      {fontFamily:'Arial,sans-serif',fontSize:12,color:'#6b8aaa'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    sk.on('pointerover',()=>sk.setColor('#c8d4e8'));
+    sk.on('pointerout',()=>sk.setColor('#6b8aaa'));
+    sk.on('pointerdown',()=>{ if(!this.selections.saule.length) this.selections.saule=['unsure']; this._goNext(); });
   }
 
   _drawStepDots(active) {

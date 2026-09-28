@@ -197,7 +197,92 @@ const Assessment = {
     add('Overconfidence', fc ? 'Level 10: average confidence ' + Math.round(fc.avgConf * 100) + '%, correct ' + fc.hits + ' of ' + fc.n + ' (' + Math.round(fc.hitRate * 100) + '%).' + (pr ? ' Practice round confidence: ' + pr.conf + '%.' : '') : null,
       'Confidence above your hit rate raises this. The practice round counts 10%, the four forecasts 90%. This shows this session only, not a trait.');
     return rows;
-  }
+  },
+
+  // Plain factual record of what the player actually did, in order.
+  // No interpretation here — interpretation lives in evidence()/scores.
+  timeline(D) {
+    D = D || [];
+    const L = {
+      safe: 'the safe housing district', balanced: 'a balanced district', aggressive: 'the high-potential technology district',
+      cancel: 'cancel / cut losses', wait: 'pause and reassess', continue: 'continue / hold on', invest_more: 'invest more',
+      repair_now: 'repair the burst pipe immediately', defer: 'postpone the repair',
+      festival: 'Festival Square (reward now)', university: 'Research University (reward later)',
+      all_in: 'move everything into technology', increase: 'increase technology exposure',
+      hold: 'hold the position', reduce: 'reduce / take profits',
+      accept: 'accept the shared infrastructure', independent: 'build your own', decline: 'decline both',
+      research: 'read the report first', sell: 'sell technology',
+      sell_all: 'sell everything', rebalance: 'rebalance', opportunistic: 'buy the dip',
+      sell_winner: 'sell the project that was up', sell_loser: 'sell the project that was down',
+      sell_gain: 'sell the cheaply bought twin', sell_loss: 'sell the expensively bought twin',
+      either: 'treat the two twins as equal'
+    };
+    const N = v => L[v] || v;
+    const out = [];
+    const push = (level, text) => out.push({ level, text });
+    const last = (n, f) => D.filter(d => d.level === n && (!f || f(d))).pop();
+
+    const l1 = last(1); if (l1) push(1, 'You began building in ' + N(l1.value) + '.');
+    const dip = last(2, d => !d.phase || d.phase === 'dip');
+    if (dip) push(2, 'After a drop with no real news behind it, you chose to ' + N(dip.value) + '.');
+    const news = last(2, d => d.phase === 'news');
+    if (news) push(2, 'After genuine bad news (the main employer leaving), you chose to ' + N(news.value) + '.');
+    const l3 = D.filter(d => d.level === 3);
+    if (l3.length) {
+      const c = {}; l3.forEach(d => { const k = d.districtId || '?'; c[k] = (c[k] || 0) + 1; });
+      push(3, 'You placed ' + l3.length + (l3.length === 1 ? ' funding cube: ' : ' funding cubes: ') + Object.entries(c).map(([k, n]) => n + ' in ' + k).join(', ') + '.');
+    }
+    const rp = last(4, d => d.phase === 'repair'); if (rp) push(4, 'You chose to ' + N(rp.value) + '.');
+    const bd = last(4, d => d.phase === 'build'); if (bd) push(4, 'You built the ' + N(bd.value) + '.');
+    const l5 = last(5); if (l5) push(5, 'During the boom you chose to ' + N(l5.value) + '.');
+    const r6 = D.some(d => d.level === 6 && d.value === 'research');
+    const l6 = last(6, d => d.value !== 'research');
+    if (l6) push(6, 'With the visiting delegation you ' + (r6 ? 'read the report, then chose to ' : 'chose without reading the report to ') + N(l6.value) + '.');
+    const r7 = D.some(d => d.level === 7 && d.value === 'research');
+    const l7 = last(7, d => d.value !== 'research');
+    if (l7) push(7, 'Under loud headlines you ' + (r7 ? 'read the report, then chose to ' : 'chose without reading the report to ') + N(l7.value) + '.'
+      + (typeof l7.elapsed === 'number' && l7.elapsed >= 0 ? ' You decided in ' + (Math.round(l7.elapsed / 100) / 10) + 's.' : ''));
+    const l8 = last(8);
+    if (l8) push(8, 'In the storm you chose to ' + N(l8.value) + '.'
+      + (D.some(d => d.level === 4 && d.value === 'university') ? ' The Research University you funded earlier opened in this chapter.' : ''));
+    const p9 = last(9, d => d.phase === 'pair'), t9 = last(9, d => d.phase === 'twin');
+    if (p9) push(9, 'In the project review you chose to ' + N(p9.value) + '.');
+    if (t9) push(9, 'Between the two identical workshops you chose to ' + N(t9.value) + '.');
+    const fc = this.forecastResult(D.filter(d => d.level === 10 && d.phase === 'forecast'));
+    if (fc) push(10, 'Across four forecasts your average confidence was ' + Math.round(fc.avgConf * 100) + '% and you were right ' + Math.round(fc.hitRate * 100) + '% of the time.');
+    const pr = D.filter(d => d.level === 10 && d.phase === 'practice').pop();
+    if (pr) push(10, 'You made one extra practice forecast at ' + pr.conf + '% confidence (counts 10%).');
+    return out;
+  },
+
+  // Concept -> what the research says -> how this game uses it -> what it cannot show.
+  // Deliberately conservative: nothing here claims this game is validated.
+  RESEARCH: [
+    { concept: 'Loss aversion', finding: 'Losses tend to feel stronger than equivalent gains (prospect theory, Kahneman & Tversky).',
+      mechanic: 'Level 2 separates a noise-driven dip from genuine bad news and records your response to each.',
+      limit: 'Two scenarios cannot measure a personal loss-aversion coefficient; the original research uses repeated, controlled gambles.' },
+    { concept: 'Disposition effect', finding: 'Investors often sell winners and hold losers even when the outlook is identical (Shefrin & Statman; Odean).',
+      mechanic: 'Level 9 offers two sales where only the purchase price differs, not the outlook.',
+      limit: 'A single pair of choices shows a tendency in this scenario, not a stable trading pattern.' },
+    { concept: 'Diversification', finding: 'Spreading holdings reduces the impact of any single bad outcome.',
+      mechanic: 'Level 3 measures how evenly six funding cubes were spread, then applies a random shock.',
+      limit: 'City districts are not asset classes, and one random shock is not a return distribution.' },
+    { concept: 'Present bias / patience', finding: 'People frequently prefer a smaller immediate reward to a larger delayed one.',
+      mechanic: 'Level 4 offers an immediate festival or a delayed university whose benefit really does arrive later.',
+      limit: 'One binary choice cannot produce a discount rate, and an urgent repair is deliberately never counted as impatience.' },
+    { concept: 'Overconfidence / calibration', finding: 'Stated confidence often exceeds actual accuracy.',
+      mechanic: 'Level 10 compares your stated confidence with the outcomes of fixed forecasts.',
+      limit: 'Four or five forecasts are far too few for a reliable calibration curve.' },
+    { concept: 'Reaction to noise', finding: 'Salient news can drive trading that is unrelated to fundamentals.',
+      mechanic: 'Level 7 pairs a sensational headline with a free, more factual report and records both access and decision speed.',
+      limit: 'Buying, selling or holding alone does not distinguish conviction, contrarianism and overreaction; that evidence is ambiguous.' },
+    { concept: 'Herding / fear of missing out', finding: 'Rising prices attract inflows after the gains have happened.',
+      mechanic: 'Level 5 makes one district boom while the alternatives stay fully available.',
+      limit: 'Increasing exposure can be a considered decision; it is not proof of herding.' }
+  ],
+
+  RESEARCH_NOTE: 'These are the ideas the scenarios are built on. WealthSim itself has not been empirically validated, and all numerical rules (weights, thresholds, the 90/10 blend, the 3-second speed rule) are game-design heuristics chosen for teaching, not measurements.'
 };
 
 if (typeof module !== 'undefined' && module.exports) module.exports = Assessment;
+
