@@ -371,8 +371,20 @@ class GameScene extends Phaser.Scene {
 
   _level3Outcome() {
     const loser=this.districts[Phaser.Math.Between(0,3)];
-    loser.takeDamage(28); this.cameras.main.shake(330,0.004); this._updateStats(-5,-5,0);
-    this._showConsequence('The '+loser.name+' district underperformed.\nHow much it hurt depended entirely\non how you spread your resources.',()=>this._nextLevel());
+    // Loss is proportional to the credits actually placed in the shocked
+    // district: each cube = 100 credits, the district falls 40%.
+    const placed=(ScoringEngine.decisions||[]).filter(d=>d.level===3&&d.districtId===loser.id).length;
+    const exposed=placed*100, lost=Math.round(exposed*0.4);
+    const share=placed/(this.cubeTotal||6);
+    loser.takeDamage(8+Math.round(40*share)); // visual damage scales with exposure
+    this.cameras.main.shake(120+Math.round(400*share),0.002+0.006*share);
+    this._updateStats(-Math.round(10*share),-Math.round(15*share),0);
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const nm=de?(loser.nameDE||loser.name):loser.name;
+    const msg=de
+      ? 'Das '+nm+'-Viertel fällt um 40 %.\nDu hattest '+exposed+' Credits dort \u2192 Verlust: '+lost+' Credits.'
+      : 'The '+nm+' district fell 40%.\nYou had '+exposed+' credits there \u2192 you lost '+lost+' credits.';
+    this._showConsequence(msg,()=>this._nextLevel());
   }
 
   // ══ LEVEL 4 ══
