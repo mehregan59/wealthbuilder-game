@@ -61,7 +61,8 @@ const ScoringEngine = {
   },
 
   scorePatience() {
-    const d = this.decisions.find(d => d.level === 4);
+    // Only the build choice measures patience; the urgent-repair beat does not.
+    const d = this.decisions.find(d => d.level === 4 && (d.value === 'festival' || d.value === 'university'));
     if (!d) return 50;
     const gameScore = { festival: 20, university: 85 }[d.value] ?? 50;
     const startScore = { impatient: 20, moderate: 55, patient: 85 }[this.startingAnswers[1]] ?? 50;
@@ -117,7 +118,7 @@ const ScoringEngine = {
       if (l1.value === this.startingAnswers[0]) matches++;
       total++;
     }
-    const l4 = this.decisions.find(d => d.level === 4);
+    const l4 = this.decisions.find(d => d.level === 4 && (d.value === 'festival' || d.value === 'university'));
     if (l4 && this.startingAnswers[1]) {
       const patientChose = l4.value === 'university';
       const saidPatient = ['moderate', 'patient'].includes(this.startingAnswers[1]);

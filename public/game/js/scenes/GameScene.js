@@ -440,13 +440,36 @@ class GameScene extends Phaser.Scene {
   }
 
   // ══ LEVEL 4 ══
+  // Beat A: an urgent repair. Spending cash on a genuine need is NOT
+  // impatience — this beat is recorded (phase:'repair') but never feeds the
+  // patience score. Beat B (phase:'build') is the real delayed-reward test.
   _level4() {
-    this._showPersistentMessage('The city can build one of two facilities.\nThis decision will echo through the rest of the game.');
+    const housing=this.districts[0];
+    housing.takeDamage(18);
+    this.cameras.main.shake(180,0.003);
+    this._showPersistentMessage('A water main has burst under the housing district.\nFamilies have no running water. The city has cash set aside.');
+    this._showDecisionPanel([
+      {icon:'🔧',label:'Repair it now',desc:'Uses reserve cash today.\nFixes the problem.',value:'repair_now',color:0x4ecdc4},
+      {icon:'⏳',label:'Postpone repair',desc:'Keep the cash for now.\nDeal with it later.',value:'defer',color:0xe2a840}
+    ],(c)=>{
+      ScoringEngine.recordDecision(4,c,{phase:'repair'}); this._clearPersistentMessage();
+      if(c==='repair_now'){
+        housing.receiveResource(2); this._updateStats(6,0,-6);
+        this._showConsequence('The pipe is fixed within days.\nUsing savings for a real emergency is what savings are for.',()=>this._level4Build());
+      } else {
+        housing.takeDamage(12); this._updateStats(-10,0,0);
+        this._showConsequence('The leak spreads. The repair now costs more than it would have.\nPostponing a real need is not the same as being patient.',()=>this._level4Build());
+      }
+    });
+  }
+
+  _level4Build() {
+    this._showPersistentMessage('With the emergency behind it, the city can build one of two facilities.\nThis decision will echo through the rest of the game.');
     this._showDecisionPanel([
       {icon:'🎪',label:'Festival Square',desc:'Happy citizens now.\nLittle long-term value.',value:'festival',color:0xe2a840},
       {icon:'🎓',label:'Research University',desc:'No reward for several levels.\nPowerful later.',value:'university',color:0x4ecdc4}
     ],(c)=>{
-      ScoringEngine.recordDecision(4,c); this._clearPersistentMessage();
+      ScoringEngine.recordDecision(4,c,{phase:'build'}); this._clearPersistentMessage();
       if(c==='university'){
         this.hasUniversity=true; this._updateStats(0,0,-8);
         this._showConsequence('Construction begins quietly.\nNo result yet. The city waits.\nSomething is being built that may matter greatly later.',()=>this._nextLevel());

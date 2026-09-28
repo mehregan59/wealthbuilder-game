@@ -247,7 +247,8 @@ class ProfileScene extends Phaser.Scene {
     const D=(typeof ScoringEngine!=='undefined'&&ScoringEngine.decisions)?ScoringEngine.decisions:[];
     const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
     // Final (non-research) action for a level — research is tracked separately.
-    const finalOf=n=>(D.filter(d=>d.level===n&&d.value!=='research').pop()||{}).value;
+    // Level 4's urgent-repair beat is context, not a patience signal.
+    const finalOf=n=>(D.filter(d=>d.level===n&&d.value!=='research'&&d.phase!=='repair').pop()||{}).value;
     const researched=n=>D.some(d=>d.level===n&&d.value==='research');
     const warnUnknown=(n,v)=>{ if(v!==undefined) console.warn('[WealthSim] Unrecognised action at level '+n+':',v); return null; };
     const pick=(map,n)=>{ const v=finalOf(n); if(v===undefined) return null; return map[v]!==undefined?map[v]:warnUnknown(n,v); };
