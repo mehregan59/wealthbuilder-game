@@ -218,8 +218,8 @@ class ProfileScene extends Phaser.Scene {
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); this.scene.start('PlayerSetup'); });
-    const ctaHit=this.add.rectangle(cx+gap/2+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
-    ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),cx+gap/2+ctaW/2,bY));
+    const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
+    ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
     this._detailsButton(de);
     console.log('[WealthSim] Scores:',this.scores,'Persona:',this.persona.key);
