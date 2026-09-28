@@ -160,8 +160,8 @@ class RoadNetwork {
     const v=this.visitor;
     if(v.ship){
       const riv=this.scene.metro.river;
-      v.path=[{x:v.x,y:v.y},{x:riv[1].x,y:riv[1].y}]; v.i=0; v.t=0; v.arrived=false; v.exiting=true;
-      v.onExit=()=>{ this._dropShipLabel(); if(onDone) onDone(); };
+      v.path=[{x:v.x,y:v.y},{x:riv[2].x,y:riv[2].y}];v.i=0;v.t=0;v.arrived=false;v.exiting=false;v.accepted=true;
+      v.onArrive=()=>{v.parked=true;this.scene.time.delayedCall(1900,()=>{if(onDone)onDone();});};
       return;
     }
     v.driveTo={ from:{x:v.x,y:v.y}, to:{x:target.cx,y:target.cy+this.s(46)}, t:0, sp:0.011,
@@ -225,7 +225,7 @@ class RoadNetwork {
     }
     const p1=pts[Math.min(v.i,pts.length-2)], p2=pts[Math.min(v.i+1,pts.length-1)];
     v.x=p1.x+(p2.x-p1.x)*v.t; v.y=p1.y+(p2.y-p1.y)*v.t;
-    if(v.ship){ this._ship(v.x,v.y,isNight); return; }
+    if(v.ship){this._ship(v.x,v.y,Math.atan2(p2.y-p1.y,p2.x-p1.x),isNight);return;}
     this._car(v.x,v.y,Math.atan2(p2.y-p1.y,p2.x-p1.x),{col:0xffd54a,stop:0},isNight,true);
   }
 
@@ -238,17 +238,11 @@ class RoadNetwork {
     }).setOrigin(0,1).setDepth(40);
   }
   _dropShipLabel(){ if(this.shipText){ this.shipText.destroy(); this.shipText=null; } }
-  _ship(x,y,isNight) {
-    const g=this.carGfx, L=this.s(46), H=this.s(12);
-    g.fillStyle(0x173b40,0.25); g.fillEllipse(x,y+this.s(6),L*1.1,H*0.8);
-    g.fillStyle(0x7a3f2c,1); g.beginPath(); g.moveTo(x-L/2,y-H/3); g.lineTo(x+L/2,y-H/3); g.lineTo(x+L/2-this.s(8),y+H/2); g.lineTo(x-L/2+this.s(6),y+H/2); g.closePath(); g.fillPath();
-    g.fillStyle(0xfffbf1,1); g.fillRect(x-L/4,y-H*1.3,L/2.2,H);
-    g.fillStyle(0x296b72,1); for(let i=0;i<3;i++) g.fillRect(x-L/4+this.s(3)+i*this.s(7),y-H*1.1,this.s(4),this.s(4));
-    // mast + flag
-    g.fillStyle(0x3c3c3c,1); g.fillRect(x+L/4,y-H*3.2,this.s(2),H*2.4);
-    g.fillStyle(0xe0a82e,1); g.fillTriangle(x+L/4+this.s(2),y-H*3.2,x+L/4+this.s(18),y-H*2.8,x+L/4+this.s(2),y-H*2.4);
-    if(isNight){ g.fillStyle(0xffe9a0,0.9); g.fillCircle(x+L/2-this.s(3),y-H/4,this.s(2)); }
-    if(this.shipText) this.shipText.setPosition(x+L/4+this.s(20),y-H*2.5);
+  _ship(x,y,ang,isNight) {
+    const g=this.carGfx,L=this.s(46),H=this.s(12),cs=Math.cos(ang),sn=Math.sin(ang),p=(a,b)=>({x:x+a*cs-b*sn,y:y+a*sn+b*cs});
+    const hull=[p(-L/2,-H/3),p(L/2,-H/3),p(L/2-this.s(8),H/2),p(-L/2+this.s(6),H/2)];
+    g.fillStyle(0x173b40,.25);g.fillEllipse(x,y+this.s(6),H*1.1,L*.8);g.fillStyle(0x7a3f2c,1);g.beginPath();g.moveTo(hull[0].x,hull[0].y);hull.slice(1).forEach(q=>g.lineTo(q.x,q.y));g.closePath();g.fillPath();
+    const cabin=p(-L*.08,0);g.fillStyle(0xfffbf1,1);g.fillCircle(cabin.x,cabin.y,this.s(7));const mast=p(L*.12,0),top={x:mast.x-sn*this.s(25),y:mast.y+cs*this.s(25)};g.lineStyle(this.s(2),0x3c3c3c,1);g.lineBetween(mast.x,mast.y,top.x,top.y);const f1={x:top.x+cs*this.s(18),y:top.y+sn*this.s(18)},f2={x:top.x-sn*this.s(9),y:top.y+cs*this.s(9)};g.fillStyle(0xe0a82e,1);g.fillTriangle(top.x,top.y,f1.x,f1.y,f2.x,f2.y);if(isNight){const bow=p(L/2-this.s(3),0);g.fillStyle(0xffe9a0,.9);g.fillCircle(bow.x,bow.y,this.s(2));}if(this.shipText)this.shipText.setPosition(x+this.s(24),y-this.s(30));
   }
 
   _car(x,y,ang,c,isNight,big) {

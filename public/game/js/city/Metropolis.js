@@ -68,9 +68,9 @@ class Metropolis {
     // District anchors — quarters of this same city.
     this.districtPoints = [
       p(0.115, 0.430),  // Housing — west bank old town
-      p(0.485, 0.345),  // Transport — set east of the north avenue, clear of the road
+      p(0.635, 0.195),  // Transport — moved right and up, clear of the avenue
       p(0.500, 0.820),  // Technology — shifted left into the south-east office streets
-      p(0.900, 0.245),  // Energy — higher on the hills, clear of the lower road
+      p(0.900, 0.195),  // Energy — solar field lifted farther above the hill road
     ];
 
 
@@ -385,6 +385,7 @@ class Metropolis {
     if (!this.anim) return;
     const dt = Math.min(delta, 60) / 1000;
     const still = this.reducedMotion;
+    const activity = 1-this.night*0.55;
     this.t += dt;
     const g = this.anim; g.clear();
 
@@ -398,7 +399,7 @@ class Metropolis {
 
     // Boats.
     this.boats.forEach(b => {
-      if (!still) b.p = (b.p + b.sp * dt) % 1;
+      if (!still) b.p = (b.p + b.sp * dt * activity) % 1;
       const q = this._riverAt(b.p), L = this.s(30), h = this.s(8);
       g.fillStyle(0x16302c, 0.18); g.fillEllipse(q.x, q.y + this.s(4), L, h);
       g.fillStyle(0xf4f2e8, 0.97); g.fillRoundedRect(q.x - L / 2, q.y - h / 2, L, h, h * 0.4);
@@ -428,21 +429,23 @@ class Metropolis {
 
     // Traffic — strictly on its own road, in its own lane.
     this.movers.forEach(m => {
-      if (!still) m.p = (m.p + m.sp * m.dir * dt + 1) % 1;
+      if (!still) m.p = (m.p + m.sp * m.dir * dt * (0.72+this.night*0.28) + 1) % 1;
       const q = this._at(m.route, m.p, m.lane * m.dir);
       if (m.type === 'train') this._drawTrain(g, q, m);
       else this._drawCar(g, q, m);
     });
 
     // People on the pavements.
-    this.walkers.forEach(w => {
-      if (!still) { w.p = (w.p + w.sp * dt + 1) % 1; w.bob += dt * 8; }
+    this.walkers.forEach((w,index) => {
+      if(this.night>0.35 && index%3!==0)return;
+      if (!still) { w.p = (w.p + w.sp * dt * activity + 1) % 1; w.bob += dt * 8 * activity; }
       const q = this._at(w.route, w.p, w.lane);
       const y = q.y - Math.abs(Math.sin(w.bob)) * this.s(1.4);
       g.fillStyle(0x15302c, 0.22); g.fillEllipse(q.x, y + this.s(3), this.s(8), this.s(3));
       g.fillStyle(w.shirt, 0.98); g.fillRoundedRect(q.x - this.s(2.6), y - this.s(9), this.s(5.2), this.s(8), 1);
       g.fillStyle(w.skin, 1); g.fillCircle(q.x, y - this.s(11.6), this.s(2.7));
     });
+    if(this.night>0.05){for(let i=0;i<9;i++){const q=this._at('boulevard',.08+i*.105,this.s(22));g.fillStyle(0xffdda0,.14*this.night);g.fillCircle(q.x,q.y-this.s(10),this.s(15));g.fillStyle(0xffe6a8,.92*this.night);g.fillCircle(q.x,q.y-this.s(10),this.s(2.6));g.fillStyle(0x394b49,.9);g.fillRect(q.x-this.s(1),q.y-this.s(9),this.s(2),this.s(12));}}
   }
 
   _drawCar(g, q, m) {
