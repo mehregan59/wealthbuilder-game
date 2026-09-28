@@ -22,16 +22,16 @@ class PlayerSetup extends Phaser.Scene {
     const compact=this.W<700;
     this._drawStepDots(1);
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    this.add.text(cx,55,de?'Erzähl uns von deiner Stadt':'Tell us about your city',{fontFamily:CityTheme.heading,fontSize:24,color:'#296b72'}).setOrigin(0.5);
-    this.add.text(cx,88,de?'Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.':'This helps personalize your experience. It never changes the game.',{fontFamily:CityTheme.body,fontSize:compact?11:13,color:'#55777a',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+    this.add.text(cx,compact?55:62,de?'Erzähl uns von deiner Stadt':'Tell us about your city',{fontFamily:CityTheme.heading,fontSize:compact?24:32,color:'#296b72'}).setOrigin(0.5);
+    this.add.text(cx,compact?88:104,de?'Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.':'This helps personalize your experience. It never changes the game.',{fontFamily:CityTheme.body,fontSize:compact?11:16,color:'#55777a',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
     // Intake disclosure: the session observes decision patterns and explains
     // them at the end — without revealing which level measures which trait.
-    this.add.text(cx,108,de?'Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.':'Note: this session observes your decision patterns and explains them to you in the final results.',{fontFamily:CityTheme.body,fontSize:compact?9:11,color:'#55777a',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
-    this._buildSection(compact?135:130,'Your age group','age',[{label:'18\u201327',value:'18-27'},{label:'28\u201337',value:'28-37'},{label:'38\u201347',value:'38-47'},{label:'48\u201357',value:'48-57'},{label:'58\u201365',value:'58-65'}],compact?3:5);
-    this._buildSection(compact?270:270,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],compact?3:5);
-    this._buildSection(compact?405:410,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
-    this._buildContinueBtn(compact?505:560);
-    this._buildSkipLink(compact?570:624, de);
+    this.add.text(cx,compact?108:130,de?'Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.':'Note: this session observes your decision patterns and explains them to you in the final results.',{fontFamily:CityTheme.body,fontSize:compact?9:13,color:'#55777a',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+    this._buildSection(compact?135:165,'Your age group','age',[{label:'18\u201327',value:'18-27'},{label:'28\u201337',value:'28-37'},{label:'38\u201347',value:'38-47'},{label:'48\u201357',value:'48-57'},{label:'58\u201365',value:'58-65'}],compact?3:5);
+    this._buildSection(compact?270:315,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],compact?3:5);
+    this._buildSection(compact?405:465,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
+    this._buildContinueBtn(compact?505:585);
+    this._buildSkipLink(compact?570:650, de);
   }
 
   // These answers only personalise the closing text, so a player who wants
@@ -54,12 +54,12 @@ class PlayerSetup extends Phaser.Scene {
   }
 
   _buildSection(y, label, key, options, cols) {
-    const cx=this.W/2,sectionW=Math.min(720,this.W-60),cardW=Math.floor((sectionW-(cols-1)*10)/cols),cardH=44,startX=cx-sectionW/2;
-    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:11,color:'#55777a',fontStyle:'bold',letterSpacing:1});
+    const compact=this.W<700,cx=this.W/2,sectionW=Math.min(1040,this.W-(compact?60:80)),cardW=Math.floor((sectionW-(cols-1)*(compact?10:16))/cols),cardH=compact?44:64,startX=cx-sectionW/2;
+    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:compact?11:17,color:'#365d60',fontStyle:'bold',letterSpacing:1});
     options.forEach((opt,i)=>{
-      const col=i%cols,row=Math.floor(i/cols),bx=startX+col*(cardW+10),by=y+20+row*(cardH+8);
+      const col=i%cols,row=Math.floor(i/cols),bx=startX+col*(cardW+(compact?10:14)),by=y+(compact?20:28)+row*(cardH+10);
       const card=this.add.graphics();
-      const txt=this.add.text(bx+cardW/2,by+cardH/2,opt.label,{fontFamily:CityTheme.body,fontSize:this.W<700?11:13,color:'#55777a',align:'center',wordWrap:{width:cardW-8}}).setOrigin(0.5);
+      const txt=this.add.text(bx+cardW/2,by+cardH/2,opt.label,{fontFamily:CityTheme.body,fontSize:compact?11:18,color:'#365d60',align:'center',wordWrap:{width:cardW-12}}).setOrigin(0.5);
       const draw=(sel,hover)=>{card.clear();if(sel){card.fillStyle(0xe0a82e,0.15);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(2,0xe0a82e,0.9);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#9b6c12');}else if(hover){card.fillStyle(0xd7e3d5,1);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1,0x4a6080,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#365d60');}else{card.fillStyle(0xf2e7c9,0.9);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1,0xd7e3d5,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#55777a');}};
       draw(false,false);
       const hit=this.add.rectangle(bx+cardW/2,by+cardH/2,cardW,cardH,0xffffff,0).setInteractive({useHandCursor:true});

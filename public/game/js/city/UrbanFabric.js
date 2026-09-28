@@ -38,5 +38,26 @@ class UrbanFabric {
       d.fillStyle(i%2?0xe8d8b9:0xf5edd9,0.8); d.fillRoundedRect(x,y,this.s(46),this.s(24),3);
       d.fillStyle(i%2?0xb66e55:0x668e94,0.8); d.fillRect(x,y,this.s(46),this.s(5));
     });
+    // Dense urban infill: repeated street-facing buildings bridge the four
+    // interactive neighborhoods into one continuous regional city.
+    const cityW=W-left;
+    const urbanRows=Math.max(4,Math.ceil((H-top-this.s(50))/this.s(92)));
+    for(let row=0;row<urbanRows;row++){
+      for(let col=0;col<12;col++){
+        if((row+col)%5===0)continue;
+        const x=left+this.s(16)+col*(cityW-this.s(40))/12+(row%2)*this.s(11);
+        const y=top+this.s(38)+row*this.s(92);
+        const bw=this.s(22+(col%3)*5),bh=this.s(14+(row+col)%3*6);
+        d.fillStyle((row+col)%4===0?0xdcccae:((row+col)%3===0?0xc7d8d2:0xeee5d2),0.82);
+        d.fillRoundedRect(x,y,bw,bh,2);
+        d.fillStyle((row+col)%4===0?0xb86f55:0x668e94,0.78);d.fillRect(x,y,bw,this.s(4));
+        d.fillStyle(0x88aa9e,.45);for(let wx=x+this.s(5);wx<x+bw-this.s(3);wx+=this.s(7))d.fillRect(wx,y+this.s(7),this.s(3),this.s(3));
+        if((row+col)%4===1){d.fillStyle(0x39784e,.9);d.fillCircle(x-this.s(7),y+bh,this.s(5));d.fillStyle(0x66533c,1);d.fillRect(x-this.s(8),y+bh,this.s(2),this.s(6));}
+      }
+    }
+    // A visible civic plaza and crosswalks at the central junction.
+    d.fillStyle(0xd8d2bf,.94);d.fillCircle(cx,cy+this.s(72),this.s(30));
+    d.lineStyle(this.s(3),0xf7f0db,.9);
+    for(let i=-3;i<=3;i++)d.lineBetween(cx+this.s(i*7),cy+this.s(48),cx+this.s(i*7),cy+this.s(61));
   }
 }
