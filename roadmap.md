@@ -13,3 +13,4 @@
 - [x] Refine solar tilt/placement, station alignment, ship docking, and faster level openings.
 - [x] Add progression-linked day/night lighting and interactive district detail panels.
 - [x] Always open the landing page after refresh and keep Back to home visible on the final screen.
+- [x] Add the landing page and working return-home flow to the standalone GitHub Pages build.
