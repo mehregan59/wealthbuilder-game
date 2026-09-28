@@ -159,9 +159,8 @@ class RoadNetwork {
     if(!this.visitor) return;
     const v=this.visitor;
     if(v.ship){
-      const riv=this.scene.metro.river;
-      v.path=[{x:v.x,y:v.y},{x:riv[2].x,y:riv[2].y}];v.i=0;v.t=0;v.arrived=false;v.exiting=false;v.accepted=true;
-      v.onArrive=()=>{v.parked=true;this.scene.time.delayedCall(1900,()=>{if(onDone)onDone();});};
+      v.arrived=true;v.exiting=false;v.accepted=true;v.parked=true;v.onArrive=null;
+      this.scene.time.delayedCall(1900,()=>{if(onDone)onDone();});
       return;
     }
     v.driveTo={ from:{x:v.x,y:v.y}, to:{x:target.cx,y:target.cy+this.s(46)}, t:0, sp:0.011,
