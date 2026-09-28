@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>WealthSim — Behavioural City Simulator</title>
+  <meta name="description" content="An educational city-building game about everyday investing behaviour. Not financial advice." />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
+  <style>html,body{margin:0;height:100%;overflow:hidden;background:#0a1420}#game{width:100vw;height:100dvh}</style>
+</head>
+<body>
+  <div id="game"></div>
+  <!-- Standalone build (used for GitHub Pages). Same scripts as the app. -->
+  <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
+  <script>
+    window.playerInfo = window.playerInfo || {};
+    window.retirementContext = window.retirementContext || {};
+    window.WS_TEXT_RES = Math.max(2, Math.min(window.devicePixelRatio || 1, 3));
+    (function () {
+      var F = Phaser.GameObjects.GameObjectFactory.prototype, orig = F.text;
+      F.text = function (x, y, t, s) { s = s || {}; if (s.resolution === undefined) s.resolution = window.WS_TEXT_RES; return orig.call(this, x, y, t, s); };
+    })();
+    window.WS_setTextRes = function (r) { window.WS_TEXT_RES = r; if (window.WS_game) window.WS_game.scene.getScenes(true).forEach(function (sc) { sc.scene.restart(); }); };
+  </script>
+  <script src="js/i18n.js"></script>
+  <script src="js/scoring.js"></script>
+  <script src="js/assessment.js"></script>
+  <script src="js/city/District.js"></script>
+  <script src="js/city/RoadNetwork.js"></script>
+  <script src="js/city/ResourceCube.js"></script>
+  <script src="js/city/AmbientSystem.js"></script>
+  <script src="js/city/WeatherSystem.js"></script>
+  <script src="js/ui/TooltipManager.js"></script>
+  <script src="js/ui/HUD.js"></script>
+  <script src="js/ui/StatsPanel.js"></script>
+  <script src="js/ui/WorldButton.js"></script>
+  <script src="js/ui/Tutorial.js"></script>
+  <script src="js/scenes/Boot.js"></script>
+  <script src="js/scenes/PlayerSetup.js"></script>
+  <script src="js/scenes/RetirementContext.js"></script>
+  <script src="js/scenes/StartingQuestions.js"></script>
+  <script src="js/scenes/GameScene.js"></script>
+  <script src="js/scenes/ProfileScene.js"></script>
+  <script>
+    window.WS_game = new Phaser.Game({
+      type: Phaser.AUTO,
+      backgroundColor: '#0a1420',
+      scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER, parent: 'game', width: '100%', height: '100%' },
+      render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
+      dom: { createContainer: true },
+      scene: [Boot, PlayerSetup, RetirementContext, StartingQuestions, GameScene, ProfileScene]
+    });
+  </script>
+</body>
+</html>
