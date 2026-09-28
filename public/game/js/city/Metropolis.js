@@ -67,11 +67,12 @@ class Metropolis {
 
     // District anchors — quarters of this same city.
     this.districtPoints = [
-      p(0.082, 0.545),  // Housing — west bank old town
+      p(0.072, 0.580),  // Housing — west bank old town
       p(0.430, 0.345),  // Transport — around the terminal on the north avenue
       p(0.645, 0.720),  // Technology — south-east office quarter
-      p(0.855, 0.375),  // Energy — north-east hills
+      p(0.828, 0.375),  // Energy — north-east hills
     ];
+
 
   }
 
