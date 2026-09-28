@@ -60,7 +60,7 @@ let gameInstance: any = null;
 let destroyTimer: ReturnType<typeof setTimeout> | null = null;
 let initPromise: Promise<void> | null = null;
 
-export default function WealthSimGame() {
+export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
 
@@ -168,6 +168,12 @@ export default function WealthSimGame() {
       }, 200);
     };
   }, []);
+
+  useEffect(() => {
+    const exit = () => onExit?.();
+    window.addEventListener("wealthsim:home", exit);
+    return () => window.removeEventListener("wealthsim:home", exit);
+  }, [onExit]);
 
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-background">

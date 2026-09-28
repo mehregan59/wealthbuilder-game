@@ -46,11 +46,11 @@ class StatsPanel {
         fontFamily:'Arial, sans-serif', fontSize:this.s(13), color:st.hex
       }).setOrigin(0,0.5);
       const lb = this.scene.add.text(px+pad+this.s(20), y, st.label, {
-        fontFamily:CityTheme.body, fontSize:this.s(14), color:'#a8c0d8'
+        fontFamily:CityTheme.body, fontSize:this.s(14), color:'#365d60'
       }).setOrigin(0,0.5);
       const vt = this.scene.add.text(px+pw-pad, y, '50', {
         fontFamily:CityTheme.body, fontSize:this.s(16),
-        color:'#e8f2ff', fontStyle:'700'
+        color:'#173b40', fontStyle:'700'
       }).setOrigin(1,0.5);
       const bBg = this.scene.add.graphics();
       bBg.fillStyle(0xdce9df,1);
@@ -77,7 +77,7 @@ class StatsPanel {
         fontFamily:CityTheme.body, fontSize:this.s(12), color:'#55777a'
       }).setOrigin(0,0.5);
       const vt = this.scene.add.text(px+pw-pad, y, '45', {
-        fontFamily:CityTheme.body, fontSize:this.s(12), color:'#c8d8ea', fontStyle:'600'
+        fontFamily:CityTheme.body, fontSize:this.s(12), color:'#365d60', fontStyle:'600'
       }).setOrigin(1,0.5);
       const bBg = this.scene.add.graphics();
       bBg.fillStyle(0xdce9df,1);
@@ -108,7 +108,7 @@ class StatsPanel {
     ax.fillStyle(0xe8f1e9, 0.92); ax.fillRect(plotX, plotY, plotW, plotH);
     [0,25,50,75,100].forEach(v => {
       const gy = plotY + plotH - (v/100)*plotH;
-      ax.lineStyle(1, v===50?0x24405f:0x162942, v===50?0.95:0.6);
+       ax.lineStyle(1, v===50?0x296b72:0x7ca5a1, v===50?0.8:0.45);
       ax.lineBetween(plotX, gy, plotX+plotW, gy);
       if (v%50===0) {
         const t = this.scene.add.text(plotX-this.s(6), gy, String(v), {
@@ -117,7 +117,7 @@ class StatsPanel {
         this.container.add(t);
       }
     });
-    ax.lineStyle(this.s(1.6), 0x33557a, 1);
+    ax.lineStyle(this.s(1.6), 0x296b72, 1);
     ax.lineBetween(plotX, plotY, plotX, plotY+plotH);
     ax.lineBetween(plotX, plotY+plotH, plotX+plotW, plotY+plotH);
     this.container.add(ax);
@@ -141,7 +141,7 @@ class StatsPanel {
       const d = this.scene.add.graphics();
       d.fillStyle(l.c,0.95); d.fillRect(lx, y, this.s(12), this.s(3));
       const tx = this.scene.add.text(lx+this.s(16), y-this.s(5), l.t, {
-        fontFamily:CityTheme.body, fontSize:this.s(10), color:'#6b8fb0'
+        fontFamily:CityTheme.body, fontSize:this.s(10), color:'#365d60'
       });
       this.container.add([d,tx]);
     });
@@ -213,7 +213,7 @@ class StatsPanel {
       wordWrap:{width:calloutW-this.s(32)}, lineSpacing:this.s(5)
     }).setDepth(152);
     const th = txt.height + this.s(64);
-    box.fillStyle(0x08131f,0.98); box.fillRoundedRect(calloutX,calloutY,calloutW,th,this.s(12));
+    box.fillStyle(0xfffbf1,0.98); box.fillRoundedRect(calloutX,calloutY,calloutW,th,this.s(12));
     box.lineStyle(1,0xe0a82e,0.6); box.strokeRoundedRect(calloutX,calloutY,calloutW,th,this.s(12));
     txt.setPosition(calloutX+this.s(16), calloutY+this.s(16));
 
@@ -264,7 +264,7 @@ class StatsPanel {
     p.fill.fillStyle(p.color,0.95); p.fill.fillRoundedRect(p.x,p.y,Math.max(p.h,p.maxW*pct),p.h,r);
     if(p.text){
       p.text.setText(Math.round(p.disp));
-      p.text.setColor(pct<0.3?'#e74c3c':pct>0.7?'#296b72':'#c8d8ea');
+       p.text.setColor(pct<0.3?'#c85848':pct>0.7?'#296b72':'#365d60');
     }
   }
 
@@ -327,7 +327,7 @@ class StatsPanel {
     b.fill.fillStyle(b.color,0.95); b.fill.fillRoundedRect(b.x,b.y,Math.max(b.h,b.maxW*pct),b.h,r);
     if (b.text) {
       b.text.setText(Math.round(b.disp));
-      b.text.setColor(pct<0.3?'#e74c3c':pct>0.7?'#296b72':'#e8f2ff');
+      b.text.setColor(pct<0.3?'#c85848':pct>0.7?'#296b72':'#173b40');
     }
   }
 }

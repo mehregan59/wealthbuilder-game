@@ -118,7 +118,7 @@ class ProfileScene extends Phaser.Scene {
       const info=T[key];
 
       const lb=this.add.text(bx,by,info.label,{
-        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#a8c0d8'
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#55777a'
       }).setDepth(100).setAlpha(0);
       const q=this.add.text(bx+lb.width+this.s(7),by+this.s(1),'\u24D8',{
         fontFamily:'Arial, sans-serif',fontSize:this.s(13),color:'#3f6288'
@@ -157,7 +157,7 @@ class ProfileScene extends Phaser.Scene {
     nBg.lineStyle(1,0x7ca5a1,1); nBg.strokeRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
     nBg.lineStyle(this.s(4),0x296b72,0.75); nBg.lineBetween(cx-nW/2,noteY+this.s(12),cx-nW/2,noteY+this.s(66));
     const nTx=this.add.text(cx,noteY+this.s(39),this._contextNote(window.retirementContext||{},de),{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#c0d4e6',
+       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#365d60',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(6)
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[nBg,nTx],alpha:1,duration:900,delay:1700});
@@ -167,7 +167,7 @@ class ProfileScene extends Phaser.Scene {
     const ret=this._retirementLines(de);
     const rBg=this.add.graphics().setDepth(99).setAlpha(0);
     const rTx=this.add.text(cx,retY+this.s(14),ret.body,{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#b8cde0',
+       fontFamily:CityTheme.body,fontSize:this.s(12),color:'#365d60',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(5)
     }).setOrigin(0.5,0).setDepth(100).setAlpha(0);
     const rH=rTx.height+this.s(58);
@@ -198,11 +198,11 @@ class ProfileScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
-    // Buttons: Play Again + real-world CTA adapted to the player's situation
+    // Exit to the game home plus a next-step education preview.
     const bY=retY+rH+this.s(40), bW=this.s(220), bH=this.s(48), gap=this.s(20);
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
     btnBg.fillStyle(0xe0a82e,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
-    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
+    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Zur Startseite':'Back to home',{
       fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     const ctaLabel=this._ctaLabel(de);
@@ -217,7 +217,7 @@ class ProfileScene extends Phaser.Scene {
     ctaBg.lineStyle(1,0x296b72,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
-    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); if(typeof AskResults!=='undefined') AskResults.reset(); this.scene.start('PlayerSetup'); });
+    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:home')); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
 
@@ -230,20 +230,21 @@ class ProfileScene extends Phaser.Scene {
     const lbl=de?'\u24D8  So entstand dein Ergebnis':'\u24D8  How we got this result';
     const t=this.add.text(this.W-this.s(20),this.s(20),lbl,{
       fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
-      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
+      backgroundColor:'#fffbf1',padding:{x:this.s(12),y:this.s(8)}
     }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
     this.tweens.add({targets:t,alpha:1,duration:800,delay:2400});
     t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#296b72'));
     t.on('pointerdown',()=>this._openDetails(de));
-    if (typeof AskResults==='undefined') return;
-    const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'?  Frag nach deinem Ergebnis':'?  Ask about my result',{
-      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
-      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
-    }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
+    const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'KI-Erklärung — Demnächst':'AI explanation — Coming soon',{
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#55777a',fontStyle:'600',
+      backgroundColor:'#fffbf1',padding:{x:this.s(12),y:this.s(8)}
+    }).setOrigin(1,0).setDepth(130).setAlpha(0);
     this.tweens.add({targets:a,alpha:1,duration:800,delay:2600});
-    a.on('pointerover',()=>a.setColor('#ffe090')); a.on('pointerout',()=>a.setColor('#296b72'));
-    a.on('pointerdown',()=>{ this._hideTip(); AskResults.open(this._askContext(), de); });
-    this.events.once('shutdown',()=>AskResults.close());
+    const next=this.add.text(this.W-this.s(20),a.y+a.height+this.s(8),de?'Deine persönliche Vorsorgebildung starten\nDemnächst':'Start your personal retirement investment education\nComing soon',{
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#173b40',fontStyle:'600',align:'right',
+      backgroundColor:'#e0a82e',padding:{x:this.s(12),y:this.s(8)}
+    }).setOrigin(1,0).setDepth(130).setAlpha(0);
+    this.tweens.add({targets:next,alpha:1,duration:800,delay:2800});
   }
 
   _askContext() {
@@ -267,7 +268,7 @@ class ProfileScene extends Phaser.Scene {
     const ov=this.add.rectangle(W/2,H/2,W,H,0x000000,0.78).setInteractive();
     const bw=Math.min(this.s(980),W-this.s(40)), bh=H-this.s(40), bx=(W-bw)/2, by=this.s(20);
     const box=this.add.graphics();
-    box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    box.fillStyle(0xfffbf1,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
     box.lineStyle(1,0xe0a82e,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
       fontFamily:CityTheme.heading,fontSize:this.s(22),color:'#296b72'});
@@ -286,7 +287,7 @@ class ProfileScene extends Phaser.Scene {
         fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
       const tlBody=this.add.text(bx+this.s(26),tlHd.y+tlHd.height+this.s(6),
         tl.map(e=>'Level '+e.level+' \u2014 '+e.text).join('\n'),{
-        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#c8dcee',
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#365d60',
         wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(4)});
       c.add([tlHd,tlBody]);
       rowsTop=tlBody.y+tlBody.height+this.s(18);
@@ -319,7 +320,7 @@ class ProfileScene extends Phaser.Scene {
           fontFamily:CityTheme.body,fontSize:this.s(12),color:'#9b6c12',fontStyle:'700'});
         const rb=this.add.text(bx+this.s(26),rh.y+rh.height+this.s(2),
           (de?'Forschung: ':'Research: ')+r.finding+'\n'+(de?'Im Spiel: ':'In the game: ')+r.mechanic+'\n'+(de?'Grenze: ':'Limit: ')+r.limit,{
-          fontFamily:CityTheme.body,fontSize:this.s(11),color:'#a8c0d8',
+         fontFamily:CityTheme.body,fontSize:this.s(11),color:'#55777a',
           wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(3)});
         c.add([rh,rb]);
         my=rb.y+rb.height+this.s(10);

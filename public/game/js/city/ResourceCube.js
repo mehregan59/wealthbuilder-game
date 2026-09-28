@@ -12,7 +12,7 @@ class ResourceCube {
   }
 
   _build(x, y) {
-    this.container = this.scene.add.container(x, y);
+    this.container = this.scene.add.container(x, y).setDepth(50);
     this.gfx = this.scene.add.graphics();
     this._drawCube(0, 0, 1.0);
     this.container.add(this.gfx);
@@ -20,7 +20,10 @@ class ResourceCube {
     this.glowRing.fillStyle(0xe2a840, 0.2);
     this.glowRing.fillEllipse(0, 8, 40, 14);
     this.container.addAt(this.glowRing, 0);
-    this.label = this.scene.add.text(0, -22, '💰', { fontSize: 14 }).setOrigin(0.5);
+    this.label = this.scene.add.text(0, -28, '100 credits', {
+      fontFamily:CityTheme.body, fontSize:11, color:'#173b40',
+      backgroundColor:'#fffbf1', padding:{x:5,y:3}
+    }).setOrigin(0.5);
     this.container.add(this.label);
     this.hitZone = this.scene.add.rectangle(0, 0, 40, 40, 0xffffff, 0);
     this.hitZone.setInteractive({ useHandCursor: true, draggable: true });
@@ -51,6 +54,7 @@ class ResourceCube {
       this.isDragging = true;
       this.scene.tweens.killTweensOf(this.container);
       this.scene.tweens.add({ targets: this.container, scaleX: 1.2, scaleY: 1.2, duration: 150 });
+      if(this.scene._armLevel3Idle) this.scene._armLevel3Idle();
     });
     this.hitZone.on('drag', (ptr, dx, dy) => {
       this.container.x = ptr.x; this.container.y = ptr.y;
