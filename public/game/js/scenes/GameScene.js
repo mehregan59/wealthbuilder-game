@@ -57,6 +57,9 @@ class GameScene extends Phaser.Scene {
   }
 
   s(v){ return Math.round(v * this.S); }
+  // Camera shake is decoration: skipped entirely when the player's system
+  // asks for reduced motion. The text of every consequence is unaffected.
+  _shake(d,i){ if(!this.reducedMotion && this.cameras && this.cameras.main) this.cameras.main.shake(d,i); }
   _cx(){ return this.PANEL + (this.W - this.PANEL)/2; }
   _availW(){ return this.W - this.PANEL - this.s(60); }
 
