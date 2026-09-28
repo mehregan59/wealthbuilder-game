@@ -8,7 +8,7 @@ class GameScene extends Phaser.Scene {
     this.S = this.isCompact
       ? Math.max(0.54, Math.min(0.72, this.W / 620))
       : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
-    this.PANEL = this.isCompact ? 0 : Math.round(Math.min(232, Math.max(168, this.W * 0.14)));
+    this.PANEL = this.isCompact ? 0 : Math.round(Math.min(286, Math.max(244, this.W * 0.18)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       ((typeof currentLang!=='undefined'&&currentLang==='de') ? 'Meine Stadt' : 'My City');
 
@@ -247,7 +247,10 @@ class GameScene extends Phaser.Scene {
       }
     };
     if (skipTutorial) proceed();
-    else this.time.delayedCall(700, ()=> this.tutorial.show(n, proceed));
+    else {
+      this.hud.showLevelTitle(n,this._levelName(n));
+      this.time.delayedCall(3100, ()=> this.tutorial.show(n, proceed));
+    }
   }
 
   _retryLevel() {
@@ -317,7 +320,7 @@ class GameScene extends Phaser.Scene {
     const t=this.add.text(0,0,icon+'  '+text,{fontFamily:CityTheme.body,fontSize:this.s(11),color:'#173b40'}).setOrigin(0.5);
     const w=t.width+this.s(18), h=this.s(21);
     const bg=this.add.graphics();
-    bg.fillStyle(0x08131f,0.82); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
+    bg.fillStyle(0xfffbf1,0.96); bg.fillRoundedRect(-w/2,-h/2,w,h,h/2);
     bg.lineStyle(1,color||0x8aa4c0,0.85); bg.strokeRoundedRect(-w/2,-h/2,w,h,h/2);
     c.add([bg,t]); c._districtId=district.id;
     c.setAlpha(0); this.tweens.add({targets:c,alpha:1,duration:500});
@@ -449,8 +452,8 @@ class GameScene extends Phaser.Scene {
 
   _spawnResourceCubes(n) {
     this.cubeTotal=n; this.cubeDropped=0;
-    const sx=this.PANEL+this.s(50), gap=this.s(84);
-    for(let i=0;i<n;i++) this.time.delayedCall(i*250,()=>this.cubes.push(new ResourceCube(this,sx+i*gap,this.H-this.s(70),1)));
+    const left=this.PANEL+this.s(54), usable=this.W-left-this.s(54), gap=Math.min(this.s(92),usable/(n-1));
+    for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>this.cubes.push(new ResourceCube(this,left+i*gap,this.H-this.s(72),1)));
   }
 
   // Nudges the player if they pause partway through placing cubes. This is
@@ -848,13 +851,13 @@ class GameScene extends Phaser.Scene {
     this.tickerActive = true;
     const top=this.s(44), h=this.s(36);
     const bg=this.add.graphics().setDepth(45);
-    bg.fillStyle(0x9e1600,0.96); bg.fillRect(0,top,this.W,h);
+    bg.fillStyle(0xfffbf1,0.97); bg.fillRect(0,top,this.W,h);
     bg.lineStyle(1,0xff4422,0.85); bg.lineBetween(0,top+h,this.W,top+h);
     const br=this.add.text(this.s(16),top+h/2,'BREAKING',{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#296b72',fontStyle:'700',letterSpacing:2
+       fontFamily:CityTheme.body,fontSize:this.s(12),color:'#c85848',fontStyle:'700',letterSpacing:2
     }).setOrigin(0,0.5).setDepth(46);
     const sep=this.add.graphics().setDepth(46);
-    sep.fillStyle(0xffffff,0.35); sep.fillRect(this.s(96),top+this.s(8),1,h-this.s(16));
+     sep.fillStyle(0x7ca5a1,0.5); sep.fillRect(this.s(96),top+this.s(8),1,h-this.s(16));
     const tk=this.add.text(this.W+20,top+h/2,lines.join('   ★   '),{
       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'600'
     }).setOrigin(0,0.5).setDepth(46);
@@ -873,14 +876,14 @@ class GameScene extends Phaser.Scene {
     const bh=Math.max(this.s(250), b.height+this.s(150)), bx=(W-bw)/2, by=(H-bh)/2;
     b.setY(by+this.s(66));
     const box=this.add.graphics().setDepth(91);
-    box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    box.fillStyle(0xfffbf1,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
     box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const t=this.add.text(W/2,by+this.s(34),title,{
       fontFamily:CityTheme.heading,fontSize:this.s(19),color:'#296b72'}).setOrigin(0.5).setDepth(92);
     const btn=this.add.text(W/2,by+bh-this.s(36),'Continue \u2192',{
-      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#9b6c12'})
+      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72',backgroundColor:'#e0a82e',padding:{x:this.s(18),y:this.s(8)}})
       .setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
-    btn.on('pointerover',()=>btn.setColor('#ffe090')); btn.on('pointerout',()=>btn.setColor('#9b6c12'));
+    btn.on('pointerover',()=>btn.setColor('#173b40')); btn.on('pointerout',()=>btn.setColor('#296b72'));
     btn.on('pointerdown',()=>{ov.destroy();box.destroy();t.destroy();b.destroy();btn.destroy();if(cb)cb();});
   }
 
@@ -892,7 +895,7 @@ class GameScene extends Phaser.Scene {
     this.persistentMsg=this.add.text(this._cx(),y-this.s(6),text,{
       fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',
       align:'center',wordWrap:{width:Math.min(this.s(760),this._availW())},
-      backgroundColor:'#040a14',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5)
+      backgroundColor:'#fffbf1',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5),stroke:'#fffbf1',strokeThickness:1
     }).setOrigin(0.5).setDepth(48).setAlpha(0);
     this.tweens.add({targets:this.persistentMsg,alpha:1,y:y,duration:600});
   }
@@ -904,18 +907,16 @@ class GameScene extends Phaser.Scene {
   _tempMessage(text,dur,fadeDur){
     fadeDur = fadeDur || 1000;
     const m=this.add.text(this._cx(),this.H-this.s(120),text,{
-      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72',
-      align:'center',backgroundColor:'#040a14',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5)
+      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#173b40',
+      align:'center',backgroundColor:'#fffbf1',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5)
     }).setOrigin(0.5).setDepth(66).setAlpha(0);
     this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur||5000,yoyo:true,onComplete:()=>m.destroy()});
   }
 
-  // opts.auto: skip the clickable World Button entirely and auto-advance
-  // after opts.autoDelay ms. Currently unused (Level 8 was reverted back to
-  // the standard clickable flow), but left in place in case a future level
-  // wants a no-click ending.
+  // Consequences remain visible long enough to read, then advance without
+  // requiring a second acknowledgement click.
   _showConsequence(text,onContinue,opts){
-    opts = opts || {};
+    opts = Object.assign({auto:true,autoDelay:4200},opts||{});
     // Clearing any existing world button/timer here (not just on level
     // transitions) is what stops Continue buttons from stacking if this
     // method is ever called again before a previous button's callback fired.
@@ -928,9 +929,9 @@ class GameScene extends Phaser.Scene {
     // stronger shade behind the message band, so the player can actually
     // see the consequence they caused instead of a black screen.
     const dim=this.add.graphics();
-    dim.fillStyle(0x02060c, 0.28);
+    dim.fillStyle(0x173b40, 0.12);
     dim.fillRect(0, 0, this.W, this.H);
-    dim.fillStyle(0x02060c, 0.55);
+    dim.fillStyle(0x173b40, 0.22);
     dim.fillRect(0, py-this.s(26), this.W, this.H-(py-this.s(26)));
 
 

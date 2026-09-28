@@ -16,6 +16,7 @@ class AmbientSystem {
     this.skyGfx   = scene.add.graphics().setDepth(-10);
     this.cloudGfx = scene.add.graphics().setDepth(-8);
     this.sunMoon  = scene.add.graphics().setDepth(-9);
+    this.nightShade = scene.add.graphics().setDepth(41);
     for (let i = 0; i < 70; i++) {
       this.stars.push({ x: Phaser.Math.Between(0, this.W), y: Phaser.Math.Between(0, 230), r: Math.random()*1.4+0.4, tw: Math.random()*Math.PI*2 });
     }
@@ -39,7 +40,7 @@ class AmbientSystem {
   // Bright sky-blue day, warm dawn/dusk, deep night
   getSkyColor() {
     const t = this.getDayProgress();
-    const NIGHT={r:27,g:65,b:70}, DAWN={r:142,g:188,b:188}, DAY={r:167,g:216,b:222}, DUSK={r:222,g:174,b:132};
+    const NIGHT={r:8,g:24,b:38}, DAWN={r:112,g:166,b:173}, DAY={r:167,g:216,b:222}, DUSK={r:210,g:146,b:110};
     const mix=(a,b,p)=>({r:a.r+(b.r-a.r)*p, g:a.g+(b.g-a.g)*p, b:a.b+(b.b-a.b)*p});
     if (t < 0.16) return mix(NIGHT,DAWN,t/0.16);
     if (t < 0.30) return mix(DAWN,DAY,(t-0.16)/0.14);
@@ -54,6 +55,9 @@ class AmbientSystem {
     const t = this.getDayProgress();
     const night = this.isNightTime();
     const sky = this.getSkyColor();
+    const nightStrength=t<0.16?(1-t/0.16):(t>0.84?(t-0.84)/0.16:0);
+    this.nightShade.clear();
+    if(nightStrength>0){this.nightShade.fillStyle(0x061522,0.48*nightStrength);this.nightShade.fillRect(0,0,this.W,this.H);}
 
     this.skyGfx.clear();
     this.skyGfx.fillStyle(Phaser.Display.Color.GetColor(sky.r|0, sky.g|0, sky.b|0), 1);

@@ -8,7 +8,7 @@ class RoadNetwork {
     this.cars = [];
     this.visitor = null;
     this.gfx     = scene.add.graphics().setDepth(3);
-    this.carGfx  = scene.add.graphics().setDepth(10);
+    this.carGfx  = scene.add.graphics().setDepth(6);
     this.signGfx = scene.add.graphics().setDepth(11).setAlpha(0);
     this.lanes   = this._lanes();
     this._draw();
@@ -20,7 +20,7 @@ class RoadNetwork {
   get H(){ return this.scene.scale.height; }
 
   _lanes() {
-    const d=this.districts, off=this.s(46);
+    const d=this.districts, off=this.s(78);
     const n=d.map(x=>({x:x.cx, y:x.cy+off}));
     const east=[
       {x:-this.s(180), y:n[0].y-this.s(8)},

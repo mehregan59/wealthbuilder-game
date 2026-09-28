@@ -3,7 +3,7 @@ class ProfileScene extends Phaser.Scene {
 
   create(data) {
     this.W = this.scale.width; this.H = this.scale.height;
-    this.S = Math.max(0.9, Math.min(1.9, this.H / 720));
+    this.S = Math.max(0.78, Math.min(1.05, this.H / 860, this.W / 1280));
     this.stats = (data && data.stats) || { happiness:50, development:50, resources:50 };
     this.scores  = this._computeScores();
     this.persona = this._assignPersona(this.scores);
@@ -118,7 +118,7 @@ class ProfileScene extends Phaser.Scene {
       const info=T[key];
 
       const lb=this.add.text(bx,by,info.label,{
-        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#a8c0d8'
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#55777a'
       }).setDepth(100).setAlpha(0);
       const q=this.add.text(bx+lb.width+this.s(7),by+this.s(1),'\u24D8',{
         fontFamily:'Arial, sans-serif',fontSize:this.s(13),color:'#3f6288'
@@ -157,7 +157,7 @@ class ProfileScene extends Phaser.Scene {
     nBg.lineStyle(1,0x7ca5a1,1); nBg.strokeRoundedRect(cx-nW/2,noteY,nW,this.s(78),this.s(12));
     nBg.lineStyle(this.s(4),0x296b72,0.75); nBg.lineBetween(cx-nW/2,noteY+this.s(12),cx-nW/2,noteY+this.s(66));
     const nTx=this.add.text(cx,noteY+this.s(39),this._contextNote(window.retirementContext||{},de),{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#c0d4e6',
+       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#365d60',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(6)
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:[nBg,nTx],alpha:1,duration:900,delay:1700});
@@ -167,7 +167,7 @@ class ProfileScene extends Phaser.Scene {
     const ret=this._retirementLines(de);
     const rBg=this.add.graphics().setDepth(99).setAlpha(0);
     const rTx=this.add.text(cx,retY+this.s(14),ret.body,{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#b8cde0',
+       fontFamily:CityTheme.body,fontSize:this.s(12),color:'#365d60',
       align:'center',wordWrap:{width:nW-this.s(54)},lineSpacing:this.s(5)
     }).setOrigin(0.5,0).setDepth(100).setAlpha(0);
     const rH=rTx.height+this.s(58);
@@ -198,11 +198,11 @@ class ProfileScene extends Phaser.Scene {
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     this.tweens.add({targets:disc,alpha:1,duration:800,delay:2100});
 
-    // Buttons: Play Again + real-world CTA adapted to the player's situation
-    const bY=retY+rH+this.s(40), bW=this.s(220), bH=this.s(48), gap=this.s(20);
+    // Exit to the game home plus a next-step education preview.
+    const bY=this.H-this.s(70), bW=this.s(220), bH=this.s(48), gap=this.s(20);
     const btnBg=this.add.graphics().setDepth(99).setAlpha(0);
     btnBg.fillStyle(0xe0a82e,1); btnBg.fillRoundedRect(cx-bW-gap/2,bY,bW,bH,this.s(11));
-    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Nochmal spielen':'Play Again',{
+    const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Zur Startseite':'Back to home',{
       fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',fontStyle:'700'
     }).setOrigin(0.5).setDepth(100).setAlpha(0);
     const ctaLabel=this._ctaLabel(de);
@@ -217,9 +217,19 @@ class ProfileScene extends Phaser.Scene {
     ctaBg.lineStyle(1,0x296b72,0.9); ctaBg.strokeRoundedRect(ctaX,bY,ctaW,bH,this.s(11));
     this.tweens.add({targets:[btnBg,btnTx,ctaBg,ctaTx],alpha:1,duration:800,delay:2300});
     const hit=this.add.rectangle(cx-bW/2-gap/2,bY+bH/2,bW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
-    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); if(typeof AskResults!=='undefined') AskResults.reset(); this.scene.start('PlayerSetup'); });
+    hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:home')); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,bY+bH/2,ctaW,bH,0xffffff,0).setDepth(101).setInteractive({useHandCursor:true});
     ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,bY));
+
+    const eduW=Math.min(this.s(520),W-this.s(40));
+    const eduX=cx-eduW/2, eduY=bY-this.s(62);
+    const eduBg=this.add.graphics().setDepth(99).setAlpha(0);
+    eduBg.fillStyle(0xdce9df,1); eduBg.fillRoundedRect(eduX,eduY,eduW,bH,this.s(8));
+    eduBg.lineStyle(1,0x7ca5a1,1); eduBg.strokeRoundedRect(eduX,eduY,eduW,bH,this.s(8));
+    const eduTx=this.add.text(cx,eduY+bH/2,de?'Persönliche Vorsorgebildung starten — Demnächst':'Start personal retirement education — Coming soon',{
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#173b40',fontStyle:'700',align:'center',wordWrap:{width:eduW-this.s(20)}
+    }).setOrigin(0.5).setDepth(100).setAlpha(0);
+    this.tweens.add({targets:[eduBg,eduTx],alpha:1,duration:800,delay:2500});
 
     this._detailsButton(de);
     console.log('[WealthSim] Scores:',this.scores,'Persona:',this.persona.key);
@@ -230,20 +240,17 @@ class ProfileScene extends Phaser.Scene {
     const lbl=de?'\u24D8  So entstand dein Ergebnis':'\u24D8  How we got this result';
     const t=this.add.text(this.W-this.s(20),this.s(20),lbl,{
       fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
-      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
+      backgroundColor:'#fffbf1',padding:{x:this.s(12),y:this.s(8)}
     }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
     this.tweens.add({targets:t,alpha:1,duration:800,delay:2400});
     t.on('pointerover',()=>t.setColor('#ffe090')); t.on('pointerout',()=>t.setColor('#296b72'));
     t.on('pointerdown',()=>this._openDetails(de));
-    if (typeof AskResults==='undefined') return;
-    const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'?  Frag nach deinem Ergebnis':'?  Ask about my result',{
-      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600',
-      backgroundColor:'#173b40',padding:{x:this.s(12),y:this.s(8)}
-    }).setOrigin(1,0).setDepth(130).setAlpha(0).setInteractive({useHandCursor:true});
+    const a=this.add.text(this.W-this.s(20),t.y+t.height+this.s(8),de?'KI-Erklärung — Demnächst':'AI explanation — Coming soon',{
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#55777a',fontStyle:'600',
+      backgroundColor:'#fffbf1',padding:{x:this.s(12),y:this.s(8)}
+    }).setOrigin(1,0).setDepth(130).setAlpha(0);
     this.tweens.add({targets:a,alpha:1,duration:800,delay:2600});
-    a.on('pointerover',()=>a.setColor('#ffe090')); a.on('pointerout',()=>a.setColor('#296b72'));
-    a.on('pointerdown',()=>{ this._hideTip(); AskResults.open(this._askContext(), de); });
-    this.events.once('shutdown',()=>AskResults.close());
+    // The matching fixed bottom action is created with the other result actions.
   }
 
   _askContext() {
@@ -264,17 +271,17 @@ class ProfileScene extends Phaser.Scene {
     const A=(typeof ScoringEngine!=='undefined'&&ScoringEngine.startingAnswers)?ScoringEngine.startingAnswers:[];
     const rows=Assessment.evidence(D,A,this.scores);
     const c=this.add.container(0,0).setDepth(200);
-    const ov=this.add.rectangle(W/2,H/2,W,H,0x000000,0.78).setInteractive();
+    const ov=this.add.rectangle(W/2,H/2,W,H,0x173b40,0.48).setInteractive();
     const bw=Math.min(this.s(980),W-this.s(40)), bh=H-this.s(40), bx=(W-bw)/2, by=this.s(20);
     const box=this.add.graphics();
-    box.fillStyle(0x08121f,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    box.fillStyle(0xfffbf1,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
     box.lineStyle(1,0xe0a82e,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
     const title=this.add.text(bx+this.s(26),by+this.s(18),de?'So entstand dein Ergebnis':'How we got this result',{
       fontFamily:CityTheme.heading,fontSize:this.s(22),color:'#296b72'});
     const intro=this.add.text(bx+this.s(26),by+this.s(52),de
       ?'Jede Zeile zeigt, was du im Spiel getan hast, und wie wir es gelesen haben. Nicht Beobachtetes wird nicht bewertet. Risiko, Verlustaversion und Geduld mischen 90% Spielverhalten mit 10% deiner Startantworten; die anderen fünf Merkmale stammen zu 100% aus dem Spiel. Marktereignisse variieren zwischen Durchgängen — rohe Ergebnisse sind nicht direkt vergleichbar; bewertet werden deine Entscheidungen in den Situationen, denen du begegnet bist. Dies ist eine pädagogische Deutung dieser Sitzung.'
       :'Each row shows what you actually did in the game, and how it was read. Anything not observed is not scored. Risk, loss aversion and patience blend 90% gameplay with 10% of your starting answers; the other five traits come from gameplay alone. Market events vary between runs, so raw outcomes are not directly comparable — what is assessed is your decisions in the situations you encountered. This is an educational interpretation of this session.',{
-      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#8fa9c2',wordWrap:{width:bw-this.s(90)}});
+      fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a',wordWrap:{width:bw-this.s(90)}});
     c.add([ov,box,title,intro]);
     const colW=(bw-this.s(78))/2;
     // Factual record first: what actually happened, in order, with no
@@ -286,7 +293,7 @@ class ProfileScene extends Phaser.Scene {
         fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
       const tlBody=this.add.text(bx+this.s(26),tlHd.y+tlHd.height+this.s(6),
         tl.map(e=>'Level '+e.level+' \u2014 '+e.text).join('\n'),{
-        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#c8dcee',
+        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#365d60',
         wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(4)});
       c.add([tlHd,tlBody]);
       rowsTop=tlBody.y+tlBody.height+this.s(18);
@@ -298,7 +305,7 @@ class ProfileScene extends Phaser.Scene {
       const did=this.add.text(x,y[col]+hd.height+this.s(3),r.did||(de?'Nicht beobachtet in dieser Sitzung.':'Not observed in this session.'),{
         fontFamily:CityTheme.body,fontSize:this.s(12),color:r.did?'#294f52':'#55777a',wordWrap:{width:colW}});
       const how=this.add.text(x,did.y+did.height+this.s(2),r.how,{
-        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#7d97b3',fontStyle:'italic',wordWrap:{width:colW}});
+        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#55777a',fontStyle:'italic',wordWrap:{width:colW}});
       c.add([hd,did,how]);
       y[col]=how.y+how.height+this.s(12);
     });
@@ -310,7 +317,7 @@ class ProfileScene extends Phaser.Scene {
       const mHd=this.add.text(bx+this.s(26),my,de?'Methode und Grenzen':'Method and limits',{
         fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72'});
       const mNote=this.add.text(bx+this.s(26),mHd.y+mHd.height+this.s(6),Assessment.RESEARCH_NOTE,{
-        fontFamily:CityTheme.body,fontSize:this.s(11),color:'#8fa9c2',
+         fontFamily:CityTheme.body,fontSize:this.s(11),color:'#55777a',
         fontStyle:'italic',wordWrap:{width:bw-this.s(60)}});
       c.add([mHd,mNote]);
       my=mNote.y+mNote.height+this.s(10);
@@ -319,7 +326,7 @@ class ProfileScene extends Phaser.Scene {
           fontFamily:CityTheme.body,fontSize:this.s(12),color:'#9b6c12',fontStyle:'700'});
         const rb=this.add.text(bx+this.s(26),rh.y+rh.height+this.s(2),
           (de?'Forschung: ':'Research: ')+r.finding+'\n'+(de?'Im Spiel: ':'In the game: ')+r.mechanic+'\n'+(de?'Grenze: ':'Limit: ')+r.limit,{
-          fontFamily:CityTheme.body,fontSize:this.s(11),color:'#a8c0d8',
+         fontFamily:CityTheme.body,fontSize:this.s(11),color:'#55777a',
           wordWrap:{width:bw-this.s(60)},lineSpacing:this.s(3)});
         c.add([rh,rb]);
         my=rb.y+rb.height+this.s(10);
@@ -331,8 +338,8 @@ class ProfileScene extends Phaser.Scene {
       :'This session only. Not a diagnosis and not financial advice.',{
       fontFamily:CityTheme.body,fontSize:this.s(11),color:'#456a8c'});
     const close=this.add.text(bx+bw-this.s(20),by+this.s(18),de?'Schlie\u00dfen \u2715':'Close \u2715',{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#a8c0d8'}).setOrigin(1,0).setInteractive({useHandCursor:true});
-    close.on('pointerover',()=>close.setColor('#ffffff')); close.on('pointerout',()=>close.setColor('#a8c0d8'));
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#296b72'}).setOrigin(1,0).setInteractive({useHandCursor:true});
+    close.on('pointerover',()=>close.setColor('#9b6c12')); close.on('pointerout',()=>close.setColor('#296b72'));
     close.on('pointerdown',()=>{ c.destroy(); this.details=null; });
     c.add([foot,close]);
     // Scroll if content is taller than the box.
@@ -343,6 +350,10 @@ class ProfileScene extends Phaser.Scene {
       const mask=this.make.graphics({add:false}); mask.fillRect(bx,by+this.s(80),bw,bh-this.s(120));
       const gm=mask.createGeometryMask(); movable.forEach(o=>o.setMask(gm));
       this.input.on('wheel',(p,go,dx,dy)=>{ if(!this.details) return; off=Math.max(0,Math.min(maxScroll,off+dy*0.5)); movable.forEach((o,i)=>o.y=base[i]-off); });
+      let dragY=null;
+      ov.on('pointerdown',p=>{dragY=p.y;});
+      ov.on('pointermove',p=>{if(dragY===null)return;off=Math.max(0,Math.min(maxScroll,off+(dragY-p.y)));dragY=p.y;movable.forEach((o,i)=>o.y=base[i]-off);});
+      ov.on('pointerup',()=>{dragY=null;}); ov.on('pointerout',()=>{dragY=null;});
     }
     this.details=c;
   }
@@ -355,7 +366,7 @@ class ProfileScene extends Phaser.Scene {
     const tTitle=this.add.text(0,0,title,{
       fontFamily:CityTheme.body,fontSize:this.s(14),color:'#9b6c12',fontStyle:'700'});
     const tBody=this.add.text(0,0,body,{
-      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#b8cde0',
+      fontFamily:CityTheme.body,fontSize:this.s(13),color:'#365d60',
       wordWrap:{width:tw-pad*2},lineSpacing:this.s(5)});
     const th = pad*2 + tTitle.height + this.s(6) + tBody.height;
     let tx = x - tw/2;
