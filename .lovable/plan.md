@@ -37,7 +37,13 @@ Repair the visual regressions shown in the screenshots while preserving every de
    - Correct all low-contrast text and button styling.
    - Present LAW / EFFECTIVE 2027 / PROPOSAL as clearly non-interactive status labels, not buttons.
    - Replace the non-working AI question action with a visible “Coming soon” label for this prototype.
+   - Add a final “Start your personal retirement investment education” section with a coming-soon action.
+   - Replace Play Again with Back to home.
 
-8. **Verification**
+8. **Game home page**
+   - Add a polished first screen explaining the educational city game with a strong city visual and Start button.
+   - Keep the actual game one click away and return players here from the result screen.
+
+9. **Verification**
    - Check desktop and mobile layouts, Level 3 allocation, automatic level transition, tooltip timing, night mode, traffic alignment, and the results screen in the running preview.
    - Run the existing behavioral scoring tests to confirm presentation fixes did not alter assessment logic.
