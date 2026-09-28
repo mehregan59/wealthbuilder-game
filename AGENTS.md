@@ -8,3 +8,6 @@
 > Commits you push to the connected branch sync back to Lovable and show up in
 > the editor, so keep the branch in a working state.
 <!-- LOVABLE:END -->
+
+- Keep Phaser as WealthSim's rendering engine; visual quality comes from modular layered city assets, avoiding a risky rewrite of tested gameplay.
+- Centralize game palette and typography in `CityTheme`; the embedded app and standalone build must load identical city modules.

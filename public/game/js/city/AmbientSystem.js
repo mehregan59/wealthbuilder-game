@@ -39,7 +39,7 @@ class AmbientSystem {
   // Bright sky-blue day, warm dawn/dusk, deep night
   getSkyColor() {
     const t = this.getDayProgress();
-    const NIGHT={r:10,g:16,b:38}, DAWN={r:96,g:96,b:150}, DAY={r:104,g:174,b:232}, DUSK={r:150,g:96,b:120};
+    const NIGHT={r:27,g:65,b:70}, DAWN={r:142,g:188,b:188}, DAY={r:167,g:216,b:222}, DUSK={r:222,g:174,b:132};
     const mix=(a,b,p)=>({r:a.r+(b.r-a.r)*p, g:a.g+(b.g-a.g)*p, b:a.b+(b.b-a.b)*p});
     if (t < 0.16) return mix(NIGHT,DAWN,t/0.16);
     if (t < 0.30) return mix(DAWN,DAY,(t-0.16)/0.14);
@@ -60,7 +60,7 @@ class AmbientSystem {
     this.skyGfx.fillRect(0, 0, this.W, 400);
 
     if (this.isDaytime()) {
-      this.skyGfx.fillStyle(0xbadcf2, 0.45);
+      this.skyGfx.fillStyle(0xe7f5f3, 0.5);
       this.skyGfx.fillRect(0, 250, this.W, 150);
     }
     const dawn = t>=0.16 && t<0.30, dusk = t>=0.70 && t<0.84;

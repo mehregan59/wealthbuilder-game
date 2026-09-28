@@ -96,10 +96,10 @@ class Tutorial {
     const bw = Math.min(this.s(centred?680:620), W-(centred?this.s(80):panelL+this.s(70)));
 
     const title=this.scene.add.text(0,0,titleTxt,{
-      fontFamily:'Playfair Display, Georgia, serif', fontSize:this.s(centred?23:19), color:'#e2a840'
+      fontFamily:CityTheme.heading, fontSize:this.s(centred?23:19), color:'#296b72'
     }).setOrigin(0.5,0).setDepth(131);
     const body=this.scene.add.text(0,0,bodyTxt,{
-      fontFamily:'Inter, Arial, sans-serif', fontSize:this.s(centred?16:15), color:'#c8dcee',
+      fontFamily:CityTheme.body, fontSize:this.s(centred?16:15), color:'#365d60',
       align:'center', lineSpacing:this.s(8), wordWrap:{width:bw-this.s(60)}
     }).setOrigin(0.5,0).setDepth(131);
 
@@ -108,10 +108,10 @@ class Tutorial {
     const bx=cx-bw/2, by=centred ? (H-bh)/2 : this.s(96);
 
     const bg=this.scene.add.graphics().setDepth(130);
-    if(centred){ bg.fillStyle(0x040a14,0.72); bg.fillRect(0,0,W,H); }
-    bg.fillStyle(0x08131f,0.98); bg.fillRoundedRect(bx,by,bw,bh,this.s(14));
-    bg.lineStyle(1,0xe2a840,0.6);  bg.strokeRoundedRect(bx,by,bw,bh,this.s(14));
-    bg.fillStyle(0xe2a840,0.9);    bg.fillRect(bx,by,bw,this.s(3));
+    if(centred){ bg.fillStyle(0xfffbf1,0.72); bg.fillRect(0,0,W,H); }
+    bg.fillStyle(0xfffbf1,0.98); bg.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    bg.lineStyle(1,0xe0a82e,0.6);  bg.strokeRoundedRect(bx,by,bw,bh,this.s(14));
+    bg.fillStyle(0xe0a82e,0.9);    bg.fillRect(bx,by,bw,this.s(3));
 
     title.setPosition(cx,by+pad);
     body.setPosition(cx,by+pad+title.height+this.s(12));
@@ -122,7 +122,7 @@ class Tutorial {
         const dx=cx-((pages-1)*this.s(14))/2+i*this.s(14);
         const d=this.scene.add.graphics().setDepth(132);
         const on=(i===page-1);
-        d.fillStyle(on?0xe2a840:0x2c4767,1); d.fillCircle(dx,by+bh-this.s(58),this.s(on?4:3));
+        d.fillStyle(on?0xe0a82e:0x7ca5a1,1); d.fillCircle(dx,by+bh-this.s(58),this.s(on?4:3));
         extras.push(d);
       }
     }
@@ -134,10 +134,10 @@ class Tutorial {
       const de=(typeof currentLang!=='undefined'&&currentLang==='de');
       const skipTxt=this.scene.add.text(bx+bw-this.s(14), by+this.s(14),
         de?'Anleitungen ausblenden \u2715':'Skip guides \u2715', {
-        fontFamily:'Inter, Arial, sans-serif', fontSize:this.s(11), color:'#4a6a8c'
+        fontFamily:CityTheme.body, fontSize:this.s(11), color:'#55777a'
       }).setOrigin(1,0).setDepth(133).setInteractive({useHandCursor:true});
-      skipTxt.on('pointerover',()=>skipTxt.setColor('#8aaacc'));
-      skipTxt.on('pointerout', ()=>skipTxt.setColor('#4a6a8c'));
+      skipTxt.on('pointerover',()=>skipTxt.setColor('#296b72'));
+      skipTxt.on('pointerout', ()=>skipTxt.setColor('#55777a'));
       skipTxt.on('pointerdown',()=>{ Tutorial.skipAll=true; this.hide(); if(onClose) onClose(); });
       extras.push(skipTxt);
     }
@@ -145,10 +145,10 @@ class Tutorial {
     const btnW=this.s(160), btnH=this.s(36);
     const btnY=by+bh-btnH-this.s(14), btnX=cx-btnW/2;
     const btn=this.scene.add.graphics().setDepth(131);
-    const drawBtn=(hv)=>{ btn.clear(); btn.fillStyle(0xe2a840,hv?1:0.9); btn.fillRoundedRect(btnX,btnY,btnW,btnH,this.s(8)); };
+    const drawBtn=(hv)=>{ btn.clear(); btn.fillStyle(0xe0a82e,hv?1:0.9); btn.fillRoundedRect(btnX,btnY,btnW,btnH,this.s(8)); };
     drawBtn(false);
     const btnTxt=this.scene.add.text(cx,btnY+btnH/2,btnLabel,{
-      fontFamily:'Inter, Arial, sans-serif', fontSize:this.s(15), color:'#0b1725', fontStyle:'700'
+      fontFamily:CityTheme.body, fontSize:this.s(15), color:'#173b40', fontStyle:'700'
     }).setOrigin(0.5).setDepth(132);
     const hit=this.scene.add.rectangle(cx,btnY+btnH/2,btnW,btnH,0xffffff,0)
       .setDepth(133).setInteractive({useHandCursor:true});

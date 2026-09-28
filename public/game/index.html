@@ -6,8 +6,8 @@
   <title>WealthSim — Behavioural City Simulator</title>
   <meta name="description" content="An educational city-building game about everyday investing behaviour. Not financial advice." />
   <link rel="preconnect" href="https://fonts.googleapis.com" />
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&family=Playfair+Display:wght@400;700&display=swap" rel="stylesheet" />
-  <style>html,body{margin:0;height:100%;overflow:hidden;background:#0a1420}#game{width:100vw;height:100dvh}</style>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
+  <style>html,body{margin:0;height:100%;overflow:hidden;background:#a7d8de}#game{width:100vw;height:100dvh}</style>
 </head>
 <body>
   <div id="game"></div>
@@ -27,6 +27,8 @@
   <script src="js/scoring.js"></script>
   <script src="js/assessment.js"></script>
   <script src="js/pensionContent.js"></script>
+  <script src="js/city/CityTheme.js"></script>
+  <script src="js/city/UrbanFabric.js"></script>
   <script src="js/city/District.js"></script>
   <script src="js/city/RoadNetwork.js"></script>
   <script src="js/city/ResourceCube.js"></script>
@@ -47,7 +49,7 @@
   <script>
     window.WS_game = new Phaser.Game({
       type: Phaser.AUTO,
-      backgroundColor: '#0a1420',
+      backgroundColor: '#a7d8de',
       scale: { mode: Phaser.Scale.RESIZE, autoCenter: Phaser.Scale.NO_CENTER, parent: 'game', width: '100%', height: '100%' },
       render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
       dom: { createContainer: true },

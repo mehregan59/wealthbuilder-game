@@ -5,6 +5,8 @@ const SCRIPTS = [
   "scoring",
   "assessment",
   "pensionContent",
+  "city/CityTheme",
+  "city/UrbanFabric",
   "city/District",
   "city/RoadNetwork",
   "city/ResourceCube",
@@ -110,7 +112,7 @@ export default function WealthSimGame() {
 
         gameInstance = new Phaser.Game({
           type: Phaser.AUTO,
-          backgroundColor: "#0a1420",
+          backgroundColor: "#a7d8de",
           scale: {
             mode: Phaser.Scale.RESIZE,
             autoCenter: Phaser.Scale.NO_CENTER,
@@ -168,7 +170,7 @@ export default function WealthSimGame() {
   }, []);
 
   return (
-    <div className="relative h-dvh w-full overflow-hidden bg-[#0a1420]">
+    <div className="relative h-dvh w-full overflow-hidden bg-background">
       <div ref={containerRef} className="h-full w-full" />
       {error && (
         <p className="absolute inset-x-0 top-1/2 text-center text-sm text-destructive">
