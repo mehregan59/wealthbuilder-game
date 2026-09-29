@@ -105,15 +105,17 @@ class StartingQuestions extends Phaser.Scene {
     const bbg=this.add.graphics();bbg.fillStyle(0xd7e3d5,1);bbg.fillRoundedRect(cx-200,62,400,6,3);
     const bfill=this.add.graphics();bfill.fillStyle(0xe0a82e,0.8);bfill.fillRoundedRect(cx-200,62,400*((this.currentQ+1)/this.questions.length),6,3);
     this.questionElements.push(bbg,bfill);
-    const qTxt=this.add.text(cx,this.H/2-140,q.text,{fontFamily:CityTheme.heading,fontSize:28,color:'#173b40',align:'center',wordWrap:{width:860}}).setOrigin(0.5).setAlpha(0);
+    const qFont=this.W<700?28:36;
+    const qWidth=Math.min(1100,this.W-70);
+    const qTxt=this.add.text(cx,this.H/2-166,q.text,{fontFamily:CityTheme.heading,fontSize:qFont,color:'#173b40',align:'center',wordWrap:{width:qWidth},lineSpacing:8}).setOrigin(0.5).setAlpha(0);
     this.questionElements.push(qTxt);
-    this.tweens.add({targets:qTxt,alpha:1,y:this.H/2-128,duration:500,ease:'Power2.easeOut'});
-    const optW=380,optH=72,optSp=20;
-    const totalH=q.options.length*(optH+optSp)-optSp,startY=this.H/2-totalH/2+50;
+    this.tweens.add({targets:qTxt,alpha:1,y:this.H/2-152,duration:500,ease:'Power2.easeOut'});
+    const optW=Math.min(this.W<700?this.W-56:660,this.W-56),optH=this.W<700?78:94,optSp=this.W<700?16:20;
+    const totalH=q.options.length*(optH+optSp)-optSp,startY=this.H/2-totalH/2+66;
     q.options.forEach((opt,i)=>{
       const by=startY+i*(optH+optSp),bx=cx-optW/2;
       const card=this.add.graphics().setAlpha(0);
-      const lbl=this.add.text(cx,by+optH/2,opt.label,{fontFamily:CityTheme.body,fontSize:19,color:'#55777a',align:'center'}).setOrigin(0.5).setAlpha(0);
+      const lbl=this.add.text(cx,by+optH/2,opt.label,{fontFamily:CityTheme.body,fontSize:this.W<700?19:24,color:'#55777a',align:'center',wordWrap:{width:optW-36}}).setOrigin(0.5).setAlpha(0);
       this.questionElements.push(card,lbl);
       const draw=(hover)=>{card.clear();if(hover){card.fillStyle(0xe0a82e,0.12);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(2,0xe0a82e,0.7);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#9b6c12');}else{card.fillStyle(0xf2e7c9,0.85);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(1,0x9bb5ae,1);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#55777a');}};
       draw(false);
