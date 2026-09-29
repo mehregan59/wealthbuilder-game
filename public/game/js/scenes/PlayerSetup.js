@@ -39,7 +39,7 @@ class PlayerSetup extends Phaser.Scene {
   // that affects the game or the behavioural result.
   _buildSkipLink(y, de) {
     const t=this.add.text(this.W/2,y,de?'Überspringen und direkt bauen \u2192':'Skip and start building \u2192',
-      {fontFamily:CityTheme.body,fontSize:12,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+      {fontFamily:CityTheme.body,fontSize:15,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     t.on('pointerover',()=>t.setColor('#365d60'));
     t.on('pointerout',()=>t.setColor('#55777a'));
     t.on('pointerdown',()=>{ this._skipped=true; this._goNext(); });
