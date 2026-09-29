@@ -22,16 +22,16 @@ class PlayerSetup extends Phaser.Scene {
     const compact=this.W<700;
     this._drawStepDots(1);
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    this.add.text(cx,compact?55:62,de?'Erzähl uns von deiner Stadt':'Tell us about your city',{fontFamily:CityTheme.heading,fontSize:compact?24:32,color:'#296b72'}).setOrigin(0.5);
-    this.add.text(cx,compact?88:104,de?'Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.':'This helps personalize your experience. It never changes the game.',{fontFamily:CityTheme.body,fontSize:compact?11:16,color:'#55777a',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+    this.add.text(cx,compact?55:62,de?'Erzähl uns von deiner Stadt':'Tell us about your city',{fontFamily:CityTheme.heading,fontSize:compact?28:40,color:'#296b72'}).setOrigin(0.5);
+    this.add.text(cx,compact?92:112,de?'Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.':'This helps personalize your experience. It never changes the game.',{fontFamily:CityTheme.body,fontSize:compact?14:19,color:'#55777a',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
     // Intake disclosure: the session observes decision patterns and explains
     // them at the end — without revealing which level measures which trait.
-    this.add.text(cx,compact?108:130,de?'Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.':'Note: this session observes your decision patterns and explains them to you in the final results.',{fontFamily:CityTheme.body,fontSize:compact?9:13,color:'#55777a',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
-    this._buildSection(compact?135:165,'Your age group','age',[{label:'18\u201327',value:'18-27'},{label:'28\u201337',value:'28-37'},{label:'38\u201347',value:'38-47'},{label:'48\u201357',value:'48-57'},{label:'58\u201365',value:'58-65'}],compact?3:5);
-    this._buildSection(compact?270:315,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],compact?3:5);
-    this._buildSection(compact?405:465,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
-    this._buildContinueBtn(compact?505:585);
-    this._buildSkipLink(compact?570:650, de);
+    this.add.text(cx,compact?118:142,de?'Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.':'Note: this session observes your decision patterns and explains them to you in the final results.',{fontFamily:CityTheme.body,fontSize:compact?11:15,color:'#55777a',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+    this._buildSection(compact?150:180,'Your age group','age',[{label:'18\u201327',value:'18-27'},{label:'28\u201337',value:'28-37'},{label:'38\u201347',value:'38-47'},{label:'48\u201357',value:'48-57'},{label:'58\u201365',value:'58-65'}],compact?3:5);
+    this._buildSection(compact?300:345,'Your employment situation','employment',[{label:'Employed',value:'employed'},{label:'Self-employed',value:'self-employed'},{label:'Student',value:'student'},{label:'Retired',value:'retired'},{label:'Other',value:'other'}],compact?3:5);
+    this._buildSection(compact?450:510,'Previous investment experience','experience',[{label:'None',value:'none'},{label:'Some basics',value:'basic'},{label:'Experienced',value:'experienced'}],3);
+    this._buildContinueBtn(compact?560:640);
+    this._buildSkipLink(compact?630:710, de);
   }
 
   // These answers only personalise the closing text, so a player who wants
@@ -72,9 +72,9 @@ class PlayerSetup extends Phaser.Scene {
   }
 
   _buildContinueBtn(y) {
-    const cx=this.W/2,bw=220,bh=48;
+    const cx=this.W/2,bw=280,bh=58;
     this.continueBtnGfx=this.add.graphics();
-    this.continueBtnTxt=this.add.text(cx,y+bh/2,'Continue \u2192',{fontFamily:CityTheme.heading,fontSize:16,color:'#688486'}).setOrigin(0.5);
+    this.continueBtnTxt=this.add.text(cx,y+bh/2,'Continue \u2192',{fontFamily:CityTheme.heading,fontSize:20,color:'#688486'}).setOrigin(0.5);
     this._continueBtnY=y;
     this._drawBtn(false);
     this.continueBtnHit=this.add.rectangle(cx,y+bh/2,bw,bh,0xffffff,0);

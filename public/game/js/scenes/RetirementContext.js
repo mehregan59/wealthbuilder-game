@@ -35,15 +35,15 @@ class RetirementContext extends Phaser.Scene {
     const cx=this.W/2;
     const lang=typeof currentLang!=='undefined'?currentLang:'en';
     this._drawStepDots(2);
-    this.add.text(cx,52,lang==='de'?'Dein Rentensystem':'Your retirement system',{fontFamily:CityTheme.heading,fontSize:22,color:'#296b72'}).setOrigin(0.5);
-    this.add.text(cx,82,lang==='de'?'Diese Antworten personalisieren dein abschließendes Feedback.':'These answers personalize your closing feedback. They never change gameplay.',{fontFamily:CityTheme.body,fontSize:13,color:'#55777a'}).setOrigin(0.5);
+    this.add.text(cx,52,lang==='de'?'Dein Rentensystem':'Your retirement system',{fontFamily:CityTheme.heading,fontSize:30,color:'#296b72'}).setOrigin(0.5);
+    this.add.text(cx,88,lang==='de'?'Diese Antworten personalisieren dein abschließendes Feedback.':'These answers personalize your closing feedback. They never change gameplay.',{fontFamily:CityTheme.body,fontSize:16,color:'#55777a'}).setOrigin(0.5);
 
     // Auto-derived retirement notice
     const noticeBox=this.add.graphics();
-    noticeBox.fillStyle(0xd7e3d5,0.8);noticeBox.fillRoundedRect(cx-310,112,620,36,8);
-    noticeBox.lineStyle(1,0x296b72,0.4);noticeBox.strokeRoundedRect(cx-310,112,620,36,8);
+    noticeBox.fillStyle(0xd7e3d5,0.8);noticeBox.fillRoundedRect(cx-380,116,760,44,8);
+    noticeBox.lineStyle(1,0x296b72,0.4);noticeBox.strokeRoundedRect(cx-380,116,760,44,8);
     const ageLabel=window.playerInfo?.age||'28-37';
-    this.add.text(cx,130,(lang==='de'?`Altersgruppe: ${ageLabel}  \xB7  Gesch\xE4tzte Zeit bis zur Rente: `:`Age group: ${ageLabel}  \xB7  Estimated time until retirement: `)+this._yearsFromAge.label,{fontFamily:CityTheme.body,fontSize:12,color:'#296b72'}).setOrigin(0.5);
+    this.add.text(cx,138,(lang==='de'?`Altersgruppe: ${ageLabel}  \xB7  Gesch\xE4tzte Zeit bis zur Rente: `:`Age group: ${ageLabel}  \xB7  Estimated time until retirement: `)+this._yearsFromAge.label,{fontFamily:CityTheme.body,fontSize:15,color:'#296b72'}).setOrigin(0.5);
 
     // Q1 Saule — multi-select, with an ℹ tooltip on each card
     const q1Label=lang==='de'?'Welche Rentenbausteine hast du bereits? (Mehrfachauswahl m\xF6glich)':'Which retirement pillars do you already have? (Select all that apply)';
@@ -66,11 +66,11 @@ class RetirementContext extends Phaser.Scene {
       {label:'\uD83D\uDCD6 Learning the basics',sub:'I know the basics and save something',value:'basic'},
       {label:'\uD83D\uDCC8 Already investing',sub:'I invest actively and regularly',value:'experienced'}
     ];
-    this._buildSimpleSection(430,q2Label,'buildexp',expOpts,3);
-    this._buildContinueBtn(570);
+    this._buildSimpleSection(486,q2Label,'buildexp',expOpts,3);
+    this._buildContinueBtn(632);
     // Optional: these answers only shape the closing text, never the game.
-    const sk=this.add.text(cx,634,lang==='de'?'Überspringen und direkt bauen \u2192':'Skip and start building \u2192',
-      {fontFamily:CityTheme.body,fontSize:12,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    const sk=this.add.text(cx,700,lang==='de'?'Überspringen und direkt bauen \u2192':'Skip and start building \u2192',
+      {fontFamily:CityTheme.body,fontSize:15,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     sk.on('pointerover',()=>sk.setColor('#365d60'));
     sk.on('pointerout',()=>sk.setColor('#55777a'));
     sk.on('pointerdown',()=>{ if(!this.selections.saule.length) this.selections.saule=['unsure']; this._goNext(); });
@@ -82,17 +82,17 @@ class RetirementContext extends Phaser.Scene {
   }
 
   _buildSauleSection(y,label,options) {
-    const cx=this.W/2,sW=Math.min(720,this.W-60),startX=cx-sW/2;
-    const cols=2,cW=Math.floor((sW-10)/cols),cH=68;
-    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:11,color:'#55777a',fontStyle:'bold'});
+    const cx=this.W/2,sW=Math.min(920,this.W-56),startX=cx-sW/2;
+    const cols=2,cW=Math.floor((sW-14)/cols),cH=88;
+    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:15,color:'#55777a',fontStyle:'bold'});
     options.forEach((opt,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
-      const bx=startX+col*(cW+10),by=y+20+row*(cH+10);
+      const bx=startX+col*(cW+14),by=y+26+row*(cH+12);
       const card=this.add.graphics();
-      const mainTxt=this.add.text(bx+14,by+16,opt.label,{fontFamily:CityTheme.body,fontSize:13,color:'#365d60',fontStyle:'bold'});
-      const subTxt=this.add.text(bx+14,by+38,opt.sub,{fontFamily:CityTheme.body,fontSize:11,color:'#55777a'});
+      const mainTxt=this.add.text(bx+18,by+20,opt.label,{fontFamily:CityTheme.body,fontSize:17,color:'#365d60',fontStyle:'bold'});
+      const subTxt=this.add.text(bx+18,by+50,opt.sub,{fontFamily:CityTheme.body,fontSize:14,color:'#55777a'});
       // Info icon — tap to see tooltip + link
-      const infoIcon=this.add.text(bx+cW-22,by+10,'\u24D8',{fontFamily:CityTheme.body,fontSize:14,color:'#55777a'}).setInteractive({useHandCursor:true});
+      const infoIcon=this.add.text(bx+cW-26,by+12,'\u24D8',{fontFamily:CityTheme.body,fontSize:18,color:'#55777a'}).setInteractive({useHandCursor:true});
       const draw=(sel,hover)=>{card.clear();if(sel){card.fillStyle(0xe0a82e,0.15);card.fillRoundedRect(bx,by,cW,cH,8);card.lineStyle(2,0xe0a82e,0.9);card.strokeRoundedRect(bx,by,cW,cH,8);mainTxt.setColor('#9b6c12');subTxt.setColor('#7a651e');infoIcon.setColor('#296b72');}else if(hover){card.fillStyle(0xd7e3d5,1);card.fillRoundedRect(bx,by,cW,cH,8);card.lineStyle(1,0x4a6080,1);card.strokeRoundedRect(bx,by,cW,cH,8);mainTxt.setColor('#173b40');subTxt.setColor('#55777a');infoIcon.setColor('#296b72');}else{card.fillStyle(0xf2e7c9,0.9);card.fillRoundedRect(bx,by,cW,cH,8);card.lineStyle(1,0xd7e3d5,1);card.strokeRoundedRect(bx,by,cW,cH,8);mainTxt.setColor('#365d60');subTxt.setColor('#55777a');infoIcon.setColor('#55777a');}};
       draw(false,false);
       const isSelected=()=>this.selections.saule.includes(opt.value);
@@ -183,9 +183,9 @@ class RetirementContext extends Phaser.Scene {
   }
 
   _buildContinueBtn(y) {
-    const cx=this.W/2,bw=220,bh=48;
+    const cx=this.W/2,bw=280,bh=58;
     this.continueBtnGfx=this.add.graphics();
-    this.continueBtnTxt=this.add.text(cx,y+bh/2,'Continue \u2192',{fontFamily:CityTheme.heading,fontSize:16,color:'#688486'}).setOrigin(0.5);
+    this.continueBtnTxt=this.add.text(cx,y+bh/2,'Continue \u2192',{fontFamily:CityTheme.heading,fontSize:20,color:'#688486'}).setOrigin(0.5);
     this._continueBtnY=y;this._drawBtn(false);
     this.continueBtnHit=this.add.rectangle(cx,y+bh/2,bw,bh,0xffffff,0);
   }
