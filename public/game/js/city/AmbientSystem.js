@@ -4,8 +4,15 @@ class AmbientSystem {
     this.W = scene.scale.width;
     this.H = scene.scale.height;
     this.time = 34000;          // start mid-morning so the first view is bright
-    this.dayDuration = 120000;  // slower 2-minute cycle
+    this.dayDuration = 210000;  // long, calm cycle
     this.targetProgress = null;
+    // The sky runs on its own clock, independent of level progression, so a
+    // storm or an offer can land at dawn, noon or midnight depending only on
+    // how the player paced their own game. The speed drifts very gently
+    // (never a jump, never a fast-forward) so no two runs share a rhythm.
+    this.speed = 0.92 + Math.random() * 0.16;
+    this.speedTarget = this.speed;
+    this.driftTimer = 0;
     this.birds = [];
     this.stars = [];
     this.clouds = [
@@ -45,7 +52,8 @@ class AmbientSystem {
   getNightStrength(){const t=this.getDayProgress();if(t>=.72)return Math.min(1,(t-.72)/.16);if(t<=.25)return Math.min(1,(.25-t)/.15);return 0;}
   isNightTime(){ return this.getNightStrength()>.55; }
   isDaytime(){ const t=this.getDayProgress(); return t>=0.30 && t<0.70; }
-  setSimulationLevel(level){const phases=[.35,.43,.52,.62,.72,.82,.92,.05,.18,.30];this.targetProgress=phases[Math.max(0,Math.min(phases.length-1,(level||1)-1))];}
+  // Deliberately inert: day and night no longer snap to the level number.
+  setSimulationLevel(){ }
 
   // Bright sky-blue day, warm dawn/dusk, deep night
   getSkyColor() {
@@ -60,7 +68,13 @@ class AmbientSystem {
   }
 
   update(time, delta) {
-    if(this.targetProgress!==null){const now=this.getDayProgress();let diff=this.targetProgress-now;if(diff>.5)diff-=1;if(diff<-.5)diff+=1;this.time+=diff*this.dayDuration*Math.min(1,delta/2600);if(Math.abs(diff)<.004)this.targetProgress=null;}else this.time += delta;
+    // Gentle, continuous clock. Every ~18s a new slightly different speed is
+    // chosen and eased towards, so the cycle breathes without ever speeding up
+    // visibly or skipping.
+    this.driftTimer -= delta;
+    if(this.driftTimer<=0){ this.driftTimer = 16000 + Math.random()*8000; this.speedTarget = 0.9 + Math.random()*0.2; }
+    this.speed += (this.speedTarget - this.speed) * Math.min(1, delta/9000);
+    this.time += delta * this.speed;
     this.W = this.scene.scale.width;
     const t = this.getDayProgress();
     const night = this.isNightTime();
