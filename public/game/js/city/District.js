@@ -243,14 +243,17 @@ class District {
     if(!this._nightGfx)this._nightGfx=this.scene.add.graphics().setDepth(9);
     const g=this._nightGfx;g.clear();
     if(k<=0.02)return;
-    g.fillStyle(0x061426,0.72*k);
-    g.fillEllipse(this.cx,this.cy+this.s(6),this.s(255),this.s(185));
-    g.fillStyle(0x0a2038,0.35*k);
-    g.fillEllipse(this.cx,this.cy+this.s(6),this.s(300),this.s(215));
+    // Soft falloff so the quarter blends into the night city instead of
+    // showing a hard dark oval on the ground.
+    for(let i=6;i>=1;i--){
+      const f=i/6;
+      g.fillStyle(0x061426,0.17*k);
+      g.fillEllipse(this.cx,this.cy+this.s(6),this.s(190+150*f),this.s(140+110*f));
+    }
   }
   _nightWindows(k){
     if(k<=0.05)return;
-    if(!this._winSeed){this._winSeed=[];for(let i=0;i<26;i++)this._winSeed.push({dx:(Math.random()-0.5)*1.7,dy:(Math.random()-0.6)*1.2,ph:Math.random()*6.28});}
+    if(!this._winSeed){this._winSeed=[];for(let i=0;i<26;i++)this._winSeed.push({dx:(Math.random()-0.5)*2.9,dy:(Math.random()-0.5)*2.4,ph:Math.random()*6.28});}
     const g=this.animGfx,lit=Math.min(26,10+this._stage()*4);
     this._winSeed.forEach((w,i)=>{
       if(i>=lit)return;
