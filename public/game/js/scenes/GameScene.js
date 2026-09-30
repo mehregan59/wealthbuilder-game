@@ -256,7 +256,7 @@ class GameScene extends Phaser.Scene {
     const fn=map[n]; if(!fn)return;
     this.hud.setLevel(n,this._levelName(n));
     if(this.ambient)this.ambient.setSimulationLevel(n);
-    const run = () => this.time.delayedCall(400, fn.bind(this));
+    const run = () => this.time.delayedCall(460, fn.bind(this));
     const proceed = () => {
       // The very first time Level 1 starts, point the player at the side
       // panel and explain what it tracks before anything is asked of them.
@@ -272,7 +272,7 @@ class GameScene extends Phaser.Scene {
       const titleAlreadyShown = n===1 && this._introLevelTitleShown;
       if(titleAlreadyShown)this._introLevelTitleShown=false;
       if(!titleAlreadyShown)this.hud.showLevelTitle(n,this._levelName(n));
-      this.time.delayedCall(titleAlreadyShown?180:720, ()=> this.tutorial.show(n, proceed));
+      this.time.delayedCall(titleAlreadyShown?207:828, ()=> this.tutorial.show(n, proceed));
     }
   }
 
