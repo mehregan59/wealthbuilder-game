@@ -48,7 +48,7 @@ class GameScene extends Phaser.Scene {
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,0);
 
     this._initAudio(); // Bug #10
-    this._addMuteButton(); // Bug #10
+    if(this.isCompact) this._addMuteButton(); // phones: side panel hidden
     this.input.keyboard.on('keydown-P', () => this._toProfile());
     this.events.removeAllListeners('resourceDropped');
     this.events.on('resourceDropped', ({district,value,cube}) => this._onResourceDropped(district,value,cube));
@@ -99,19 +99,19 @@ class GameScene extends Phaser.Scene {
     const p3=at(3,.88,baseY+this.s(18));
 
     this.districts = [
-      new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
+      new District(this, {id:'housing',tag:'Safe & Steady',tagDE:'Sicher & stetig',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
         color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.16,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
-      new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
+      new District(this, {id:'transport',tag:'Reliable Returns',tagDE:'Verlässliche Erträge',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
         color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S*1.16,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
-      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
+      new District(this, {id:'technology',tag:'High Potential',tagDE:'Hohes Potenzial',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
         color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.16,labelLift:46,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
-      new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
+      new District(this, {id:'energy',tag:'Essential Base',tagDE:'Grundversorgung',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
         color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S*1.16,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
@@ -189,7 +189,6 @@ class GameScene extends Phaser.Scene {
         lineSpacing:this.s(8) }).setOrigin(0.5).setDepth(70).setAlpha(0);
     this.tweens.add({targets:splash,alpha:1,duration:700,hold:1200,yoyo:true,
       onComplete:()=>{ splash.destroy(); this._introLevelTitleShown=true; this._startLevel(1); }});
-    this._drawCityBoundary();
   }
 
   _startLevel(n, skipTutorial) {
