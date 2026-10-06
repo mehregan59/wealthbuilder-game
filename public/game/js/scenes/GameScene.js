@@ -48,7 +48,7 @@ class GameScene extends Phaser.Scene {
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,0);
 
     this._initAudio(); // Bug #10
-    this._addMuteButton(); // Bug #10
+    if(this.isCompact) this._addMuteButton(); // phones: side panel hidden
     this.input.keyboard.on('keydown-P', () => this._toProfile());
     this.events.removeAllListeners('resourceDropped');
     this.events.on('resourceDropped', ({district,value,cube}) => this._onResourceDropped(district,value,cube));
@@ -99,19 +99,19 @@ class GameScene extends Phaser.Scene {
     const p3=at(3,.88,baseY+this.s(18));
 
     this.districts = [
-      new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
+      new District(this, {id:'housing',tag:'Safe & Steady',tagDE:'Sicher & stetig',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
         color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.16,
         tooltip:'Stable homes for citizens.\nLow risk, steady growth.\nLike bonds in a portfolio.',
         tooltipDE:'Stabile Häuser für Bürger.\nGeringes Risiko, stetiges Wachstum.'}),
-      new District(this, {id:'transport',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
+      new District(this, {id:'transport',tag:'Reliable Returns',tagDE:'Verlässliche Erträge',name:'Transport',nameDE:'Verkehrsviertel',label:'Transport District',labelDE:'Verkehrsviertel',
         color:0x4f8fa0,darkColor:0x6f9c62,accentColor:0x4f9aa4,cx:p1.cx,cy:p1.cy,health:45,scale:this.S*1.16,
         tooltip:'Roads and transit connect the city.\nModerate risk, reliable returns.',
         tooltipDE:'Straßen verbinden die Stadt.\nModerates Risiko, zuverlässige Erträge.'}),
-      new District(this, {id:'technology',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
+      new District(this, {id:'technology',tag:'High Potential',tagDE:'Hohes Potenzial',name:'Technology',nameDE:'Technologieviertel',label:'Technology District',labelDE:'Technologieviertel',
         color:0x557b89,darkColor:0x6f9c62,accentColor:0x296b72,cx:p2.cx,cy:p2.cy,health:45,scale:this.S*1.16,labelLift:46,
         tooltip:'High growth potential.\nHigh uncertainty.\nCan double — or fall sharply.',
         tooltipDE:'Hohes Wachstumspotenzial.\nHohe Unsicherheit.'}),
-      new District(this, {id:'energy',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
+      new District(this, {id:'energy',tag:'Essential Base',tagDE:'Grundversorgung',name:'Energy',nameDE:'Energieviertel',label:'Energy District',labelDE:'Energieviertel',
         color:0xe0a82e,darkColor:0x6f9c62,accentColor:0xe0a82e,cx:p3.cx,cy:p3.cy,health:45,scale:this.S*1.16,
         tooltip:'Wind and solar power the city.\nEssential infrastructure.',
         tooltipDE:'Wind und Solar versorgen die Stadt.'})
@@ -189,7 +189,6 @@ class GameScene extends Phaser.Scene {
         lineSpacing:this.s(8) }).setOrigin(0.5).setDepth(70).setAlpha(0);
     this.tweens.add({targets:splash,alpha:1,duration:700,hold:1200,yoyo:true,
       onComplete:()=>{ splash.destroy(); this._introLevelTitleShown=true; this._startLevel(1); }});
-    this._drawCityBoundary();
   }
 
   _startLevel(n, skipTutorial) {
@@ -1048,195 +1047,238 @@ class GameScene extends Phaser.Scene {
     this.districts.forEach(d=>d.update(time,delta));
   }
 
-  // ══ Bug #10 — Web Audio sound system ══
+  // ══ Sound: layered city ambience + soft interface sounds (Web Audio) ══
   _initAudio() {
     try {
-      this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-      this._muted = false;
+      if (!GameScene._audioCtx) GameScene._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      this._audioCtx = GameScene._audioCtx;
+      this._muted = !!GameScene._muted;
+      this._master = this._audioCtx.createGain();
+      this._master.gain.value = 0.9;
+      this._master.connect(this._audioCtx.destination);
       this._ambientNode = null;
+      const resume = () => { if (this._audioCtx.state === 'suspended') this._audioCtx.resume(); };
+      this.input.on('pointerdown', resume);
       this._startAmbient();
+      this.events.once('shutdown', () => this._stopAmbient());
+      this.events.once('destroy', () => this._stopAmbient());
     } catch(e) { this._audioCtx = null; }
   }
 
+  _noiseBuffer(seconds, brown) {
+    const ctx = this._audioCtx, len = Math.floor(ctx.sampleRate * seconds);
+    const buf = ctx.createBuffer(1, len, ctx.sampleRate), d = buf.getChannelData(0);
+    let last = 0;
+    for (let i = 0; i < len; i++) {
+      const w = Math.random() * 2 - 1;
+      if (brown) { last = (last + 0.02 * w) / 1.02; d[i] = last * 3.2; } else d[i] = w;
+    }
+    return buf;
+  }
+
   _startAmbient() {
-    if (!this._audioCtx || this._muted) return;
-    const ctx = this._audioCtx;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.type = 'sine';
-    osc.frequency.setValueAtTime(55, ctx.currentTime);
-    gain.gain.setValueAtTime(0.04, ctx.currentTime);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start();
-    this._ambientNode = { osc, gain };
+    if (!this._audioCtx || this._muted || this._ambientNode) return;
+    const ctx = this._audioCtx, now = ctx.currentTime, nodes = [];
+    const bus = ctx.createGain(); bus.gain.setValueAtTime(0, now); bus.gain.linearRampToValueAtTime(1, now + 3);
+    bus.connect(this._master);
+    // 1) distant city hum + breeze: brown noise, low-passed, slowly breathing
+    const wind = ctx.createBufferSource(); wind.buffer = this._noiseBuffer(6, true); wind.loop = true;
+    const wf = ctx.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 520; wf.Q.value = 0.4;
+    const wg = ctx.createGain(); wg.gain.value = 0.11;
+    const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.05; lfo.connect(lfoG); lfoG.connect(wg.gain);
+    const lfo2 = ctx.createOscillator(); lfo2.frequency.value = 0.045;
+    const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
+    wind.connect(wf); wf.connect(wg); wg.connect(bus);
+    wind.start(); lfo.start(); lfo2.start(); nodes.push(wind, lfo, lfo2);
+    // 2) warm, hopeful pad (D major add9), softly detuned and filtered
+    const padF = ctx.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 900;
+    const padG = ctx.createGain(); padG.gain.value = 0.022; padF.connect(padG); padG.connect(bus);
+    [146.83, 220.0, 293.66, 369.99, 329.63].forEach((f, i) => {
+      [-4, 4].forEach(det => {
+        const o = ctx.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle';
+        o.frequency.value = f; o.detune.value = det;
+        const g = ctx.createGain(); g.gain.value = i < 2 ? 0.8 : 0.35;
+        const tr = ctx.createOscillator(); tr.frequency.value = 0.05 + i * 0.023;
+        const trG = ctx.createGain(); trG.gain.value = 0.3; tr.connect(trG); trG.connect(g.gain);
+        o.connect(g); g.connect(padF); o.start(); tr.start(); nodes.push(o, tr);
+      });
+    });
+    this._ambientNode = { bus, nodes };
+    // 3) life: occasional birdsong by day, a distant tram bell now and then
+    const schedule = () => {
+      if (!this._ambientNode) return;
+      this._ambientTimer = this.time.delayedCall(4000 + Math.random() * 7000, () => {
+        if (!this._ambientNode || this._muted) return;
+        const night = (this.nightStrength || 0) > 0.55;
+        if (!night && Math.random() < 0.7) this._birdChirp(); else this._tramBell();
+        schedule();
+      });
+    };
+    schedule();
+  }
+
+  _birdChirp() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime, n = 2 + Math.floor(Math.random() * 3), base = 2600 + Math.random() * 1400;
+    for (let i = 0; i < n; i++) {
+      const t = t0 + i * (0.11 + Math.random() * 0.05);
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
+      o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.45, t + 0.06);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.025, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.09);
+      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.1);
+    }
+  }
+
+  _tramBell() {
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    [1, 2.76, 5.4].forEach((m, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 660 * m;
+      g.gain.setValueAtTime(0.018 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
+      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 1.7);
+    });
   }
 
   _stopAmbient() {
-    if (this._ambientNode) {
-      try { this._ambientNode.osc.stop(); } catch(e) {}
-      this._ambientNode = null;
-    }
+    if (this._ambientTimer) { try { this._ambientTimer.remove(false); } catch(e) {} this._ambientTimer = null; }
+    const a = this._ambientNode; this._ambientNode = null;
+    if (!a || !this._audioCtx) return;
+    const t = this._audioCtx.currentTime;
+    try { a.bus.gain.cancelScheduledValues(t); a.bus.gain.setValueAtTime(a.bus.gain.value, t); a.bus.gain.linearRampToValueAtTime(0, t + 0.6); } catch(e) {}
+    setTimeout(() => { a.nodes.forEach(n => { try { n.stop(); } catch(e) {} }); try { a.bus.disconnect(); } catch(e) {} }, 700);
+  }
+
+  _tone(freq, start, dur, vol, type, attack) {
+    const ctx = this._audioCtx, o = ctx.createOscillator(), g = ctx.createGain();
+    o.type = type || 'sine'; o.frequency.value = freq;
+    g.gain.setValueAtTime(0, start); g.gain.linearRampToValueAtTime(vol, start + (attack || 0.01));
+    g.gain.exponentialRampToValueAtTime(0.0005, start + dur);
+    o.connect(g); g.connect(this._master); o.start(start); o.stop(start + dur + 0.05);
   }
 
   _playClick() {
     if (!this._audioCtx || this._muted) return;
-    const ctx = this._audioCtx;
-    const osc = ctx.createOscillator();
-    const gain = ctx.createGain();
-    osc.frequency.setValueAtTime(440, ctx.currentTime);
-    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.1);
-    gain.gain.setValueAtTime(0.3, ctx.currentTime);
-    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-    osc.connect(gain); gain.connect(ctx.destination);
-    osc.start(); osc.stop(ctx.currentTime + 0.15);
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    // soft wooden tap: a short filtered noise tick plus a rounded pitch blip
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(0.04, false);
+    const f = ctx.createBiquadFilter(); f.type = 'bandpass'; f.frequency.value = 1800; f.Q.value = 2.5;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0.12, t); g.gain.exponentialRampToValueAtTime(0.0005, t + 0.04);
+    src.connect(f); f.connect(g); g.connect(this._master); src.start(t);
+    const o = ctx.createOscillator(), og = ctx.createGain(); o.type = 'sine';
+    o.frequency.setValueAtTime(880, t); o.frequency.exponentialRampToValueAtTime(520, t + 0.08);
+    og.gain.setValueAtTime(0.09, t); og.gain.exponentialRampToValueAtTime(0.0005, t + 0.12);
+    o.connect(og); og.connect(this._master); o.start(t); o.stop(t + 0.14);
   }
 
   _playTransition() {
     if (!this._audioCtx || this._muted) return;
-    const ctx = this._audioCtx;
-    [261, 329, 392].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
-      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + i * 0.12 + 0.05);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.5);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + i * 0.12);
-      osc.stop(ctx.currentTime + i * 0.12 + 0.5);
+    const t = this._audioCtx.currentTime;
+    // gentle bell phrase: each note has a soft overtone so it rings like glass
+    [[587.33,0],[739.99,0.16],[880,0.32]].forEach(([f,d]) => {
+      this._tone(f, t + d, 1.4, 0.09, 'sine', 0.02);
+      this._tone(f * 2.01, t + d, 0.7, 0.025, 'sine', 0.01);
     });
   }
 
   _playCelebration() {
     if (!this._audioCtx || this._muted) return;
-    const ctx = this._audioCtx;
-    [523, 659, 784, 1046].forEach((freq, i) => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = 'triangle';
-      osc.frequency.value = freq;
-      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.08);
-      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + i * 0.08 + 0.04);
-      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.6);
-      osc.connect(gain); gain.connect(ctx.destination);
-      osc.start(ctx.currentTime + i * 0.08);
-      osc.stop(ctx.currentTime + i * 0.08 + 0.7);
+    const t = this._audioCtx.currentTime;
+    [523.25, 659.25, 783.99, 1046.5, 1318.5].forEach((f, i) => {
+      this._tone(f, t + i * 0.09, 0.9, 0.08, 'triangle', 0.015);
+      this._tone(f / 2, t + i * 0.09, 0.6, 0.03, 'sine', 0.02);
     });
+    [523.25, 659.25, 783.99].forEach(f => this._tone(f, t + 0.55, 1.8, 0.04, 'sine', 0.08));
   }
 
   _toggleMute() {
-    this._muted = !this._muted;
-    if (this._muted) {
-      this._stopAmbient();
-    } else {
-      if (this._audioCtx && this._audioCtx.state === 'suspended') {
-        this._audioCtx.resume();
-      }
-      this._startAmbient();
+    this._muted = !this._muted; GameScene._muted = this._muted;
+    if (this._muted) this._stopAmbient();
+    else {
+      if (this._audioCtx && this._audioCtx.state === 'suspended') this._audioCtx.resume();
+      this._startAmbient(); this._playClick();
     }
     if (this._muteBtn) this._muteBtn.setText(this._muted ? this._tr('game.unmute', '🔇 Unmute') : this._tr('game.mute', '🔊 Mute'));
   }
 
   _addMuteButton() {
-    this._muteBtn = this.add.text(this.W - this.s(10), this.s(10), this._tr('game.mute', '🔊 Mute'), {
-      fontFamily: CityTheme.body, fontSize: this.s(12), color: '#7dbfc8',
-      backgroundColor: '#0d2b2e', padding: { x: this.s(8), y: this.s(4) }
+    this._muteBtn = this.add.text(this.W - this.s(10), this.s(52), this._muted ? this._tr('game.unmute', '🔇 Unmute') : this._tr('game.mute', '🔊 Mute'), {
+      fontFamily: CityTheme.body, fontSize: this.s(14), color: '#fffbf1',
+      backgroundColor: '#296b72', padding: { x: this.s(8), y: this.s(4) }
     }).setOrigin(1, 0).setDepth(200).setInteractive({ useHandCursor: true });
     this._muteBtn.on('pointerdown', () => this._toggleMute());
   }
 
-  // ══ Bug #4 — City tour at level 1 start ══
+  // ══ Level 1 city tour: a spotlight moves across the real screen areas;
+  //    tap anywhere to continue. Shown once, only at the start of Level 1. ══
   _cityTour(done) {
+    const de = (typeof currentLang !== 'undefined' && currentLang === 'de');
+    const W = this.W, H = this.H, hudH = (this.hud && this.hud.height) || this.s(48), P = this.PANEL || 0;
+    const cityTop = hudH + this.s(10), cityBottom = H - this.s(150);
     const steps = [
-      {
-        title: this._tr('tour.step1.title', '🏙 Welcome to Your City!'),
-        text: this._tr('tour.step1.text', 'This is your city dashboard. The top bar (HUD) shows the city name, current year, and level. Watch it update as your city grows!')
-      },
-      {
-        title: this._tr('tour.step2.title', '🏘 Your Districts'),
-        text: this._tr('tour.step2.text', 'Each coloured area on the map is a district: Housing, Transport, Technology, and Energy. Each district has a different risk and growth profile.')
-      },
-      {
-        title: this._tr('tour.step3.title', '📊 Stats Panel'),
-        text: this._tr('tour.step3.text', 'On the left you can see three key stats: Happiness, Development, and Resources. Every decision you make affects these numbers.')
-      },
-      {
-        title: this._tr('tour.step4.title', '🗳 Decision Area'),
-        text: this._tr('tour.step4.text', 'At the bottom of the screen you\'ll see decision panels. Read each option carefully — your choices have lasting consequences for the city!')
-      },
-      {
-        title: this._tr('tour.step5.title', '🏆 Level Progress'),
-        text: this._tr('tour.step5.text', 'Complete each level by making a key decision. There are 10 levels total. Each one teaches a different lesson about wealth and city management.')
-      }
-    ];
+      { r: { x: 0, y: 0, w: W, h: hudH },
+        t: de ? 'Die Kopfleiste' : 'The top bar',
+        b: de ? 'Hier stehen Stadtname, aktuelles Jahr und Level. Sie ändern sich, während deine Stadt wächst.' : 'City name, current year and level live here. They update as your city grows.' },
+      { r: { x: P + this.s(10), y: cityTop, w: W - P - this.s(20), h: cityBottom - cityTop },
+        t: de ? 'Deine vier Stadtteile' : 'Your four districts',
+        b: de ? 'Wohnen, Verkehr, Technologie und Energie. Jedes Viertel wächst anders — das kurze Schild über dem Namen verrät, wie.' : 'Housing, Transport, Technology and Energy. Each grows differently — the short sign above each name tells you how.' },
+      { r: { x: 0, y: hudH, w: Math.max(P, this.s(10)), h: H - hudH }, skip: !P,
+        t: de ? 'Die Seitenleiste' : 'The side panel',
+        b: de ? 'Zufriedenheit, Wachstum und Mittel deiner Stadt — plus Ton, Licht-Vorschau und Textgröße.' : 'Your city’s happiness, growth and funds — plus sound, lighting preview and text size.' },
+      { r: { x: P + this.s(10), y: H - this.s(150), w: W - P - this.s(20), h: this.s(140) },
+        t: de ? 'Entscheidungen' : 'Decisions',
+        b: de ? 'Hier erscheinen deine Wahlmöglichkeiten. Nimm dir Zeit — jede Wahl prägt die Stadt dauerhaft.' : 'Your choices appear here. Take your time — every choice leaves a lasting mark on the city.' }
+    ].filter(s => !s.skip);
 
-    let currentStep = 0;
-    let tourOverlay = null;
-    let tourBg = null;
-    let tourTitle = null;
-    let tourText = null;
-    let nextBtn = null;
-    let skipBtn = null;
+    const layer = this.add.container(0, 0).setDepth(180);
+    const dim = this.add.graphics(), ring = this.add.graphics();
+    const card = this.add.graphics();
+    const title = this.add.text(0, 0, '', { fontFamily: CityTheme.heading, fontSize: this.s(21), color: '#173b40', fontStyle: '700' }).setOrigin(0, 0);
+    const body = this.add.text(0, 0, '', { fontFamily: CityTheme.body, fontSize: this.s(16), color: '#2a5a60', lineSpacing: this.s(5) }).setOrigin(0, 0);
+    const hint = this.add.text(0, 0, '', { fontFamily: CityTheme.body, fontSize: this.s(13), color: '#9b6c12', fontStyle: '700' }).setOrigin(0, 0);
+    const hit = this.add.rectangle(W / 2, H / 2, W, H, 0xffffff, 0.001).setInteractive();
+    layer.add([dim, ring, card, title, body, hint, hit]);
+    const cur = { x: W / 2, y: H / 2, w: 10, h: 10 };
+    let idx = -1, tw = null, finished = false;
 
-    const cleanup = () => {
-      [tourOverlay, tourBg, tourTitle, tourText, nextBtn, skipBtn].forEach(el => {
-        if (el) { try { el.destroy(); } catch(e) {} }
-      });
-      tourOverlay = tourBg = tourTitle = tourText = nextBtn = skipBtn = null;
+    const paint = () => {
+      const { x, y, w, h } = cur;
+      dim.clear(); dim.fillStyle(0x0b1f22, 0.62);
+      dim.fillRect(0, 0, W, y); dim.fillRect(0, y + h, W, H - y - h);
+      dim.fillRect(0, y, x, h); dim.fillRect(x + w, y, W - x - w, h);
+      ring.clear(); ring.lineStyle(this.s(3), CityTheme.colors.gold, 1); ring.strokeRoundedRect(x, y, w, h, this.s(10));
     };
-
-    const showStep = (idx) => {
-      cleanup();
-      if (idx >= steps.length) return;
-
-      const step = steps[idx];
-      const cx = this._cx();
-      const cy = this.H / 2;
-      const pw = Math.min(this.s(560), this._availW());
-      const ph = this.s(260);
-      const px = cx - pw / 2;
-      const py = cy - ph / 2;
-
-      tourOverlay = this.add.graphics().setDepth(180);
-      tourOverlay.fillStyle(0x000000, 0.45);
-      tourOverlay.fillRect(0, 0, this.W, this.H);
-
-      tourBg = this.add.graphics().setDepth(181);
-      tourBg.fillStyle(0xfffbf1, 0.97);
-      tourBg.fillRoundedRect(px, py, pw, ph, this.s(14));
-      tourBg.lineStyle(this.s(2), 0x296b72, 0.8);
-      tourBg.strokeRoundedRect(px, py, pw, ph, this.s(14));
-
-      tourTitle = this.add.text(cx, py + this.s(26), step.title, {
-        fontFamily: CityTheme.heading, fontSize: this.s(26), color: '#173b40',
-        align: 'center', fontStyle: '700'
-      }).setOrigin(0.5, 0).setDepth(182);
-
-      tourText = this.add.text(cx, py + this.s(60), step.text, {
-        fontFamily: CityTheme.body, fontSize: this.s(19), color: '#2a5a60',
-        align: 'center', wordWrap: { width: pw - this.s(48) }, lineSpacing: this.s(6)
-      }).setOrigin(0.5, 0).setDepth(182);
-
-      const stepLabel = (idx + 1) + ' / ' + steps.length;
-      const stepTxt = this.add.text(cx, py + ph - this.s(14), stepLabel, {
-        fontFamily: CityTheme.body, fontSize: this.s(14), color: '#7dbfc8'
-      }).setOrigin(0.5, 1).setDepth(182);
-
-      const nextLabel = idx < steps.length - 1 ? this._tr('tour.next', 'Next →') : this._tr('tour.done', 'Start Game →');
-      nextBtn = this.add.text(cx + this.s(70), py + ph + this.s(14), nextLabel, {
-        fontFamily: CityTheme.body, fontSize: this.s(17), color: '#fffbf1',
-        backgroundColor: '#296b72', padding: { x: this.s(20), y: this.s(11) }
-      }).setOrigin(0.5, 0).setDepth(182).setInteractive({ useHandCursor: true });
-      nextBtn.on('pointerdown', () => { cleanup(); try { stepTxt.destroy(); } catch(e) {} if (idx + 1 >= steps.length) { if (typeof done === 'function') done(); } else { showStep(idx + 1); } });
-
-      skipBtn = this.add.text(cx - this.s(70), py + ph + this.s(14), this._tr('tour.skip', 'Skip Tour'), {
-        fontFamily: CityTheme.body, fontSize: this.s(16), color: '#7dbfc8',
-        backgroundColor: '#0d2b2e', padding: { x: this.s(16), y: this.s(11) }
-      }).setOrigin(0.5, 0).setDepth(182).setInteractive({ useHandCursor: true });
-      skipBtn.on('pointerdown', () => { cleanup(); try { stepTxt.destroy(); } catch(e) {} if (typeof done === 'function') done(); });
+    const placeCard = (r) => {
+      const cw = Math.min(this.s(400), W - this.s(40));
+      title.setWordWrapWidth(cw - this.s(36)); body.setWordWrapWidth(cw - this.s(36));
+      const ch = this.s(28) + title.height + this.s(8) + body.height + this.s(14) + hint.height + this.s(18);
+      let cx, cy;
+      if (r.x + r.w + cw + this.s(24) < W && r.w < W * 0.4) { cx = r.x + r.w + this.s(18); cy = Math.min(H - ch - this.s(16), r.y + this.s(40)); }
+      else if (r.y + r.h + ch + this.s(20) < H) { cx = Math.max(this.s(16), Math.min(W - cw - this.s(16), r.x + r.w / 2 - cw / 2)); cy = r.y + r.h + this.s(16); }
+      else if (r.y - ch - this.s(20) > 0) { cx = Math.max(this.s(16), Math.min(W - cw - this.s(16), r.x + r.w / 2 - cw / 2)); cy = r.y - ch - this.s(16); }
+      else { cx = r.x + r.w / 2 - cw / 2; cy = r.y + r.h / 2 - ch / 2; }
+      card.clear(); card.fillStyle(0xfffbf1, 0.98); card.fillRoundedRect(cx, cy, cw, ch, this.s(12));
+      card.fillStyle(0xe0a82e, 1); card.fillRect(cx, cy, cw, this.s(4));
+      title.setPosition(cx + this.s(18), cy + this.s(18));
+      body.setPosition(cx + this.s(18), title.y + title.height + this.s(8));
+      hint.setPosition(cx + this.s(18), body.y + body.height + this.s(14));
+      [card, title, body, hint].forEach(o => o.setAlpha(1));
     };
-
-    showStep(0);
+    const finish = () => {
+      if (finished) return; finished = true;
+      this.tweens.add({ targets: layer, alpha: 0, duration: 300, onComplete: () => { layer.destroy(); if (typeof done === 'function') done(); } });
+    };
+    const next = () => {
+      idx++;
+      if (idx >= steps.length) return finish();
+      this._playClick();
+      const s = steps[idx];
+      title.setText(s.t); body.setText(s.b);
+      hint.setText((de ? 'Tippe irgendwo, um fortzufahren' : 'Tap anywhere to continue') + '  ·  ' + (idx + 1) + '/' + steps.length);
+      if (tw) tw.stop();
+      tw = this.tweens.add({ targets: cur, x: s.r.x, y: s.r.y, w: s.r.w, h: s.r.h, duration: idx === 0 ? 10 : 520, ease: 'Sine.easeInOut', onUpdate: paint, onComplete: paint });
+      placeCard(s.r);
+    };
+    let ready = 0;
+    hit.on('pointerdown', () => { if (this.time.now - ready < 350) return; ready = this.time.now; next(); });
+    next();
   }
 }
