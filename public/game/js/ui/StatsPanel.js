@@ -162,7 +162,7 @@ class StatsPanel {
     const ly=py+ph-this.s(170);
     this.container.add(this.scene.add.text(px+pad,ly,de?'LICHT-VORSCHAU':'LIGHTING PREVIEW',{fontFamily:CityTheme.body,fontSize:this.s(9),color:'#456a8c',letterSpacing:2,fontStyle:'600'}).setOrigin(0,0.5));
     const amb=()=>this.scene.ambient;
-    const lOpts=[{l:'Auto',v:null},{l:de?'Tag':'Day',v:0},{l:de?'Dämmerung':'Dusk',v:0.55},{l:de?'Nacht':'Night',v:1}];
+    const lOpts=[{l:'Auto',v:null},{l:de?'Tag':'Day',v:0},{l:de?'Abend':'Dusk',v:0.55},{l:de?'Nacht':'Night',v:1}];
     const lw=Math.floor((pw-pad*2-this.s(3*4))/4);
     lOpts.forEach((o,i)=>mkBtn(px+pad+i*(lw+this.s(4)),ly+this.s(12),lw,this.s(24),o.l,
       ()=>{const a=amb();const cur=a&&a.previewPhase!==undefined?a.previewPhase:null;return cur===o.v;},
