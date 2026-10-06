@@ -1260,7 +1260,7 @@ class GameScene extends Phaser.Scene {
       title.setPosition(cx + this.s(18), cy + this.s(18));
       body.setPosition(cx + this.s(18), title.y + title.height + this.s(8));
       hint.setPosition(cx + this.s(18), body.y + body.height + this.s(14));
-      [card, title, body, hint].forEach(o => { o.setAlpha(0); this.tweens.add({ targets: o, alpha: 1, duration: 320 }); });
+      [card, title, body, hint].forEach(o => o.setAlpha(1));
     };
     const finish = () => {
       if (finished) return; finished = true;
@@ -1279,7 +1279,6 @@ class GameScene extends Phaser.Scene {
     };
     let ready = 0;
     hit.on('pointerdown', () => { if (this.time.now - ready < 350) return; ready = this.time.now; next(); });
-    layer.setAlpha(0); this.tweens.add({ targets: layer, alpha: 1, duration: 300 });
     next();
   }
 }
