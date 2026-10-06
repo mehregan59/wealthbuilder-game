@@ -271,15 +271,10 @@ class GameScene extends Phaser.Scene {
     this.siteMarkers=[];
     const storyText = ld && ld.story ? ld.story : this._tr('level1.story', 'Tap one of the districts below to start growing your city.');
     const guideText = ld && ld.guide ? ld.guide : this._tr('game.guideDefault', 'Read the situation. Choose a district to begin.');
-    this._showGuide(guideText, () => {
+    {
       this._showPersistentMessage(storyText);
-      ch.forEach((o,i)=>{
-        this.time.delayedCall(i*260,()=>{
-          this.siteMarkers.push(this._choiceLabel(o.d.cx, o.d.subLabelY(), o.l, o.c));
-          o.d.setSelectable(true, ()=>this._onLevel1Choice(o.d,o.v));
-        });
-      });
-    });
+      ch.forEach((o)=>{ o.d.setSelectable(true, ()=>this._onLevel1Choice(o.d,o.v)); });
+    }
   }
 
   _choiceLabel(x,y,text,color) {
@@ -344,11 +339,11 @@ class GameScene extends Phaser.Scene {
     const ld = this._levelData(2);
     const storyMsg = ld && ld.story ? ld.story
       : this._tr('level2.story', 'The technology district has lost value.\nHeadlines are alarming, but nothing concrete has changed.\nWhat does the city do?');
-    this.time.delayedCall(1900,()=>{
+    this.time.delayedCall(700,()=>{
       const guideText2 = ld && ld.guide ? ld.guide : this._tr('guide.default', 'Read the situation. Make your choice.');
       const opts = ld && ld.options ? ld.options : null;
       // Bug #1: show guide first, then story + decision panel
-      this._showGuide(guideText2, () => {
+      {
       this._showPersistentMessage(storyMsg);
       this._showDecisionPanel([
         {icon:'🛡',label: opts && opts[0] ? opts[0].label : this._tr('level2.opt0', 'Cancel project'), desc: opts && opts[0] ? opts[0].description : this._tr('level2.opt0desc', 'Stop work now,\nkeep the resources'),value:'cancel',color:0x3a5f8a},
@@ -377,7 +372,7 @@ class GameScene extends Phaser.Scene {
         else if(c==='cancel') this.districts[2].takeDamage(8);
         this._showConsequence(e.m,()=>this._level2Recovery(c));
       });
-      }); // end _showGuide callback
+      } // end guide-free block
     });
   }
 
@@ -405,15 +400,15 @@ class GameScene extends Phaser.Scene {
 
   _level2News() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    this.time.delayedCall(1200,()=>{
+    this.time.delayedCall(300,()=>{
       this.districts[1].takeDamage(30); this._updateStats(-5,-8,0);
       this._shake(200,0.003);
-      this.time.delayedCall(1600,()=>{
+      this.time.delayedCall(500,()=>{
         const newsStory = this._tr('level2.newsStory', 'Now the transport district is falling.\nThis time there is real news: its largest employer\nis leaving the city for good. What does the city do?');
         const ld = this._levelData(2);
         const opts = ld && ld.options ? ld.options : null;
         // Bug #1: guide then story + panel
-        this._showGuide(this._tr('guide.default', 'Read the situation. Make your choice.'), () => {
+        {
         this._showPersistentMessage(newsStory);
         this._showDecisionPanel([
           {icon:'🛡',label: opts && opts[0] ? opts[0].label : this._tr('level2news.opt0','Cut losses'), desc: de?'Distriktvermögen verkaufen\nbevor es schlimmer wird':'Sell the district assets\nbefore it gets worse',value:'cancel',color:0x3a5f8a},
@@ -432,7 +427,7 @@ class GameScene extends Phaser.Scene {
           else if(c==='continue') this.districts[1].takeDamage(6);
           this._showConsequence(e.m,()=>this._nextLevel());
         });
-        }); // end _showGuide callback
+        } // end guide-free block
       });
     });
   }
@@ -479,7 +474,6 @@ class GameScene extends Phaser.Scene {
     if(this.cubeDropped>=this.cubeTotal)return;
     const cube=new ResourceCube(this,this._cx(),this.s(100));
     this.cubes.push(cube);
-    cube.spawn(this.districts);
   }
 
   _onResourceDropped(district,value,cube) {
@@ -1272,7 +1266,7 @@ class GameScene extends Phaser.Scene {
       this._playClick();
       const s = steps[idx];
       title.setText(s.t); body.setText(s.b);
-      hint.setText((de ? 'Tippe irgendwo, um fortzufahren' : 'Tap anywhere to continue') + '  ·  ' + (idx + 1) + '/' + steps.length);
+      hint.setText((idx===steps.length-1 ? (de ? 'Tippe irgendwo, um Level 1 zu starten →' : 'Click anywhere to start Level 1 →') : (de ? 'Klicke irgendwo für den nächsten Schritt →' : 'Click anywhere for the next step →')) + '  ·  ' + (idx + 1) + '/' + steps.length);
       if (tw) tw.stop();
       tw = this.tweens.add({ targets: cur, x: s.r.x, y: s.r.y, w: s.r.w, h: s.r.h, duration: idx === 0 ? 10 : 520, ease: 'Sine.easeInOut', onUpdate: paint, onComplete: paint });
       placeCard(s.r);
