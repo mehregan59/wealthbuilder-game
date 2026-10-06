@@ -1211,7 +1211,7 @@ class GameScene extends Phaser.Scene {
   //    tap anywhere to continue. Shown once, only at the start of Level 1. ══
   _cityTour(done) {
     const de = (typeof currentLang !== 'undefined' && currentLang === 'de');
-    const W = this.W, H = this.H, hudH = this.hud ? this.hud.height : this.s(44), P = this.PANEL || 0;
+    const W = this.W, H = this.H, hudH = (this.hud && this.hud.height) || this.s(48), P = this.PANEL || 0;
     const cityTop = hudH + this.s(10), cityBottom = H - this.s(150);
     const steps = [
       { r: { x: 0, y: 0, w: W, h: hudH },
