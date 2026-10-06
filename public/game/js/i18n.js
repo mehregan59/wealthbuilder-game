@@ -1,7 +1,36 @@
+// ── FRENCH ──────────────────────────────────────────────────────────────────
 const TRANSLATIONS = {
   en: {
     opening: { tagline: "A behavioral simulation", title: "Build Your Future", sub: "Every city begins with a single decision.\nThere are no right answers.\nBuild the future you believe in.", btn: "Start Building" },
-    info: { title: "Tell us about your city", sub: "This helps personalize your experience. It never changes the game.", age: "Your age group", employment: "Your employment situation", employed: "Employed", selfEmployed: "Self-employed", student: "Student", retired: "Retired", other: "Other", experience: "Previous investment experience", expNone: "None", expBasic: "Some basics", expExperienced: "Experienced" },
+    info: {
+      title: "Tell us about your city",
+      sub: "This helps personalize your experience. It never changes the game.",
+      age: "Your age group",
+      employment: "Your employment situation",
+      employed: "Employed",
+      selfEmployed: "Self-employed",
+      student: "Student",
+      retired: "Retired",
+      other: "Other",
+      experience: "Previous investment experience",
+      expNone: "None",
+      expBasic: "Some basics",
+      expExperienced: "Experienced",
+      heroText: "Make decisions that shape your city's future. Discover your financial instincts through pivotal choices.",
+      startBtn: "Start Building",
+      features: {
+        f1: { title: "Behavioral Economics", desc: "Experience loss aversion, anchoring, and overconfidence through real scenarios." },
+        f2: { title: "City Building", desc: "Watch your decisions reshape the city's skyline, districts, and infrastructure." },
+        f3: { title: "Personal Profile", desc: "Receive a detailed analysis of your decision-making style and financial biases." },
+        f4: { title: "No Wrong Answers", desc: "Every choice is valid — the game reveals patterns, not right or wrong answers." }
+      },
+      about: {
+        title: "ℹ️ About WealthSim",
+        p1: "WealthSim is an interactive simulation that teaches behavioral finance by putting you in the role of a city mayor. Over eight levels, you face realistic economic dilemmas — from housing crises and infrastructure investments to market crashes and technology bets.",
+        p2: "Each decision is designed to surface a specific cognitive bias: loss aversion, present bias, overconfidence, anchoring, and more. After completing the game, you receive a personalized financial personality profile.",
+        p3: "The game takes approximately 15–20 minutes to complete. There are no correct answers — only your instincts, and what they reveal about how you think about risk, time, and value."
+      }
+    },
     context: { title: "Your city's support system", sub: "Help us understand which infrastructure is already in place.", q1: "Which best describes your city's main support system?", grv: "Mainly national infrastructure network (GRV — state pension)", bav: "Also has employer-supported building programs (bAV)", s3: "Also has private construction reserves (Säule 3 — Riester, Rürup)", unsure: "Not sure yet", q2: "How many building years does your city have remaining?", y30plus: "More than 30 years", y1530: "15 to 30 years", yUnder15: "Fewer than 15 years", q3: "Has your city completed any independent building before?", bNone: "No experience", bBasic: "Some basics", bExperienced: "Experienced builder" },
     questions: {
       title: "Before you build",
@@ -9,9 +38,26 @@ const TRANSLATIONS = {
         { text: "Your city receives its first building budget. What feels most comfortable?", options: [{ text: "Protect almost everything", value: "safe" }, { text: "Invest part of it", value: "balanced" }, { text: "Invest most of it", value: "aggressive" }] },
         { text: "Some projects need many years before producing results. How do you feel?", options: [{ text: "I prefer quick results", value: "impatient" }, { text: "I can wait if the outcome is better", value: "moderate" }, { text: "Long-term results are worth waiting for", value: "patient" }] },
         { text: "One project suddenly loses value. What would you instinctively do?", options: [{ text: "Stop immediately", value: "stop" }, { text: "Wait and observe", value: "wait" }, { text: "Gather more information first", value: "research" }] }
-      ]
+      ],
+      cityName: "What would you like to name your city?",
+      cityPlaceholder: "My City",
+      continue: "Continue →",
+      back: "← Back",
     },
     game: { happiness: "Happiness", development: "Development", resources: "Resources", remaining: "Credits remaining:", confirmAllocation: "Confirm allocation", levelTag: "Level", year: "Year", readMore: "Read the full report", reportTitle: "Full Situation Report" },
+    tour: {
+      step1: { title: '🏙 Welcome to Your City!', text: 'This is your city dashboard. The top bar (HUD) shows the city name, current year, and level. Watch it update as your city grows!' },
+      step2: { title: '🏘 Your Districts', text: 'Each coloured area on the map is a district: Housing, Transport, Technology, and Energy. Each district has a different risk and growth profile.' },
+      step3: { title: '📊 Stats Panel', text: 'On the left you can see three key stats: Happiness, Development, and Resources. Every decision you make affects these numbers.' },
+      step4: { title: '🗳 Decision Area', text: "At the bottom of the screen you'll see decision panels. Read each option carefully — your choices have lasting consequences for the city!" },
+      step5: { title: '🏆 Level Progress', text: 'Complete each level by making a key decision. There are 10 levels total. Each one teaches a different lesson about wealth and city management.' },
+      next: 'Next →', done: 'Start Game →', skip: 'Skip Tour'
+    },
+    guide: {
+      welcome: 'Welcome to your city! You are about to make decisions that will shape its future.',
+      default: 'Read the situation. Make your choice.',
+      continue: 'Continue →'
+    },
     levels: [
       { tag: "Level 1", title: "The First Opportunity", story: "Three builders arrive. Your city has received its first development budget. Choose one.", trait: "Risk Preference", options: [{ label: "Builder A", description: "\"We guarantee safe construction. Your city will grow slowly but steadily.\"", value: "safe", consequence: "Construction begins carefully. The city grows at a steady, predictable pace." }, { label: "Builder B", description: "\"We balance safety and growth. Some uncertainty, better long-term results.\"", value: "balanced", consequence: "A balanced approach takes shape. The city moves forward with measured confidence." }, { label: "Builder C", description: "\"We build tomorrow's skyline. High uncertainty, but the potential is significant.\"", value: "aggressive", consequence: "Construction has begun. Citizens are excited, but results will take time to appear." }] },
       { tag: "Level 2", title: "The Unexpected Setback", story: "Clouds arrive. Construction costs rise unexpectedly. Your chosen district has temporarily lost 20% of its estimated value. The city council asks what to do.", trait: "Loss Aversion", options: [{ label: "Cancel the project", description: "Protect the remaining resources.", value: "cancel", consequence: "The remaining resources are protected. The city will not benefit if the project later recovers." }, { label: "Continue as planned", description: "Accept the short-term loss and keep building.", value: "continue", consequence: "The city accepts short-term uncertainty and keeps the long-term plan active." }, { label: "Invest more", description: "Put additional resources into the project.", value: "invest_more", consequence: "The city doubles down. If the project recovers, the gain will be significant. If not, the loss will be larger." }, { label: "Wait for more information", description: "Pause and observe before deciding.", value: "wait", consequence: "Construction has slowed. The city is not moving forward. Resources are safe but idle." }] },
@@ -38,12 +84,85 @@ const TRANSLATIONS = {
       s3: { under15: "Your city has private construction reserves in addition to other support systems. This gives you flexibility that many cities lack. With limited time remaining, the focus should be on protecting what has been built while maintaining some growth.", y1530: "Your city has private reserves and a moderate horizon. Your behavioral profile shows how you respond under pressure — use this insight to decide when to protect and when to continue building.", y30plus: "Your city has private reserves and significant building years ahead. Your behavioral profile here is especially valuable — you have the time to adjust your approach based on what you learned today." },
       unsure: { under15: "Your retirement support structure is still unclear. With limited building time remaining, understanding which infrastructure systems your city has access to is an important next step.", y1530: "Understanding your retirement support structure will help you use your remaining building years effectively. Your behavioral profile gives you a starting point for that conversation.", y30plus: "With many building years ahead, there is time to understand and improve your retirement support structure. Your behavioral profile today is a useful first step." }
     },
-    common: { next: "Continue", continue: "Continue", back: "Back" }
+    ui: {
+      playerSetup: {
+        title: "Tell us about your city",
+        subtitle: "This helps personalize your experience. It never changes the game.",
+        disclosure: "Note: this session observes your decision patterns and explains them to you in the final results.",
+        ageLabel: "Your age group",
+        employmentLabel: "Your employment situation",
+        experienceLabel: "Previous investment experience",
+        employmentOptions: [
+          {label:"Employed",value:"employed"},
+          {label:"Self-employed",value:"self-employed"},
+          {label:"Student",value:"student"},
+          {label:"Retired",value:"retired"},
+          {label:"Other",value:"other"}
+        ],
+        experienceOptions: [
+          {label:"None",value:"none"},
+          {label:"Some basics",value:"basic"},
+          {label:"Experienced",value:"experienced"}
+        ],
+        continue: "Continue →",
+        skip: "Skip and start building →"
+      },
+      retirement: {
+        title: "Your retirement system",
+        subtitle: "These answers personalize your closing feedback. They never change gameplay.",
+        ageNotice: "Age group: {age}  ·  Estimated time until retirement: {years}",
+        yearsUntilRetirement: "~{years} years until retirement",
+        q1Label: "Which retirement pillars do you already have? (Select all that apply)",
+        q2Label: "How familiar are you with saving and investing?",
+        sauleOptions: [
+          {value:"grv",label:"🏛 GRV",sub:"State pension",tooltipTitle:"GRV — Statutory Pension Insurance",tooltipBody:"Mandatory for almost all employees in Germany.",link:"https://www.deutsche-rentenversicherung.de",linkLabel:"deutsche-rentenversicherung.de"},
+          {value:"bav",label:"🏢 bAV",sub:"Occupational pension",tooltipTitle:"bAV — Occupational Pension",tooltipBody:"Your employer contributes to your pension.",link:"https://www.bmas.de/DE/Arbeit/Betriebliche-Altersversorgung/betriebliche-altersversorgung.html",linkLabel:"bmas.de"},
+          {value:"s3",label:"🏗 Pillar 3",sub:"Riester / Rürup / Private",tooltipTitle:"Pillar 3 — Private Provision",tooltipBody:"Voluntary private retirement savings.",link:"https://www.verbraucherzentrale.de/wissen/geld-versicherungen/altersvorsorge-und-rente",linkLabel:"verbraucherzentrale.de"},
+          {value:"unsure",label:"❓ Not sure",sub:"I am not sure yet",tooltipTitle:"The German pension system",tooltipBody:"Germany has a three-pillar system.",link:"https://www.bpb.de/themen/soziale-lage/rentenpolitik/",linkLabel:"bpb.de — Rentenpolitik"}
+        ],
+        experienceOptions: [
+          {label:"🔰 Not yet started",sub:"I am not yet saving for retirement",value:"none"},
+          {label:"📖 Learning the basics",sub:"I know the basics and save something",value:"basic"},
+          {label:"📈 Already investing",sub:"I invest actively and regularly",value:"experienced"}
+        ],
+        continue: "Continue →",
+        skip: "Skip and start building →"
+      }
+    },
+    common: { next: "Continue", continue: "Continue", back: "Back", skip: "Skip", mute: "Mute", unmute: "Unmute", year: "Year", level: "Level" }
   },
 
   de: {
     opening: { tagline: "Eine Verhaltenssimulation", title: "Bau deine Zukunft", sub: "Jede Stadt beginnt mit einer einzigen Entscheidung.\nEs gibt keine richtigen Antworten.\nBaue die Zukunft, an die du glaubst.", btn: "Jetzt bauen" },
-    info: { title: "Erzähl uns von deiner Stadt", sub: "Das hilft, dein Erlebnis zu personalisieren. Es ändert das Spiel nicht.", age: "Deine Altersgruppe", employment: "Deine Beschäftigungssituation", employed: "Angestellt", selfEmployed: "Selbstständig", student: "Student/in", retired: "Im Ruhestand", other: "Sonstiges", experience: "Bisherige Anlageerfahrung", expNone: "Keine", expBasic: "Grundkenntnisse", expExperienced: "Erfahren" },
+    info: {
+      title: "Erzähl uns von deiner Stadt",
+      sub: "Das hilft, dein Erlebnis zu personalisieren. Es ändert das Spiel nicht.",
+      age: "Deine Altersgruppe",
+      employment: "Deine Beschäftigungssituation",
+      employed: "Angestellt",
+      selfEmployed: "Selbstständig",
+      student: "Student/in",
+      retired: "Im Ruhestand",
+      other: "Sonstiges",
+      experience: "Bisherige Anlageerfahrung",
+      expNone: "Keine",
+      expBasic: "Grundkenntnisse",
+      expExperienced: "Erfahren",
+      heroText: "Triff Entscheidungen, die die Zukunft deiner Stadt prägen. Entdecke deine finanziellen Instinkte durch weichenstellende Entscheidungen.",
+      startBtn: "Jetzt bauen",
+      features: {
+        f1: { title: "Verhaltensökonomie", desc: "Erlebe Verlustaversion, Verankerung und Überkonfidenz anhand realer Szenarien." },
+        f2: { title: "Stadtentwicklung", desc: "Beobachte, wie deine Entscheidungen die Skyline, Stadtteile und Infrastruktur deiner Stadt umgestalten." },
+        f3: { title: "Persönliches Profil", desc: "Erhalte eine detaillierte Analyse deines Entscheidungsstils und deiner finanziellen Verzerrungen." },
+        f4: { title: "Keine falschen Antworten", desc: "Jede Entscheidung ist gültig — das Spiel deckt Muster auf, keine richtigen oder falschen Antworten." }
+      },
+      about: {
+        title: "ℹ️ Über WealthSim",
+        p1: "WealthSim ist eine interaktive Simulation, die Verhaltensfinanzierung lehrt, indem sie dich in die Rolle eines Stadtbürgermeisters versetzt. In acht Leveln begegnest du realistischen wirtschaftlichen Dilemmas — von Wohnungskrisen und Infrastrukturinvestitionen bis hin zu Markteinbrüchen und Technologiewetten.",
+        p2: "Jede Entscheidung ist darauf ausgelegt, eine spezifische kognitive Verzerrung aufzudecken: Verlustaversion, Gegenwartsverzerrung, Überkonfidenz, Verankerung und mehr. Nach Abschluss des Spiels erhältst du ein personalisiertes Finanzpersönlichkeitsprofil.",
+        p3: "Das Spiel dauert ungefähr 15–20 Minuten. Es gibt keine richtigen Antworten — nur deine Instinkte und was sie darüber verraten, wie du über Risiko, Zeit und Wert denkst."
+      }
+    },
     context: { title: "Das Unterstützungssystem deiner Stadt", sub: "Hilf uns zu verstehen, welche Infrastruktur bereits vorhanden ist.", q1: "Was beschreibt das Hauptunterstützungssystem deiner Stadt am besten?", grv: "Hauptsächlich nationales Infrastrukturnetz (GRV — gesetzliche Rente)", bav: "Auch arbeitgebergestützte Bauprogramme (bAV)", s3: "Auch private Baureserven (Säule 3 — Riester, Rürup)", unsure: "Noch nicht sicher", q2: "Wie viele Baujahre verbleiben deiner Stadt noch?", y30plus: "Mehr als 30 Jahre", y1530: "15 bis 30 Jahre", yUnder15: "Weniger als 15 Jahre", q3: "Hat deine Stadt bereits unabhängige Bauprojekte abgeschlossen?", bNone: "Keine Erfahrung", bBasic: "Grundlegende Projekte", bExperienced: "Erfahrener Baumeister" },
     questions: {
       title: "Bevor du baust",
@@ -51,9 +170,26 @@ const TRANSLATIONS = {
         { text: "Deine Stadt erhält ihr erstes Baubudget. Was fühlt sich am angenehmsten an?", options: [{ text: "Fast alles schützen", value: "safe" }, { text: "Einen Teil investieren", value: "balanced" }, { text: "Das meiste investieren", value: "aggressive" }] },
         { text: "Manche Projekte brauchen viele Jahre, um Ergebnisse zu liefern. Wie fühlst du dich dabei?", options: [{ text: "Ich bevorzuge schnelle Ergebnisse", value: "impatient" }, { text: "Ich kann warten, wenn das Ergebnis besser ist", value: "moderate" }, { text: "Langfristige Ergebnisse sind das Warten wert", value: "patient" }] },
         { text: "Ein Projekt verliert plötzlich an Wert. Was würdest du instinktiv tun?", options: [{ text: "Sofort stoppen", value: "stop" }, { text: "Abwarten und beobachten", value: "wait" }, { text: "Zuerst mehr Informationen sammeln", value: "research" }] }
-      ]
+      ],
+      cityName: "Wie soll deine Stadt heißen?",
+      cityPlaceholder: "Meine Stadt",
+      continue: "Weiter →",
+      back: "← Zurück",
     },
     game: { happiness: "Zufriedenheit", development: "Entwicklung", resources: "Ressourcen", remaining: "Verbleibende Kredite:", confirmAllocation: "Verteilung bestätigen", levelTag: "Level", year: "Jahr", readMore: "Den vollständigen Bericht lesen", reportTitle: "Vollständiger Lagebericht" },
+    tour: {
+      step1: { title: '🏙 Willkommen in deiner Stadt!', text: 'Das ist dein Stadt-Dashboard. Die Leiste oben (HUD) zeigt den Stadtnamen, das aktuelle Jahr und das Level. Beobachte, wie sie sich mit deiner Stadt verändert!' },
+      step2: { title: '🏘 Deine Stadtteile', text: 'Jede farbige Fläche auf der Karte ist ein Stadtteil: Wohnen, Transport, Technologie und Energie. Jeder Stadtteil hat ein anderes Risiko- und Wachstumsprofil.' },
+      step3: { title: '📊 Stats-Panel', text: 'Links siehst du drei Schlüsselwerte: Zufriedenheit, Entwicklung und Ressourcen. Jede Entscheidung beeinflusst diese Zahlen.' },
+      step4: { title: '🗳 Entscheidungsbereich', text: 'Unten auf dem Bildschirm erscheinen Entscheidungspanels. Lies jede Option sorgfältig — deine Entscheidungen haben dauerhafte Folgen für die Stadt!' },
+      step5: { title: '🏆 Level-Fortschritt', text: 'Schließe jedes Level ab, indem du eine wichtige Entscheidung triffst. Es gibt 10 Level. Jedes lehrt eine andere Lektion über Vermögen und Stadtmanagement.' },
+      next: 'Weiter →', done: 'Spiel starten →', skip: 'Tour überspringen'
+    },
+    guide: {
+      welcome: 'Willkommen in deiner Stadt! Du wirst gleich Entscheidungen treffen, die ihre Zukunft formen.',
+      default: 'Lies die Situation. Triff deine Wahl.',
+      continue: 'Weiter →'
+    },
     levels: [
       { tag: "Level 1", title: "Die erste Chance", story: "Drei Bauunternehmer kommen an. Deine Stadt hat ihr erstes Entwicklungsbudget erhalten. Wähle eines.", trait: "Risikobereitschaft", options: [{ label: "Bauunternehmer A", description: "\"Wir garantieren sicheres Bauen. Deine Stadt wird langsam aber stetig wachsen.\"", value: "safe", consequence: "Der Bau beginnt sorgfältig. Die Stadt wächst in einem stabilen, vorhersehbaren Tempo." }, { label: "Bauunternehmer B", description: "\"Wir balancieren Sicherheit und Wachstum. Etwas Unsicherheit, bessere langfristige Ergebnisse.\"", value: "balanced", consequence: "Ein ausgewogener Ansatz nimmt Form an. Die Stadt bewegt sich mit gemessener Zuversicht vorwärts." }, { label: "Bauunternehmer C", description: "\"Wir bauen die Skyline von morgen. Hohe Unsicherheit, aber das Potenzial ist bedeutend.\"", value: "aggressive", consequence: "Der Bau hat begonnen. Die Bürger sind begeistert, aber Ergebnisse werden Zeit brauchen." }] },
       { tag: "Level 2", title: "Der unerwartete Rückschlag", story: "Wolken ziehen auf. Die Baukosten steigen unerwartet. Dein gewähltes Viertel hat vorübergehend 20% seines Wertes verloren. Der Stadtrat fragt, was zu tun ist.", trait: "Verlustaversion", options: [{ label: "Projekt abbrechen", description: "Die verbleibenden Ressourcen schützen.", value: "cancel", consequence: "Die verbleibenden Ressourcen sind geschützt. Die Stadt profitiert nicht, falls das Projekt sich später erholt." }, { label: "Wie geplant fortfahren", description: "Den kurzfristigen Verlust akzeptieren und weiterbauen.", value: "continue", consequence: "Die Stadt akzeptiert kurzfristige Unsicherheit und hält den langfristigen Plan aufrecht." }, { label: "Mehr investieren", description: "Zusätzliche Ressourcen in das Projekt stecken.", value: "invest_more", consequence: "Die Stadt verdoppelt. Wenn das Projekt sich erholt, wird der Gewinn erheblich sein." }, { label: "Auf mehr Informationen warten", description: "Pausieren und beobachten, bevor entschieden wird.", value: "wait", consequence: "Der Bau hat sich verlangsamt. Die Stadt bewegt sich nicht vorwärts. Ressourcen sind sicher, aber untätig." }] },
@@ -80,8 +216,53 @@ const TRANSLATIONS = {
       s3: { under15: "Deine Stadt verfügt über private Baureserven zusätzlich zu anderen Unterstützungssystemen. Mit begrenzter verbleibender Zeit sollte der Fokus darauf liegen, das Aufgebaute zu schützen.", y1530: "Deine Stadt hat private Reserven und einen moderaten Horizont. Dein Verhaltensprofil zeigt, wie du unter Druck reagierst.", y30plus: "Deine Stadt hat private Reserven und erhebliche Baujahre voraus. Du hast die Zeit, deinen Ansatz basierend auf dem, was du heute gelernt hast, anzupassen." },
       unsure: { under15: "Deine Rentenunterstützungsstruktur ist noch unklar. Mit begrenzter verbleibender Bauzeit ist das Verstehen deiner verfügbaren Infrastruktursysteme ein wichtiger nächster Schritt.", y1530: "Das Verstehen deiner Rentenunterstützungsstruktur hilft dir, deine verbleibenden Baujahre effektiv zu nutzen.", y30plus: "Mit vielen Baujahren voraus ist Zeit, deine Rentenunterstützungsstruktur zu verstehen und zu verbessern." }
     },
-    common: { next: "Weiter", continue: "Weiter", back: "Zurück" }
-  }
+    ui: {
+      playerSetup: {
+        title: "Erzähl uns von deiner Stadt",
+        subtitle: "Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.",
+        disclosure: "Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.",
+        ageLabel: "Deine Altersgruppe",
+        employmentLabel: "Deine Beschäftigungssituation",
+        experienceLabel: "Frühere Anlageerfahrung",
+        employmentOptions: [
+          {label:"Angestellt",value:"employed"},
+          {label:"Selbständig",value:"self-employed"},
+          {label:"Student/in",value:"student"},
+          {label:"Rentner/in",value:"retired"},
+          {label:"Sonstiges",value:"other"}
+        ],
+        experienceOptions: [
+          {label:"Keine",value:"none"},
+          {label:"Grundlagen",value:"basic"},
+          {label:"Erfahren",value:"experienced"}
+        ],
+        continue: "Weiter →",
+        skip: "Überspringen und direkt bauen →"
+      },
+      retirement: {
+        title: "Dein Rentensystem",
+        subtitle: "Diese Antworten personalisieren dein abschließendes Feedback. Sie ändern nie das Spiel.",
+        ageNotice: "Altersgruppe: {age}  ·  Geschätzte Zeit bis zur Rente: {years}",
+        yearsUntilRetirement: "~{years} Jahre bis zur Rente",
+        q1Label: "Welche Rentenbausteine hast du bereits? (Mehrfachauswahl möglich)",
+        q2Label: "Wie vertraut bist du mit Sparen und Investieren?",
+        sauleOptions: [
+          {value:"grv",label:"🏛 GRV",sub:"Gesetzliche Rente",tooltipTitle:"GRV — Gesetzliche Rentenversicherung",tooltipBody:"Pflicht für fast alle Arbeitnehmer in Deutschland.",link:"https://www.deutsche-rentenversicherung.de",linkLabel:"deutsche-rentenversicherung.de"},
+          {value:"bav",label:"🏢 bAV",sub:"Betriebliche Altersversorgung",tooltipTitle:"bAV — Betriebliche Altersversorgung",tooltipBody:"Der Arbeitgeber zahlt mit in die Rente ein.",link:"https://www.bmas.de/DE/Arbeit/Betriebliche-Altersversorgung/betriebliche-altersversorgung.html",linkLabel:"bmas.de"},
+          {value:"s3",label:"🏗 Säule 3",sub:"Riester / Rürup / Privat",tooltipTitle:"Säule 3 — Private Vorsorge",tooltipBody:"Freiwillige private Altersvorsorge.",link:"https://www.verbraucherzentrale.de/wissen/geld-versicherungen/altersvorsorge-und-rente",linkLabel:"verbraucherzentrale.de"},
+          {value:"unsure",label:"❓ Unsicher",sub:"Noch nicht sicher",tooltipTitle:"Das deutsche Rentensystem",tooltipBody:"Deutschland hat ein Drei-Säulen-System.",link:"https://www.bpb.de/themen/soziale-lage/rentenpolitik/",linkLabel:"bpb.de — Rentenpolitik"}
+        ],
+        experienceOptions: [
+          {label:"🔰 Noch nicht gestartet",sub:"Ich spare noch nicht für die Rente",value:"none"},
+          {label:"📖 Grundlagen lerne ich",sub:"Ich kenne die Basics, spare etwas",value:"basic"},
+          {label:"📈 Bereits investiert",sub:"Ich investiere aktiv und regelmäßig",value:"experienced"}
+        ],
+        continue: "Weiter →",
+        skip: "Überspringen und direkt bauen →"
+      }
+    },
+    common: { next: "Weiter", continue: "Weiter", back: "Zurück", skip: "Überspringen", mute: "Stummschalten", unmute: "Ton an", year: "Jahr", level: "Level" }
+  },
 };
 
 let currentLang = 'en';
@@ -89,6 +270,7 @@ let currentLang = 'en';
 function setLang(lang) {
   currentLang = lang;
   document.documentElement.lang = lang;
+  document.documentElement.dir = (lang === 'fa') ? 'rtl' : 'ltr';
   applyTranslations();
 }
 
@@ -109,14 +291,3 @@ function applyTranslations() {
     if (typeof val === 'string') el.textContent = val;
   });
 }
-
-document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.lang-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      document.querySelectorAll('.lang-btn').forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      setLang(btn.dataset.lang);
-    });
-  });
-  applyTranslations();
-});

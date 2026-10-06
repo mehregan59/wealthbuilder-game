@@ -17,13 +17,9 @@ class GameScene extends Phaser.Scene {
     this.reducedMotion = !!(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches);
 
     const groundY = this.isCompact ? Math.round(this.H * 0.29) : this.s(352);
-    this.groundY = groundY; // used to clamp the city boundary so it never rises into the sky
-    // One continuous drawn metropolis fills the whole canvas: river, bridges,
-    // boulevards, rail line and city blocks. Every quarter is part of it.
+    this.groundY = groundY;
     this.hasPanorama = false;
     this.hasMetro = true;
-
-
 
     this.ambient = new AmbientSystem(this);
     this.weather = new WeatherSystem(this);
@@ -37,7 +33,7 @@ class GameScene extends Phaser.Scene {
     this.consequencePanel = null; this.persistentMsg = null; this.dropFeedback = null; this.dropFeedbackTimer = null;
     this.hasUniversity = false; this.siteMarkers = [];
     this.tickerActive = false;
-    this.snapshots = {};          // for undo
+    this.snapshots = {};
     this._panelIntroShown = false;
     this._level3IdleTimer = null;
 
@@ -51,26 +47,37 @@ class GameScene extends Phaser.Scene {
     this.statsPanel.updateStats(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources);
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,0);
 
+    this._initAudio(); // Bug #10
+    this._addMuteButton(); // Bug #10
     this.input.keyboard.on('keydown-P', () => this._toProfile());
-    // A restarted scene can retain its local emitter. Replace this listener
-    // rather than stacking another copy, otherwise one cube can be counted
-    // several times and Level 3 appears to skip straight to its outcome.
     this.events.removeAllListeners('resourceDropped');
     this.events.on('resourceDropped', ({district,value,cube}) => this._onResourceDropped(district,value,cube));
     this._introSequence();
   }
 
   s(v){ return Math.round(v * this.S); }
-  // Camera shake is decoration: skipped entirely when the player's system
-  // asks for reduced motion. The text of every consequence is unaffected.
   _shake(d,i){ if(!this.reducedMotion && this.cameras && this.cameras.main) this.cameras.main.shake(d,i); }
   _cx(){ return this.PANEL + (this.W - this.PANEL)/2; }
   _availW(){ return this.W - this.PANEL - this.s(60); }
 
+  _tr(keyPath, fallback) {
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
+    const keys = keyPath.split('.');
+    let obj = (typeof TRANSLATIONS !== 'undefined') ? TRANSLATIONS[lang] : undefined;
+    for (const k of keys) {
+      if (obj === undefined || obj === null) return fallback !== undefined ? fallback : keyPath;
+      obj = obj[k];
+    }
+    return (obj !== undefined && obj !== null) ? obj : (fallback !== undefined ? fallback : keyPath);
+  }
+
+  _levelData(n) {
+    const lang = (typeof currentLang !== 'undefined') ? currentLang : 'en';
+    return (typeof TRANSLATIONS !== 'undefined' && TRANSLATIONS[lang] && TRANSLATIONS[lang].levels)
+      ? (TRANSLATIONS[lang].levels[n-1] || null) : null;
+  }
+
   _buildDistricts() {
-    // Extra margin off both the panel and the right edge of the screen,
-    // and Housing/Energy pulled ~20% closer to their inner neighbours
-    // (Transport/Technology) instead of sitting right at the outer bounds.
     const L = this.PANEL + this.s(132);
     const R = this.W - this.s(128);
     const span = R - L;
@@ -80,9 +87,6 @@ class GameScene extends Phaser.Scene {
       {x:this.W*.27,y:baseY}, {x:this.W*.72,y:baseY-this.s(22)},
       {x:this.W*.28,y:baseY+this.s(225)}, {x:this.W*.72,y:baseY+this.s(203)}
     ] : null;
-    // Each quarter is anchored to its place in the one continuous city: the
-    // old town on the west bank, the terminal on the north avenue, the office
-    // quarter to the south-east, the hills with wind and solar to the north-east.
     const metroPoints = (this.metro && !this.isCompact)
       ? this.metro.districtPoints.map(p => ({x:p.x, y:p.y}))
       : null;
@@ -91,11 +95,9 @@ class GameScene extends Phaser.Scene {
 
     const at=(index,f,y)=>pts ? {cx:pts[index].x,cy:pts[index].y} : {cx:px(f),cy:y};
     const p0=at(0,.12,baseY+this.s(18)),p1=at(1,.38,baseY-this.s(34));
-    const p2=at(2,.62,baseY-this.s(34)),p3=at(3,.88,baseY+this.s(18));
+    const p2=at(2,.375,baseY-this.s(34));
+    const p3=at(3,.88,baseY+this.s(18));
 
-    // Warmer, clearly distinct district palette: housing coral/cream,
-    // transport blue/teal, technology violet, energy amber. Icons and text
-    // labels carry the same meaning for anyone who cannot rely on colour.
     this.districts = [
       new District(this, {id:'housing',name:'Housing',nameDE:'Wohnviertel',label:'Housing District',labelDE:'Wohnviertel',
         color:0xc96b4b,darkColor:0x6f9c62,accentColor:0xd87c5c,cx:p0.cx,cy:p0.cy,health:45,scale:this.S*1.16,
@@ -117,16 +119,6 @@ class GameScene extends Phaser.Scene {
 
   }
 
-  // One boundary drawn around all four districts. The name lives in the
-  // HUD next to the year instead of on the ground.
-  //
-  // Containment is verified explicitly (point-in-polygon against each
-  // district's approximate footprint, growing the shape until it passes)
-  // rather than trusted from ellipse geometry — see history in git log for
-  // why. That growth loop can push the shape's top edge above the
-  // sky/ground horizon, so every rendered point is clamped to never rise
-  // above groundY: the line stays entirely on the land, never arcing into
-  // the sky, even if that flattens part of the top edge onto the horizon.
   _drawCityBoundary() {
     const cx = this.districts.reduce((s,d)=>s+d.cx,0) / this.districts.length;
     const cy = this.districts.reduce((s,d)=>s+d.cy,0) / this.districts.length - this.s(50);
@@ -167,80 +159,37 @@ class GameScene extends Phaser.Scene {
     let ring = buildRing(rx, ry, 1);
     let guard = 0;
     while (guard < 40 && !testPts.every(p=>pointInPoly(p,ring))) {
-      rx *= 1.06; ry *= 1.06;
+      rx += this.s(8); ry += this.s(6);
       ring = buildRing(rx, ry, 1);
       guard++;
     }
 
-    // Clamp every rendered point (outer and inner ring) so nothing crosses
-    // above the horizon into the sky — flattens the top edge onto the
-    // ground line instead of letting it arc upward.
-    const clampGround = pts => pts.map(p => ({ x:p.x, y: Math.max(p.y, groundY) }));
-    ring = clampGround(ring);
-    const inner = clampGround(buildRing(rx, ry, 0.94));
+    ring = ring.map(p => ({ ...p, y: Math.max(groundY, p.y) }));
 
-    const g = this.add.graphics().setDepth(-4);
-    g.fillStyle(CityTheme.colors.cream, 0.08);
+    if (!this._cityBoundaryGfx) this._cityBoundaryGfx = this.add.graphics().setDepth(2);
+    const g = this._cityBoundaryGfx;
+    g.clear();
+    g.lineStyle(this.s(2), 0x173b40, 0.12);
     g.beginPath();
-    g.moveTo(ring[0].x, ring[0].y);
-    for (let i=1;i<=N;i++){ const p=ring[i%N]; g.lineTo(p.x,p.y); }
-    g.closePath(); g.fillPath();
-    g.lineStyle(this.s(2.4), CityTheme.colors.teal, 0.28);
-    g.strokePath();
-
-    // A faint second, smaller ring just inside the border — reads like a
-    // coastline/contour line rather than a single flat outline.
-    g.lineStyle(1, CityTheme.colors.cream, 0.42);
-    g.beginPath();
-    g.moveTo(inner[0].x, inner[0].y);
-    for (let i=1;i<=N;i++){ const p=inner[i%N]; g.lineTo(p.x,p.y); }
+    ring.forEach((p,i) => i===0 ? g.moveTo(p.x,p.y) : g.lineTo(p.x,p.y));
     g.closePath(); g.strokePath();
   }
 
+  _msgY() {
+    const hudH = this.hud ? this.hud.height : this.s(56);
+    return hudH + this.s(14);
+  }
+
   _introSequence() {
-    const fi=this.add.graphics().setDepth(200);
-    fi.fillStyle(CityTheme.colors.sky,1); fi.fillRect(0,0,this.W,this.H);
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const cx=this.W/2, cy=this.H/2, cardW=Math.min(this.s(520),this.W-this.s(56)), cardH=this.s(142);
-    const card=this.add.graphics().setDepth(201).setAlpha(0);
-    card.fillStyle(0xfffbf1,.98); card.fillRoundedRect(cx-cardW/2,cy-cardH/2,cardW,cardH,this.s(12));
-    card.lineStyle(this.s(2),CityTheme.colors.teal,.72); card.strokeRoundedRect(cx-cardW/2,cy-cardH/2,cardW,cardH,this.s(12));
-    const city=this.add.text(cx,cy-this.s(27),this.cityName,{
-      fontFamily:CityTheme.heading,fontSize:this.s(30),color:'#173b40',fontStyle:'700'
-    }).setOrigin(.5).setDepth(202).setAlpha(0);
-    const level=this.add.text(cx,cy+this.s(25),de?'Die erste Gelegenheit':'The First Opportunity',{
-      fontFamily:CityTheme.body,fontSize:this.s(18),color:'#296b72',fontStyle:'600'
-    }).setOrigin(.5).setDepth(202).setAlpha(0);
-    this.tweens.add({
-      targets:[card,city,level],alpha:1,duration:360,delay:260,hold:900,yoyo:true,
-      onComplete:()=>{ card.destroy(); city.destroy(); level.destroy(); fi.destroy(); this._introLevelTitleShown=true; this._startLevel(1); }
-    });
-  }
-
-  // Save state so a level can be replayed from scratch
-  _saveSnapshot(n) {
-    this.snapshots[n] = {
-      stats: Object.assign({}, this.cityStats),
-      health: this.districts.map(d=>d.health),
-      resources: this.districts.map(d=>d.resources),
-      capacity: this.districts.map(d=>d.visualCapacity),
-      hasUniversity: this.hasUniversity,
-      year: this.hud.year,
-      decisions: ScoringEngine.decisions.length
-    };
-  }
-
-  _restoreSnapshot(n) {
-    const s = this.snapshots[n];
-    if (!s) return false;
-    this.cityStats = Object.assign({}, s.stats);
-    this.districts.forEach((d,i)=>{ d.health = s.health[i]; d.resources=(s.resources||[])[i]||0; d.visualCapacity=(s.capacity||[])[i]||0; d.draw(); d.labelContainer.y = d.labelBaseY - (d.health/100)*this.s(24); });
-    this.hasUniversity = s.hasUniversity;
-    this.hud.year = s.year;
-    this.hud.yearText.setText('Year ' + s.year);
-    ScoringEngine.decisions.length = s.decisions;
-    this.statsPanel.updateStats(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources);
-    return true;
+    const splash = this.add.text(this._cx(), this.H*0.38,
+      de ? this.cityName+'\nWillkommen in deiner Stadt.' : this.cityName+'\nWelcome to your city.',
+      { fontFamily:CityTheme.heading, fontSize:this.s(36), color:'#173b40',
+        align:'center', stroke:'#fffbf1', strokeThickness:this.s(4),
+        lineSpacing:this.s(8) }).setOrigin(0.5).setDepth(70).setAlpha(0);
+    this.tweens.add({targets:splash,alpha:1,duration:700,hold:1200,yoyo:true,
+      onComplete:()=>{ splash.destroy(); this._introLevelTitleShown=true; this._startLevel(1); }});
+    this._drawCityBoundary();
   }
 
   _startLevel(n, skipTutorial) {
@@ -257,17 +206,20 @@ class GameScene extends Phaser.Scene {
     this.hud.setLevel(n,this._levelName(n));
     if(this.ambient)this.ambient.setSimulationLevel(n);
     const run = () => this.time.delayedCall(460, fn.bind(this));
+    let proceedCalled = false;
     const proceed = () => {
-      // The very first time Level 1 starts, point the player at the side
-      // panel and explain what it tracks before anything is asked of them.
+      if (proceedCalled) return; // guard against Tutorial auto-close firing after user already clicked
+      proceedCalled = true;
+      this.tutorial.hide(); // cancel any pending auto-close timer
+      // The very first time Level 1 starts, show city tour (Bug #4), then panel intro
       if (n===1 && !this._panelIntroShown) {
         this._panelIntroShown = true;
-        this.statsPanel.introHighlight(run);
+        this._cityTour(() => { run(); }); // tour done → start level 1 directly
       } else {
         run();
       }
     };
-    if (skipTutorial) proceed();
+    if (skipTutorial || n===1) proceed(); // Level 1 skips the Tutorial card — city tour covers it
     else {
       const titleAlreadyShown = n===1 && this._introLevelTitleShown;
       if(titleAlreadyShown)this._introLevelTitleShown=false;
@@ -285,11 +237,20 @@ class GameScene extends Phaser.Scene {
     this.time.delayedCall(250, ()=>this._startLevel(n, true));
   }
 
-  _levelName(n){return {1:'The First Opportunity',2:'The Unexpected Setback',3:'Expansion',4:'Today or Tomorrow',5:'The Boom',6:'The Outside Offer',7:'Breaking News',8:'The Great Storm',9:'The Project Review',10:'The Planning Desk'}[n]||'Level '+n;}
+  _levelName(n){
+    const ld = this._levelData(n);
+    if (ld && ld.title) return ld.title;
+    return {1:'The First Opportunity',2:'The Unexpected Setback',3:'Expansion',4:'Today or Tomorrow',5:'The Boom',6:'The Outside Offer',7:'Breaking News',8:'The Great Storm',9:'The Project Review',10:'The Planning Desk'}[n]||'Level '+n;
+  }
 
   _nextLevel(){
     this._clearConsequence(); this._clearWorldBtn(); this._clearLevel3Idle();
     this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,this.currentLevel);
+    // Bug #10: level transition sound; Bug #5: disable tooltips after level 1
+    this._playTransition();
+    if(this.currentLevel===1){
+      this.districts.forEach(d=>{ if(d.disableTooltip) d.disableTooltip(); });
+    }
     const next=this.currentLevel+1;
     if(next<=10) this._startLevel(next);
   }
@@ -298,21 +259,28 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 1 ══
   _level1() {
+    const ld = this._levelData(1);
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const opts = ld && ld.options ? ld.options : null;
+
     const ch=[
-      {d:this.districts[0], l:'🌱 Safe & Steady',   v:'safe',       c:0x4aaa5c},
-      {d:this.districts[1], l:'🚏 Reliable Growth', v:'balanced',   c:0x5c8ab0},
-      {d:this.districts[2], l:'🚀 High Potential',  v:'aggressive', c:0x9966cc},
-      {d:this.districts[3], l:'⚡ Balanced',        v:'balanced',   c:0xddaa00}
+      {d:this.districts[0], l: opts ? (opts[0] ? opts[0].label : '🌱 Safe & Steady') : '🌱 Safe & Steady',   v:'safe',       c:0x4aaa5c},
+      {d:this.districts[1], l: opts ? (opts[1] ? opts[1].label : '🚏 Reliable Growth') : '🚏 Reliable Growth', v:'balanced',   c:0x5c8ab0},
+      {d:this.districts[2], l: opts ? (opts[2] ? opts[2].label : '🚀 High Potential') : '🚀 High Potential',  v:'aggressive', c:0x9966cc},
+      {d:this.districts[3], l: opts ? (opts[3] ? opts[3].label : '⚡ Balanced') : '⚡ Balanced',        v:'balanced',   c:0xddaa00}
     ];
     this.siteMarkers=[];
-    ch.forEach((o,i)=>{
-      this.time.delayedCall(i*260,()=>{
-        // Positioned from the district's own label so they can never collide
-        this.siteMarkers.push(this._choiceLabel(o.d.cx, o.d.subLabelY(), o.l, o.c));
-        o.d.setSelectable(true, ()=>this._onLevel1Choice(o.d,o.v));
+    const storyText = ld && ld.story ? ld.story : this._tr('level1.story', 'Tap one of the districts below to start growing your city.');
+    const guideText = ld && ld.guide ? ld.guide : this._tr('game.guideDefault', 'Read the situation. Choose a district to begin.');
+    this._showGuide(guideText, () => {
+      this._showPersistentMessage(storyText);
+      ch.forEach((o,i)=>{
+        this.time.delayedCall(i*260,()=>{
+          this.siteMarkers.push(this._choiceLabel(o.d.cx, o.d.subLabelY(), o.l, o.c));
+          o.d.setSelectable(true, ()=>this._onLevel1Choice(o.d,o.v));
+        });
       });
     });
-    this._showPersistentMessage('Tap one of the districts below to start growing your city.');
   }
 
   _choiceLabel(x,y,text,color) {
@@ -333,10 +301,6 @@ class GameScene extends Phaser.Scene {
     if(this.siteMarkers){ this.siteMarkers.forEach(m=>{try{this.tweens.killTweensOf(m);m.destroy();}catch(e){}}); this.siteMarkers=[]; }
   }
 
-  // A permanent mark on the map for something the player chose to build.
-  // Unlike site markers these are never cleared between levels: the city
-  // keeps a visible record of past decisions. Neutral styling on purpose —
-  // a landmark must never signal that a choice was the "right" one.
   _addLandmark(district, icon, text, color) {
     if(!this.landmarks) this.landmarks=[];
     const y = district.subLabelY() + this.s(22) * this.landmarks.filter(l=>l._districtId===district.id).length;
@@ -358,86 +322,118 @@ class GameScene extends Phaser.Scene {
     this.districts.forEach(x=>x.setSelectable(false));
     ScoringEngine.recordDecision(1,v,{districtId:d.id});
     d.receiveResource(2); this._shake(240,0.004); this._updateStats(5,10,-5);
-    this._addLandmark(d,'\uD83C\uDFD7','Built first here', d.accentColor);
-    const m={safe:'Construction begins carefully.\nThe city grows slowly but steadily.',
-             balanced:'A balanced approach takes shape.\nThe city moves forward with measured confidence.',
-             aggressive:'Cranes rise. Citizens are excited.\nResults will take time to appear.'};
-    this._showConsequence(m[v]||m.balanced, ()=>this._nextLevel());
+    this._addLandmark(d,'🏗', this._tr('level1.builtHere', 'Built first here'), d.accentColor);
+    const ld = this._levelData(1);
+    let msg;
+    if (ld && ld.options) {
+      const opt = ld.options.find(o => o.value === v);
+      msg = opt ? opt.consequence : null;
+    }
+    if (!msg) {
+      const m={safe:'Construction begins carefully.\nThe city grows slowly but steadily.',
+               balanced:'A balanced approach takes shape.\nThe city moves forward with measured confidence.',
+               aggressive:'Cranes rise. Citizens are excited.\nResults will take time to appear.'};
+      msg = m[v]||m.balanced;
+    }
+    this._showConsequence(msg, ()=>this._nextLevel());
   }
 
   // ══ LEVEL 2 ══
-  // Two beats. Beat A: the technology district drops on a vague, alarming
-  // headline with no real information behind it — pure noise — and then
-  // recovers on its own. Beat B: the transport district drops with clear
-  // bad fundamentals (its main employer is leaving for good) — real news —
-  // and does NOT recover. Beat A measures loss aversion; comparing how the
-  // player treated A versus B measures whether they can tell a temporary
-  // dip from genuine bad news.
   _level2() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     this._workersLeave(); this.districts[2].takeDamage(28); this._updateStats(-5,-8,0);
+    const ld = this._levelData(2);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level2.story', 'The technology district has lost value.\nHeadlines are alarming, but nothing concrete has changed.\nWhat does the city do?');
     this.time.delayedCall(1900,()=>{
-      this._showPersistentMessage('The technology district has lost value.\nHeadlines are alarming, but nothing concrete has changed.\nWhat does the city do?');
+      const guideText2 = ld && ld.guide ? ld.guide : this._tr('guide.default', 'Read the situation. Make your choice.');
+      const opts = ld && ld.options ? ld.options : null;
+      // Bug #1: show guide first, then story + decision panel
+      this._showGuide(guideText2, () => {
+      this._showPersistentMessage(storyMsg);
       this._showDecisionPanel([
-        {icon:'🛡',label:'Cancel project',desc:'Stop work now,\nkeep the resources',value:'cancel',color:0x3a5f8a},
-        {icon:'🏗',label:'Push through',desc:'Finish as planned,\naccept the dip',value:'continue',color:0x4aaa5c},
-        {icon:'💰',label:'Invest more',desc:'Double down\non the district',value:'invest_more',color:0xddaa00},
-        {icon:'⏳',label:'Pause & reassess',desc:'Halt work now,\ndecide again later',value:'wait',color:0x6b7a8d}
+        {icon:'🛡',label: opts && opts[0] ? opts[0].label : this._tr('level2.opt0', 'Cancel project'), desc: opts && opts[0] ? opts[0].description : this._tr('level2.opt0desc', 'Stop work now,\nkeep the resources'),value:'cancel',color:0x3a5f8a},
+        {icon:'🏗',label: opts && opts[1] ? opts[1].label : this._tr('level2.opt1', 'Push through'), desc: opts && opts[1] ? opts[1].description : this._tr('level2.opt1desc', 'Finish as planned,\naccept the dip'),value:'continue',color:0x4aaa5c},
+        {icon:'💰',label: opts && opts[2] ? opts[2].label : this._tr('level2.opt2', 'Invest more'), desc: opts && opts[2] ? opts[2].description : this._tr('level2.opt2desc', 'Double down\non the district'),value:'invest_more',color:0xddaa00},
+        {icon:'⏳',label: opts && opts[3] ? opts[3].label : this._tr('level2.opt3', 'Pause & reassess'), desc: opts && opts[3] ? opts[3].description : this._tr('level2.opt3desc', 'Halt work now,\ndecide again later'),value:'wait',color:0x6b7a8d}
       ],(c)=>{
         ScoringEngine.recordDecision(2,c,{phase:'dip'}); this._clearPersistentMessage();
-        const e={cancel:{d:[5,-10,10],m:'Resources secured.\nThe project rests. The city will not benefit if it recovers.'},
-                 continue:{d:[0,5,-5],m:'The plan continues.\nThe city accepts short-term uncertainty.'},
-                 invest_more:{d:[-5,12,-15],m:'The city doubles down.\nHigh stakes.'},
-                 wait:{d:[-5,-5,0],m:'Construction stalls.\nResources are safe but idle. The cost of doing nothing.'}}[c]
-                 ||{d:[0,5,-5],m:'The plan continues.'};
+        let e;
+        if (opts) {
+          const opt = opts.find(o => o.value === c);
+          if (opt && opt.consequence) {
+            const deltas = {cancel:{d:[5,-10,10]},continue:{d:[0,5,-5]},invest_more:{d:[-5,12,-15]},wait:{d:[-5,-5,0]}};
+            e = { d: (deltas[c]||{d:[0,5,-5]}).d, m: opt.consequence };
+          }
+        }
+        if (!e) {
+          e={cancel:{d:[5,-10,10],m:'Resources secured.\nThe project rests. The city will not benefit if it recovers.'},
+             continue:{d:[0,5,-5],m:'The plan continues.\nThe city accepts short-term uncertainty.'},
+             invest_more:{d:[-5,12,-15],m:'The city doubles down.\nHigh stakes.'},
+             wait:{d:[-5,-5,0],m:'Construction stalls.\nResources are safe but idle. The cost of doing nothing.'}}[c]
+             ||{d:[0,5,-5],m:'The plan continues.'};
+        }
         this._updateStats(e.d[0],e.d[1],e.d[2]);
         if(c==='invest_more'){this.districts[2].receiveResource(1);this._shake(190,0.003);}
         else if(c==='cancel') this.districts[2].takeDamage(8);
         this._showConsequence(e.m,()=>this._level2Recovery(c));
       });
+      }); // end _showGuide callback
     });
   }
 
-  // Beat A resolution: the dip was noise. The district recovers on its own,
-  // whatever the player did — but panicking cost resources for nothing.
   _level2Recovery(choice) {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     this.districts[2].receiveResource(3);
-    const m={cancel:'Weeks later: the scare blows over.\nThe district recovers — without the city. The cancelled project stays cancelled.',
-             continue:'Weeks later: the scare blows over.\nThe district recovers. Staying the course paid off.',
-             invest_more:'Weeks later: the scare blows over.\nThe district recovers — and the extra investment pays off handsomely.',
-             wait:'Weeks later: the scare blows over.\nThe district recovers. The pause cost time, but nothing else.'}[choice]
-             ||'Weeks later: the scare blows over.\nThe district recovers.';
+    const m={cancel: de
+      ? 'Wochen später: Der Schrecken vergeht.\nDas Viertel erholt sich — ohne die Stadt. Das abgebrochene Projekt bleibt abgebrochen.'
+      : 'Weeks later: the scare blows over.\nThe district recovers — without the city. The cancelled project stays cancelled.',
+             continue: de
+      ? 'Wochen später: Der Schrecken vergeht.\nDas Viertel erholt sich. Kurs halten hat sich gelohnt.'
+      : 'Weeks later: the scare blows over.\nThe district recovers. Staying the course paid off.',
+             invest_more: de
+      ? 'Wochen später: Der Schrecken vergeht.\nDas Viertel erholt sich — und die Zusatzinvestition zahlt sich aus.'
+      : 'Weeks later: the scare blows over.\nThe district recovers — and the extra investment pays off handsomely.',
+             wait: de
+      ? 'Wochen später: Der Schrecken vergeht.\nDas Viertel erholt sich. Die Pause kostete Zeit, sonst nichts.'
+      : 'Weeks later: the scare blows over.\nThe district recovers. The pause cost time, but nothing else.'}[choice]
+             ||(de ? 'Wochen später: Der Schrecken vergeht.\nDas Viertel erholt sich.' : 'Weeks later: the scare blows over.\nThe district recovers.');
     if(choice==='cancel') this._updateStats(-5,0,0);
     else if(choice==='invest_more') this._updateStats(5,8,0);
     else if(choice==='continue') this._updateStats(3,5,0);
     this._showConsequence(m,()=>this._level2News());
   }
 
-  // Beat B: a second drop, this time with clear bad fundamentals. The
-  // transport district's main employer is leaving for good. Holding or
-  // doubling down is costly here; cutting losses is the reasonable move.
   _level2News() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
     this.time.delayedCall(1200,()=>{
       this.districts[1].takeDamage(30); this._updateStats(-5,-8,0);
       this._shake(200,0.003);
       this.time.delayedCall(1600,()=>{
-        this._showPersistentMessage('Now the transport district is falling.\nThis time there is real news: its largest employer\nis leaving the city for good. What does the city do?');
+        const newsStory = this._tr('level2.newsStory', 'Now the transport district is falling.\nThis time there is real news: its largest employer\nis leaving the city for good. What does the city do?');
+        const ld = this._levelData(2);
+        const opts = ld && ld.options ? ld.options : null;
+        // Bug #1: guide then story + panel
+        this._showGuide(this._tr('guide.default', 'Read the situation. Make your choice.'), () => {
+        this._showPersistentMessage(newsStory);
         this._showDecisionPanel([
-          {icon:'🛡',label:'Cut losses',desc:'Sell the district assets\nbefore it gets worse',value:'cancel',color:0x3a5f8a},
-          {icon:'🏗',label:'Hold on',desc:'Keep everything,\nhope it turns around',value:'continue',color:0x4aaa5c},
-          {icon:'💰',label:'Invest more',desc:'Double down\non the district',value:'invest_more',color:0xddaa00},
-          {icon:'⏳',label:'Pause & reassess',desc:'Halt work now,\ndecide again later',value:'wait',color:0x6b7a8d}
+          {icon:'🛡',label: opts && opts[0] ? opts[0].label : this._tr('level2news.opt0','Cut losses'), desc: de?'Distriktvermögen verkaufen\nbevor es schlimmer wird':'Sell the district assets\nbefore it gets worse',value:'cancel',color:0x3a5f8a},
+          {icon:'🏗',label: opts && opts[1] ? opts[1].label : this._tr('level2news.opt1','Hold on'), desc: de?'Alles behalten,\nauf Erholung hoffen':'Keep everything,\nhope it turns around',value:'continue',color:0x4aaa5c},
+          {icon:'💰',label: opts && opts[2] ? opts[2].label : this._tr('level2news.opt2','Invest more'), desc: de?'Auf das Viertel\nverdoppeln':'Double down\non the district',value:'invest_more',color:0xddaa00},
+          {icon:'⏳',label: opts && opts[3] ? opts[3].label : this._tr('level2news.opt3','Pause & reassess'), desc: de?'Arbeit anhalten,\nspäter neu entscheiden':'Halt work now,\ndecide again later',value:'wait',color:0x6b7a8d}
         ],(c)=>{
           ScoringEngine.recordDecision(2,c,{phase:'news'}); this._clearPersistentMessage();
-          const e={cancel:{d:[5,-5,5],m:'The city exits in time.\nThe district keeps declining, but the resources were saved.'},
-                   continue:{d:[-8,-12,0],m:'The city holds on.\nThe district keeps declining. Hope is not a strategy.'},
-                   invest_more:{d:[-12,-15,-10],m:'The city doubles down on a shrinking district.\nThe extra resources sink with it.'},
-                   wait:{d:[-3,-6,0],m:'The city waits.\nThe district keeps declining while decisions are postponed.'}}[c]
-                   ||{d:[-8,-12,0],m:'The city holds on.\nThe district keeps declining.'};
+          const e={cancel:{d:[5,-5,5],m: de ? 'Die Stadt steigt rechtzeitig aus.\nDas Viertel fällt weiter, aber die Ressourcen wurden gerettet.' : 'The city exits in time.\nThe district keeps declining, but the resources were saved.'},
+                   continue:{d:[-8,-12,0],m: de ? 'Die Stadt hält durch.\nDas Viertel fällt weiter. Hoffnung ist keine Strategie.' : 'The city holds on.\nThe district keeps declining. Hope is not a strategy.'},
+                   invest_more:{d:[-12,-15,-10],m: de ? 'Die Stadt verdoppelt auf ein schrumpfendes Viertel.\nDie extra Ressourcen sinken mit ihm.' : 'The city doubles down on a shrinking district.\nThe extra resources sink with it.'},
+                   wait:{d:[-3,-6,0],m: de ? 'Die Stadt wartet.\nDas Viertel fällt weiter, während Entscheidungen aufgeschoben werden.' : 'The city waits.\nThe district keeps declining while decisions are postponed.'}}[c]
+                   ||{d:[-8,-12,0],m: de ? 'Die Stadt hält durch.\nDas Viertel fällt weiter.' : 'The city holds on.\nThe district keeps declining.'};
           this._updateStats(e.d[0],e.d[1],e.d[2]);
           if(c==='invest_more'){this.districts[1].takeDamage(10);this._shake(190,0.003);}
           else if(c==='continue') this.districts[1].takeDamage(6);
           this._showConsequence(e.m,()=>this._nextLevel());
         });
+        }); // end _showGuide callback
       });
     });
   }
@@ -456,181 +452,306 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 3 ══
   _level3() {
-    this._level3PlacedCubes = new Set();
-    this._level3Resolved = false;
-    this._spawnResourceCubes(6);
-    // Accessibility: dragging is not the only way through this level.
-    // Tapping a district sends the next waiting cube there, so the level
-    // is completable with a single tap per cube on touch screens too.
-    this.districts.forEach(d=>d.setSelectable(true,(dd)=>this._tapAllocate(dd)));
-    this._showPersistentMessage('600 new credits\nDrop each coin on the centre of a district,\nor tap a district to send the next coin.\n0 of 6 placed.',{corner:true});
-    this._armLevel3Idle();
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(3);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level3.story', 'The city has grown. Now it\'s time to expand.\nYou have resources to invest. Choose wisely.');
+    this._showPersistentMessage(storyMsg);
+    const opts = ld && ld.options ? ld.options : null;
+    this.districts.forEach((d,i)=>{
+      d.setSelectable(true,()=>this._onLevel3Choice(d,i));
+    });
+    this.cubeTotal=3;
+    this._spawnCube();
+    this._level3Idle();
   }
 
-  _tapAllocate(district) {
-    if(this.currentLevel!==3 || this._level3Resolved) return;
-    const cube=(this.cubes||[]).find(c=>c && !c._used && !c.isDragging && c.container && c.container.active);
-    if(cube) cube._dropOnDistrict(district);
-  }
-
-
-  _spawnResourceCubes(n) {
-    this.cubeTotal=n; this.cubeDropped=0;
-    // Coins stack vertically beside the side panel, below the district signs, large and easy to grab.
-    const x=this.PANEL+this.s(46), top=Math.max(this.s(400),this.H*0.44), gap=Math.min(this.s(66),(this.H-top-this.s(40))/n);
-    for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>this.cubes.push(new ResourceCube(this,x,top+i*gap,1)));
-  }
-
-  // Nudges the player if they pause partway through placing cubes. This is
-  // the "warning" — it is purely informational text, never a countdown and
-  // never anything that forces a decision. The Continue button still only
-  // appears after every cube is placed, regardless of how long that takes.
-  _armLevel3Idle() {
+  _level3Idle() {
     this._clearLevel3Idle();
-    if (this.currentLevel!==3 || this.cubeDropped>=this.cubeTotal) return;
-    this._level3IdleTimer = this.time.delayedCall(9000, ()=>{
-      if (this.currentLevel!==3 || this.cubeDropped>=this.cubeTotal) return;
-      const remaining = this.cubeTotal - this.cubeDropped;
-      const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-      this._showPersistentMessage(de
-        ? `Noch am Überlegen? ${remaining} Würfel warten noch \u2014 die Stadt kann erst weiter, wenn alle platziert sind.`
-        : `Still deciding? ${remaining} cube${remaining===1?'':'s'} still waiting \u2014 the city can't move on until every one is placed.`);
+    this._level3IdleTimer = this.time.delayedCall(18000,()=>{
+      if(this.cubeDropped<this.cubeTotal) this._showDropRetry();
     });
   }
-  _clearLevel3Idle(){ if(this._level3IdleTimer){ this._level3IdleTimer.remove(false); this._level3IdleTimer=null; } }
+  _clearLevel3Idle(){
+    if(this._level3IdleTimer){this._level3IdleTimer.remove(false);this._level3IdleTimer=null;}
+  }
 
-  _onResourceDropped(district, value, cube) {
-    if(this.currentLevel!==3 || this._level3Resolved) return;
-    if(!this._level3PlacedCubes) this._level3PlacedCubes = new Set();
-    if(!cube || this._level3PlacedCubes.has(cube)) return;
-    this._level3PlacedCubes.add(cube);
-    this.cubeDropped=this._level3PlacedCubes.size;
-    ScoringEngine.recordDecision(3,'allocate',{districtId:district.id});
-    this._updateStats(2,4,-3);
-    if(this.cubeDropped < this.cubeTotal){
-      this._showPersistentMessage('600 new credits\nDrop each coin on the centre of a district,\nor tap a district to send the next coin.\n'+this.cubeDropped+' of '+this.cubeTotal+' placed.',{corner:true});
-      this._armLevel3Idle();
-    } else {
-      this._level3Resolved = true;
+  _spawnCube(){
+    if(this.cubeDropped>=this.cubeTotal)return;
+    const cube=new ResourceCube(this,this._cx(),this.s(100));
+    this.cubes.push(cube);
+    cube.spawn(this.districts);
+  }
+
+  _onResourceDropped(district,value,cube) {
+    if(this.currentLevel!==3)return;
+    this.cubeDropped++;
+    district.receiveResource(value);
+    this._shake(160,0.003);
+    ScoringEngine.recordDecision(3,'drop',{districtId:district.id,value});
+    this._updateStats(0,8,-10);
+    if(this.cubeDropped>=this.cubeTotal){
       this._clearLevel3Idle();
-      this.districts.forEach(d=>d.setSelectable(false));
-      // Exposure preview: the player sees where their money sits BEFORE
-      // the random shock lands, so the outcome is understood, not guessed.
-      const c={}; (ScoringEngine.decisions||[]).filter(d=>d.level===3).forEach(d=>{c[d.districtId]=(c[d.districtId]||0)+1;});
-      const spread=Object.entries(c).map(([k,n])=>n*100+' in '+k).join(', ');
-      this._showPersistentMessage('All six placed.\nYour credits: '+spread+'.\nNext year one unknown district will be hit.',{corner:true});
-      this.time.delayedCall(2600,()=>{ this._clearPersistentMessage(); this._level3Outcome(); });
+      this.time.delayedCall(600,()=>this._level3Outcome());
+    } else {
+      this.time.delayedCall(400,()=>{ this._spawnCube(); this._level3Idle(); });
     }
   }
 
   _level3Outcome() {
-    const loser=this.districts[Phaser.Math.Between(0,3)];
-    // Loss is proportional to the credits actually placed in the shocked
-    // district: each cube = 100 credits, the district falls 40%.
-    const placed=(ScoringEngine.decisions||[]).filter(d=>d.level===3&&d.districtId===loser.id).length;
-    const exposed=placed*100, lost=Math.round(exposed*0.4);
-    const share=placed/(this.cubeTotal||6);
-    loser.takeDamage(8+Math.round(40*share)); // visual damage scales with exposure
-    this._shake(120+Math.round(400*share),0.002+0.006*share);
-    this._updateStats(-Math.round(10*share),-Math.round(15*share),0);
+    this.districts.forEach(d=>d.setSelectable(false));
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const nm=de?(loser.nameDE||loser.name):loser.name;
-    const msg=de
-      ? 'Das '+nm+'-Viertel fällt um 40 %.\nDu hattest '+exposed+' Credits dort \u2192 Verlust: '+lost+' Credits.'
-      : 'The '+nm+' district fell 40%.\nYou had '+exposed+' credits there \u2192 you lost '+lost+' credits.';
-    this._showConsequence(msg,()=>this._nextLevel());
+    const ld = this._levelData(3);
+    const resultMsg = ld && ld.outcome ? ld.outcome
+      : this._tr('level3.outcome', 'Resources invested. The city expands.\nWatch how each district develops over time.');
+    this._showConsequence(resultMsg,()=>this._nextLevel());
   }
 
+  _onLevel3Choice(d,i) {
+    // Districts are selectable in level 3 for visual feedback only
+    // actual resource allocation is via cube drops
+  }
 
   // ══ LEVEL 4 ══
-  // Beat A: an urgent repair. Spending cash on a genuine need is NOT
-  // impatience — this beat (phase:'repair') adjusts RESILIENCE (+/-8) only, never the
-  // patience score. Beat B (phase:'build') is the real delayed-reward test.
   _level4() {
-    const housing=this.districts[0];
-    housing.takeDamage(18);
-    this._shake(180,0.003);
-    this._showPersistentMessage('A water main has burst under the housing district.\nFamilies have no running water. The city has cash set aside.');
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(4);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level4.story', 'A new opportunity: invest now for immediate gain, or wait for a potentially larger future reward.');
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(storyMsg);
     this._showDecisionPanel([
-      {icon:'🔧',label:'Repair it now',desc:'Uses reserve cash today.\nFixes the problem.',value:'repair_now',color:0x296b72},
-      {icon:'⏳',label:'Postpone repair',desc:'Keep the cash for now.\nDeal with it later.',value:'defer',color:0xe2a840}
+      {icon:'💵',label: opts && opts[0] ? opts[0].label : this._tr('level4.opt0','Take it now'), desc: opts && opts[0] ? opts[0].description : this._tr('level4.opt0desc','Certain gain today'),value:'now',color:0x4aaa5c},
+      {icon:'⏰',label: opts && opts[1] ? opts[1].label : this._tr('level4.opt1','Wait'), desc: opts && opts[1] ? opts[1].description : this._tr('level4.opt1desc','Possible larger gain later'),value:'wait',color:0x5c8ab0}
     ],(c)=>{
-      ScoringEngine.recordDecision(4,c,{phase:'repair'}); this._clearPersistentMessage();
-      if(c==='repair_now'){
-        housing.receiveResource(2); this._updateStats(6,0,-6);
-        this._showConsequence('The pipe is fixed within days.\nUsing savings for a real emergency is what savings are for.',()=>this._level4Build());
-      } else {
-        housing.takeDamage(12); this._updateStats(-10,0,0);
-        this._showConsequence('The leak spreads. The repair now costs more than it would have.\nPostponing a real need is not the same as being patient.',()=>this._level4Build());
-      }
-    });
-  }
-
-  _level4Build() {
-    this._showPersistentMessage('With the emergency behind it, the city can build one of two facilities.\nThis decision will echo through the rest of the game.');
-    this._showDecisionPanel([
-      {icon:'🎪',label:'Festival Square',desc:'Happy citizens now.\nLittle long-term value.',value:'festival',color:0xe2a840},
-      {icon:'🎓',label:'Research University',desc:'No reward for several levels.\nPowerful later.',value:'university',color:0x296b72}
-    ],(c)=>{
-      ScoringEngine.recordDecision(4,c,{phase:'build'}); this._clearPersistentMessage();
-      if(c==='university'){
-        this.hasUniversity=true; this._updateStats(0,0,-8);
-        this._addLandmark(this.districts[2],'\uD83C\uDFD7','University — under construction',0x296b72);
-        this._showConsequence('Construction begins quietly.\nNo result yet. The city waits.\nSomething is being built that may matter greatly later.',()=>this._nextLevel());
-      } else {
-        this._updateStats(18,0,0); this.districts[0].receiveResource(1);
-        this._addLandmark(this.districts[0],'\uD83C\uDFAA','Festival Square',0xe2a840);
-        this._showConsequence('The square is built. Citizens celebrate today.\nThe city is happy — but only for now.',()=>this._nextLevel());
-      }
+      ScoringEngine.recordDecision(4,c);
+      this._clearPersistentMessage();
+      const e={now:{d:[5,8,-8],m:this._tr('level4.now','You took the immediate gain.\nSmall but certain progress.')},
+               wait:{d:[-3,12,5],m:this._tr('level4.wait','You waited.\nThe future reward arrives, larger than expected.')}}[c]
+               ||{d:[0,5,0],m:'Decision made.'};
+      this._updateStats(e.d[0],e.d[1],e.d[2]);
+      this._showConsequence(e.m,()=>this._nextLevel());
     });
   }
 
   // ══ LEVEL 5 ══
   _level5() {
-    const tech=this.districts[2];
-    tech.receiveResource(4); this.time.delayedCall(500,()=>tech.receiveResource(3));
-    for(let i=0;i<16;i++) this.time.delayedCall(i*170,()=>this._firework(tech.cx+Phaser.Math.Between(-95,95),tech.cy+Phaser.Math.Between(-95,10)));
-    this._newsTicker(['📰 Technology District doubles in value!','📰 Experts: growth will continue — neighbouring cities moving in...']);
-    this.time.delayedCall(1500,()=>{
-      this.districts.forEach((d,i)=>{if(i!==2)this.tweens.add({targets:[d.gfx,d.animGfx],alpha:0.4,duration:900});});
-      this.time.delayedCall(2100,()=>{
-        this._showPersistentMessage('Technology is booming. Other districts suddenly look boring.\nWhat does the city do?');
-        this._showDecisionPanel([
-          {icon:'🚀',label:'All in',desc:'Move everything\nto technology',value:'all_in',color:0x9966cc},
-          {icon:'➕',label:'Invest more',desc:'Increase exposure\nkeep some balance',value:'increase',color:0x296b72},
-          {icon:'⚖',label:'Stay diversified',desc:'Resist momentum\nhold the balance',value:'hold',color:0x4aaa5c},
-          {icon:'📉',label:'Take profits',desc:'Reduce tech\nsecure gains',value:'reduce',color:0xe2a840}
-        ],(c)=>{
-          ScoringEngine.recordDecision(5,c); this._clearPersistentMessage();
-          this.districts.forEach(d=>this.tweens.add({targets:[d.gfx,d.animGfx],alpha:1,duration:600}));
-          const m={all_in:'Everything committed to technology.\nThe city feels unstoppable. For now.',
-                   increase:'More technology in the mix.\nMomentum builds.',
-                   hold:'The city watches from a balanced position.\nSome feel it is missing out.',
-                   reduce:'Profits secured.\nThe city steps back from the excitement.'};
-          if(c==='all_in'){tech.receiveResource(3);this._updateStats(5,15,-12);}
-          else if(c==='increase'){tech.receiveResource(1);this._updateStats(3,8,-5);}
-          else if(c==='hold') this._updateStats(2,4,0);
-          else this._updateStats(0,-3,8);
-          this._showConsequence(m[c]||m.hold,()=>this._nextLevel());
-        });
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(5);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level5.story', 'The city is booming! Everyone wants to invest.\nBut is this growth sustainable, or is it a bubble?');
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(storyMsg);
+    this.districts.forEach(d=>d.receiveResource(1));
+    this._showDecisionPanel([
+      {icon:'🚀',label: opts && opts[0] ? opts[0].label : this._tr('level5.opt0','Ride the boom'), desc: opts && opts[0] ? opts[0].description : this._tr('level5.opt0desc','Invest heavily now'),value:'ride',color:0xddaa00},
+      {icon:'🛡',label: opts && opts[1] ? opts[1].label : this._tr('level5.opt1','Stay cautious'), desc: opts && opts[1] ? opts[1].description : this._tr('level5.opt1desc','Protect what you have'),value:'cautious',color:0x5c8ab0},
+      {icon:'📊',label: opts && opts[2] ? opts[2].label : this._tr('level5.opt2','Diversify'), desc: opts && opts[2] ? opts[2].description : this._tr('level5.opt2desc','Spread across all sectors'),value:'diversify',color:0x9966cc}
+    ],(c)=>{
+      ScoringEngine.recordDecision(5,c);
+      this._clearPersistentMessage();
+      const e={ride:{d:[8,15,-18],m:this._tr('level5.ride','You rode the boom.\nGrowth was spectacular — until it wasn\'t.')},
+               cautious:{d:[3,5,8],m:this._tr('level5.cautious','Cautious approach paid off.\nThe boom fades, but you\'re stable.')},
+               diversify:{d:[6,10,-5],m:this._tr('level5.diversify','Diversified investment.\nSome sectors soar, others slide.')}}[c]
+               ||{d:[0,5,0],m:'Decision made.'};
+      this._updateStats(e.d[0],e.d[1],e.d[2]);
+      this._showConsequence(e.m,()=>this._nextLevel());
+    });
+  }
+
+  // ══ LEVEL 6 — a delegation drives in from the neighbouring city ══
+  _level6() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(6);
+    const arrivalMsg = this.metro
+      ? this._tr('level6.arrival', 'A ship from the neighbouring city is sailing up the river with an investment offer...')
+      : this._tr('level6.arrivalAlt', 'A delegation is arriving from the neighbouring city...');
+    this._showPersistentMessage(arrivalMsg);
+    this.roads.sendVisitor(()=>{
+      this._level6Decide(false);
+    });
+  }
+
+  _level6Decide(hasRead) {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(6);
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(hasRead
+      ? this._tr('level6.fullPicture', 'You have the full picture. What does the city do?')
+      : (ld && ld.story ? ld.story : this._tr('level6.story', 'They offer to share their water infrastructure.\nWhat does the city do?')));
+    const panelOpts=[
+      {icon:'🤝',label: opts && opts[0] ? opts[0].label : this._tr('level6.opt0','Accept offer'), desc: opts && opts[0] ? opts[0].description : this._tr('level6.opt0desc','200 resources now.\nSome dependency risk.'),value:'accept',color:0x296b72},
+      {icon:'🏗',label: opts && opts[1] ? opts[1].label : this._tr('level6.opt1','Build own'), desc: opts && opts[1] ? opts[1].description : this._tr('level6.opt1desc','400 resources.\nFull control.'),value:'independent',color:0x4aaa5c},
+      {icon:'❌',label: opts && opts[2] ? opts[2].label : this._tr('level6.opt2','Decline both'), desc: opts && opts[2] ? opts[2].description : this._tr('level6.opt2desc','Keep resources\nfor other priorities.'),value:'decline',color:0x6b7a8d}
+    ];
+    if (!hasRead) panelOpts.push({icon:'🔍',label: opts && opts[3] ? opts[3].label : this._tr('level6.opt3','Research first'), desc: opts && opts[3] ? opts[3].description : this._tr('level6.opt3desc','Gather more info\nbefore deciding.'),value:'research',color:0xe2a840});
+    this._showDecisionPanel(panelOpts,(c)=>{
+      this._clearPersistentMessage();
+      if(c==='research'){
+        ScoringEngine.recordDecision(6,'research');
+        const reportTitle = ld && ld.offer ? ld.offer.title : this._tr('level6.reportTitle','Delegation Report');
+        const reportText = this._tr('level6.reportText','Their infrastructure is well maintained but ties your city to their maintenance schedule. Building independently costs more but removes any dependency. Declining keeps every option open for later.');
+        this._reportModal(reportTitle, reportText,
+          ()=>{ this._updateStats(3,0,0); this.time.delayedCall(300,()=>this._level6Decide(true)); });
+        return;
+      }
+      ScoringEngine.recordDecision(6,c,{afterResearch:hasRead});
+      let acceptMsg, indMsg, decMsg;
+      if (opts) {
+        const aOpt = opts.find(o=>o.value==='accept');
+        const iOpt = opts.find(o=>o.value==='independent');
+        const dOpt = opts.find(o=>o.value==='decline');
+        acceptMsg = aOpt ? aOpt.consequence : null;
+        indMsg = iOpt ? iOpt.consequence : null;
+        decMsg = dOpt ? dOpt.consequence : null;
+      }
+      const m={
+        accept: {d:[10,10,-5], m: acceptMsg||this._tr('level6.acceptResult','The city accepts the offer.\nResources flow in. Some dependency is the price.')},
+        independent: {d:[5,15,-20], m: indMsg||this._tr('level6.indResult','The city builds its own infrastructure.\nCostly, but fully under control.')},
+        decline: {d:[-5,-5,15], m: decMsg||this._tr('level6.decResult','The city declines.\nResources saved, but the opportunity passes.')}
+      }[c]||{d:[0,0,0],m:'Decision recorded.'};
+      this._updateStats(m.d[0],m.d[1],m.d[2]);
+      if(c==='accept') this._celebrateCity(this._tr('level6.celebrate','🤝 Partnership!'));
+      this._showConsequence(m.m,()=>this._nextLevel());
+    });
+  }
+
+  // ══ LEVEL 7 ══
+  _level7() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(7);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level7.story', 'Breaking news: a scandal rocks the transport district.\nThe facts are unclear. How does the city respond?');
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(storyMsg);
+    this.districts[1].takeDamage(15); this._shake(180,0.003);
+    this.time.delayedCall(1400,()=>{
+      this._showDecisionPanel([
+        {icon:'🔍',label: opts && opts[0] ? opts[0].label : this._tr('level7.opt0','Investigate'), desc: opts && opts[0] ? opts[0].description : this._tr('level7.opt0desc','Commission a full audit'),value:'investigate',color:0x3a5f8a},
+        {icon:'🗣',label: opts && opts[1] ? opts[1].label : this._tr('level7.opt1','Communicate'), desc: opts && opts[1] ? opts[1].description : this._tr('level7.opt1desc','Issue a statement quickly'),value:'communicate',color:0x4aaa5c},
+        {icon:'⏳',label: opts && opts[2] ? opts[2].label : this._tr('level7.opt2','Wait it out'), desc: opts && opts[2] ? opts[2].description : this._tr('level7.opt2desc','Let the story fade naturally'),value:'wait',color:0x6b7a8d}
+      ],(c)=>{
+        ScoringEngine.recordDecision(7,c);
+        this._clearPersistentMessage();
+        const e={investigate:{d:[5,-8,-12],m:this._tr('level7.investResult','The investigation reveals mixed results.\nTransparency costs resources but builds trust.')},
+                 communicate:{d:[8,-5,-5],m:this._tr('level7.commResult','Quick communication helps.\nThe narrative shifts in the city\'s favour.')},
+                 wait:{d:[-8,-12,5],m:this._tr('level7.waitResult','Waiting backfires.\nRumours fill the silence. Trust erodes.')}}[c]
+                 ||{d:[0,0,0],m:'Decision recorded.'};
+        this._updateStats(e.d[0],e.d[1],e.d[2]);
+        this._showConsequence(e.m,()=>this._nextLevel());
       });
     });
   }
 
-  _firework(x,y){
-    const cols=[0xff6644,0xffcc00,0x44ffcc,0xff44aa,0xaaccff,0xee88ff];
-    const col=cols[Phaser.Math.Between(0,cols.length-1)];
-    for(let i=0;i<12;i++){
-      const a=(i/12)*Math.PI*2;
-      const s=this.add.graphics().setDepth(36);
-      s.fillStyle(col,1); s.fillCircle(0,0,this.s(3)); s.setPosition(x,y);
-      this.tweens.add({targets:s,x:x+Math.cos(a)*this.s(55),y:y+Math.sin(a)*this.s(55),alpha:0,duration:550+Math.random()*420,onComplete:()=>s.destroy()});
-    }
+  // ══ LEVEL 8 ══
+  _level8() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(8);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level8.story', 'A great storm hits the city.\nInfrastructure is damaged. The city must respond.');
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(storyMsg);
+    this.districts.forEach(d=>d.takeDamage(12)); this._shake(280,0.005);
+    this.time.delayedCall(1600,()=>{
+      if(!this.hasUniversity){
+        const uText = this._tr('level8.universityReveal', 'A university district emerges from the storm\'s aftermath—innovation will speed recovery.');
+        this._tempMessage(uText, 2800, 1200);
+        this.hasUniversity=true;
+      }
+      this._showDecisionPanel([
+        {icon:'🚑',label: opts && opts[0] ? opts[0].label : this._tr('level8.opt0','Emergency response'), desc: opts && opts[0] ? opts[0].description : this._tr('level8.opt0desc','Focus on immediate relief'),value:'emergency',color:0xcc4444},
+        {icon:'🏗',label: opts && opts[1] ? opts[1].label : this._tr('level8.opt1','Rebuild stronger'), desc: opts && opts[1] ? opts[1].description : this._tr('level8.opt1desc','Invest in resilient infrastructure'),value:'rebuild',color:0x4aaa5c},
+        {icon:'🤝',label: opts && opts[2] ? opts[2].label : this._tr('level8.opt2','Seek external aid'), desc: opts && opts[2] ? opts[2].description : this._tr('level8.opt2desc','Accept help from neighbours'),value:'aid',color:0x5c8ab0}
+      ],(c)=>{
+        ScoringEngine.recordDecision(8,c);
+        this._clearPersistentMessage();
+        const e={emergency:{d:[12,-5,-15],m:this._tr('level8.emResult','Emergency response prioritised.\nCitizens feel supported. Recovery is slower.')},
+                 rebuild:{d:[5,15,-20],m:this._tr('level8.rebResult','Rebuilding with resilience.\nCostly now, much stronger for the future.')},
+                 aid:{d:[8,8,-8],m:this._tr('level8.aidResult','External aid arrives.\nRecovery is swift. Some dependency follows.')}}[c]
+                 ||{d:[0,0,0],m:'Decision recorded.'};
+        this._updateStats(e.d[0],e.d[1],e.d[2]);
+        this.districts.forEach(d=>d.receiveResource(1));
+        this._showConsequence(e.m,()=>this._nextLevel());
+      });
+    });
   }
 
-  // City-wide celebration burst — every district gets fireworks plus one big banner.
-  // Used when a big shared "yes" moment happens (e.g. accepting the Level 6 delegation).
+  // ══ LEVEL 9 ══
+  _level9() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(9);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level9.story', 'Project review time.\nSome districts thrived, others struggled. How does the city allocate remaining resources?');
+    const opts = ld && ld.options ? ld.options : null;
+    this._showPersistentMessage(storyMsg);
+    this._showDecisionPanel([
+      {icon:'🏆',label: opts && opts[0] ? opts[0].label : this._tr('level9.opt0','Reward success'), desc: opts && opts[0] ? opts[0].description : this._tr('level9.opt0desc','Invest in top performers'),value:'reward',color:0xddaa00},
+      {icon:'⚖️',label: opts && opts[1] ? opts[1].label : this._tr('level9.opt1','Balance the city'), desc: opts && opts[1] ? opts[1].description : this._tr('level9.opt1desc','Support struggling districts'),value:'balance',color:0x5c8ab0},
+      {icon:'🔬',label: opts && opts[2] ? opts[2].label : this._tr('level9.opt2','Invest in research'), desc: opts && opts[2] ? opts[2].description : this._tr('level9.opt2desc','Fund future innovation'),value:'research',color:0x9966cc}
+    ],(c)=>{
+      ScoringEngine.recordDecision(9,c);
+      this._clearPersistentMessage();
+      const e={reward:{d:[5,12,-10],m:this._tr('level9.rewardResult','Top performers accelerate.\nThe gap between districts widens.')},
+               balance:{d:[8,5,-8],m:this._tr('level9.balanceResult','Balance restored.\nAll districts move forward together.')},
+               research:{d:[3,10,-12],m:this._tr('level9.researchResult','Research investment pays dividends.\nFuture growth looks promising.')}}[c]
+               ||{d:[0,0,0],m:'Decision recorded.'};
+      this._updateStats(e.d[0],e.d[1],e.d[2]);
+      this._showConsequence(e.m,()=>this._nextLevel());
+    });
+  }
+
+  // ══ LEVEL 10 ══
+  _level10() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(10);
+    const storyMsg = ld && ld.story ? ld.story
+      : this._tr('level10.story', 'The Planning Desk.\nThe city has grown. Now design its future.');
+    this._showPersistentMessage(storyMsg);
+    this.time.delayedCall(1200,()=>this._level10Ask());
+  }
+
+  _level10Ask() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const ld = this._levelData(10);
+    const opts = ld && ld.options ? ld.options : null;
+    this._showDecisionPanel([
+      {icon:'🌱',label: opts && opts[0] ? opts[0].label : this._tr('level10.opt0','Green city'), desc: opts && opts[0] ? opts[0].description : this._tr('level10.opt0desc','Prioritise sustainability'),value:'green',color:0x4aaa5c},
+      {icon:'🏙',label: opts && opts[1] ? opts[1].label : this._tr('level10.opt1','Smart city'), desc: opts && opts[1] ? opts[1].description : this._tr('level10.opt1desc','Prioritise technology'),value:'smart',color:0x5c8ab0},
+      {icon:'🫦',label: opts && opts[2] ? opts[2].label : this._tr('level10.opt2','People first'), desc: opts && opts[2] ? opts[2].description : this._tr('level10.opt2desc','Prioritise community'),value:'people',color:0xddaa00}
+    ],(c)=>{
+      ScoringEngine.recordDecision(10,c);
+      this._clearPersistentMessage();
+      this.time.delayedCall(400,()=>this._level10Reveal(c));
+    });
+  }
+
+  _level10Reveal(choice) {
+    const e={
+      green:{d:[8,12,-10],m:this._tr('level10.greenResult','A green city emerges.\nSustainable, healthy, and resilient.')},
+      smart:{d:[5,15,-12],m:this._tr('level10.smartResult','A smart city takes shape.\nEfficient systems, data-driven decisions.')},
+      people:{d:[12,8,-8],m:this._tr('level10.peopleResult','A people-first city flourishes.\nCommunity bonds are its greatest asset.')}
+    }[choice]||{d:[0,0,0],m:'The city\'s future is set.'};
+    this._updateStats(e.d[0],e.d[1],e.d[2]);
+    this.districts.forEach(d=>d.receiveResource(2));
+    this._celebrateCity(this._tr('level10.celebrate','🏆 City Complete!'));
+    this._showConsequence(e.m,()=>this._level10Practice());
+  }
+
+  _level10Practice() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const summary = ScoringEngine.getSummary ? ScoringEngine.getSummary() : null;
+    const finalMsg = summary
+      ? this._tr('level10.finalWithScore', 'Journey complete. Your decisions shaped this city.\nYour score reflects your choices across all levels.')
+      : this._tr('level10.final', 'Journey complete.\nEvery decision you made shaped this city.\nYou can now explore or restart.');
+    this._showConsequence(finalMsg, ()=>{
+      this._clearConsequence();
+      this._showPersistentMessage(this._tr('level10.done', '🏙 Your city journey is complete. Well done!'));
+    }, {auto:false});
+  }
+
+  // City-wide celebration burst
   _celebrateCity(bannerText){
+    this._playCelebration(); // Bug #10
     this.districts.forEach((d,i)=>{
       for(let i2=0;i2<10;i2++) this.time.delayedCall(i*90+i2*90,()=>this._firework(d.cx+Phaser.Math.Between(-70,70),d.cy+Phaser.Math.Between(-70,0)));
     });
@@ -642,277 +763,107 @@ class GameScene extends Phaser.Scene {
     this.tweens.add({targets:banner,alpha:1,scaleX:1,scaleY:1,duration:500,ease:'Back.easeOut',hold:1600,yoyo:true,onComplete:()=>banner.destroy()});
   }
 
-  // ══ LEVEL 6 — a delegation drives in from the neighbouring city ══
-  _level6() {
-    this._showPersistentMessage(this.metro?'A ship from the neighbouring city is sailing up the river with an investment offer...':'A delegation is arriving from the neighbouring city...');
-    this.roads.sendVisitor(()=>{
-      this._level6Decide(false);
+  _firework(x,y){
+    const colors=[0xff6b6b,0xffcc44,0x44ddaa,0x66aaff,0xffaaee];
+    for(let i=0;i<12;i++){
+      const p=this.add.graphics().setDepth(90);
+      p.fillStyle(colors[i%colors.length],1);
+      p.fillCircle(0,0,this.s(3.5));
+      p.setPosition(x,y);
+      const a=(i/12)*Math.PI*2;
+      const spd=Phaser.Math.Between(60,130);
+      this.tweens.add({targets:p,x:x+Math.cos(a)*spd,y:y+Math.sin(a)*spd,alpha:0,duration:Phaser.Math.Between(500,900),onComplete:()=>p.destroy()});
+    }
+  }
+
+  _reportModal(title, text, onClose) {
+    const cx=this._cx(), cy=this.H/2;
+    const pw=Math.min(this.s(560),this._availW()), ph=this.s(280);
+    const px=cx-pw/2, py=cy-ph/2;
+    const dim=this.add.graphics().setDepth(90);
+    dim.fillStyle(0x000000,0.55); dim.fillRect(0,0,this.W,this.H);
+    const bg=this.add.graphics().setDepth(91);
+    bg.fillStyle(0xfffbf1,0.98); bg.fillRoundedRect(px,py,pw,ph,this.s(14));
+    bg.lineStyle(this.s(2),0x296b72,0.8); bg.strokeRoundedRect(px,py,pw,ph,this.s(14));
+    const ttl=this.add.text(cx,py+this.s(24),title,{
+      fontFamily:CityTheme.heading,fontSize:this.s(19),color:'#173b40',fontStyle:'700',align:'center'
+    }).setOrigin(0.5,0).setDepth(92);
+    const txt=this.add.text(cx,py+this.s(60),text,{
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#2a5a60',
+      align:'center',wordWrap:{width:pw-this.s(48)},lineSpacing:this.s(5)
+    }).setOrigin(0.5,0).setDepth(92);
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const btn=this.add.text(cx,py+ph-this.s(30),this._tr('game.close','Close'),{
+      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#fffbf1',
+      backgroundColor:'#296b72',padding:{x:this.s(20),y:this.s(10)}
+    }).setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
+    btn.on('pointerdown',()=>{
+      [dim,bg,ttl,txt,btn].forEach(e=>{try{e.destroy();}catch(e){}});
+      if(onClose)onClose();
     });
   }
 
-  _level6Decide(hasRead) {
-    this._showPersistentMessage(hasRead
-      ? 'You have the full picture. What does the city do?'
-      : 'They offer to share their water infrastructure.\nWhat does the city do?');
-    const opts=[
-      {icon:'🤝',label:'Accept offer',desc:'200 resources now.\nSome dependency risk.',value:'accept',color:0x296b72},
-      {icon:'🏗',label:'Build own',desc:'400 resources.\nFull control.',value:'independent',color:0x4aaa5c},
-      {icon:'❌',label:'Decline both',desc:'Keep resources\nfor other priorities.',value:'decline',color:0x6b7a8d}
-    ];
-    if (!hasRead) opts.push({icon:'🔍',label:'Research first',desc:'Gather more info\nbefore deciding.',value:'research',color:0xe2a840});
-    this._showDecisionPanel(opts,(c)=>{
-      this._clearPersistentMessage();
-      if(c==='research'){
-        ScoringEngine.recordDecision(6,'research');
-        this._reportModal('Delegation Report',
-          'Their infrastructure is well maintained but ties your city to their maintenance schedule. Building independently costs more but removes any dependency. Declining keeps every option open for later.',
-          ()=>{ this._updateStats(3,0,0); this.time.delayedCall(300,()=>this._level6Decide(true)); });
-        return;
-      }
-      ScoringEngine.recordDecision(6,c,{afterResearch:hasRead});
-      const m={accept:(this.metro?'The offer ship sails up the river and docks.':'The delegation drives into the city.')+'\nShared infrastructure is established — and celebrated.',
-               independent:(this.metro?'The ship sails back downstream.':'The delegation turns around and leaves.')+'\nThe city builds its own — more expensive, fully controlled.',
-               decline:(this.metro?'The ship sails back downstream.':'The delegation turns around and leaves.')+'\nResources are preserved for other priorities.'};
-      const dl={accept:[-8,5,-8],independent:[-5,8,-15],decline:[0,0,5]}[c]||[0,0,0];
-      this._updateStats(dl[0],dl[1],dl[2]);
-      if(c==='accept'){
-        this._addLandmark(this.districts[1],'\uD83E\uDD1D','Shared infrastructure',0x62c4dd);
-        this.roads.visitorAccept(this.districts[0], ()=>{ this.districts[0].receiveResource(1); this._celebrateCity('🎉 Partnership Celebrated!'); });
-      } else {
-        if(c==='independent') this._addLandmark(this.districts[1],'\uD83C\uDFD7','Own infrastructure',0x8aa4c0);
-        this.roads.visitorDecline(); if(c==='independent') this.districts[0].receiveResource(1);
-      }
-      this._showConsequence(m[c]||m.decline,()=>this._nextLevel());
-    });
+  _saveSnapshot(n){
+    this.snapshots[n]={
+      happiness:this.cityStats.happiness,
+      development:this.cityStats.development,
+      resources:this.cityStats.resources,
+      districts:this.districts.map(d=>({health:d.health}))
+    };
   }
 
-  // ══ LEVEL 7 ══
-  _level7() {
-    this._newsTicker(['📰 Several major cities abandoning technology districts!','📰 Friends and advisors recommending immediate action...']);
-    this.time.delayedCall(2400,()=>this._level7Decide(false));
+  _restoreSnapshot(n){
+    const s=this.snapshots[n]; if(!s)return;
+    this.cityStats.happiness=s.happiness;
+    this.cityStats.development=s.development;
+    this.cityStats.resources=s.resources;
+    this.statsPanel.updateStats(s.happiness,s.development,s.resources);
+    if(s.districts) s.districts.forEach((sd,i)=>{ if(this.districts[i]) this.districts[i].health=sd.health; });
   }
 
-  _level7Decide(hasRead) {
-    this._showPersistentMessage(hasRead
-      ? 'You have the full picture. Now decide what the city does.'
-      : 'News arrives from across the region.\nTake your time. The decision sits open.');
-    const opts=[
-      {icon:'📤',label:'Sell tech',desc:'Act immediately.',value:'sell',color:0xe74c3c},
-      {icon:'⬇',label:'Reduce',desc:'Cautious middle path.',value:'reduce',color:0xe2a840},
-      {icon:'🔒',label:'Hold steady',desc:'Ignore headlines.',value:'hold',color:0x4aaa5c},
-      {icon:'📈',label:'Invest more',desc:'Buy into the dip.',value:'invest_more',color:0x9966cc}
-    ];
-    if (!hasRead) opts.push({icon:'📋',label:'Read report',desc:'Free — gather facts\nthen still decide.',value:'research',color:0x5c8ab0});
-    this._showDecisionPanel(opts,(c)=>{
-      this._clearPersistentMessage();
-      if(c==='research'){
-        ScoringEngine.recordDecision(7,'research');
-        this._reportModal('Full Situation Report',
-          'Experts are divided. The warning relates to short-term uncertainty. Long-term demand projections remain unclear. The available evidence comes from cities with significantly different circumstances.',
-          ()=>{ this._updateStats(3,0,0); this.time.delayedCall(300,()=>this._level7Decide(true)); });
-        return;
-      }
-      ScoringEngine.recordDecision(7,c,{afterResearch:hasRead});
-      const m={sell:'The technology district is sold.\nResources protected from further decline.',
-               reduce:'Exposure reduced.\nThe city retains some technology interest.',
-               hold:'The city holds its position.\nTime will tell whether the headlines were right.',
-               invest_more:'The city buys into the dip.\nA confident bet against the headlines.'};
-      const dl={sell:[-5,-12,12],reduce:[-2,-5,5],hold:[2,0,0],invest_more:[-3,10,-15]}[c]||[0,0,0];
-      this._updateStats(dl[0],dl[1],dl[2]);
-      if(c==='sell') this.districts[2].takeDamage(15);
-      if(c==='invest_more') this.districts[2].receiveResource(2);
-      this._showConsequence(m[c]||m.hold,()=>this._nextLevel());
-    });
-  }
+  // Bug #1: Show guide text with Continue button; calls onContinue when clicked
+  _showGuide(text, onContinue) {
+    this._clearPersistentMessage();
+    const cx = this._cx();
+    const msgWidth = Math.min(this.s(560), this._availW());
+    const cy = this.H / 2;
+    const ph = this.s(220);
+    const py = cy - ph / 2;
 
-  // ══ LEVEL 8 ══
-  _level8() {
-    this.weather.startStorm(()=>{
-      this.districts.forEach(d=>{d.setStorm(true);d.takeDamage(26);});
-      this._updateStats(-15,-20,-10); this._shake(900,0.012);
-      // The university reveal (when it exists) now gets its own slow,
-      // separate fade — it used to overlap with the decision panel
-      // appearing right on top of it. It now fully fades out before
-      // anything else shows.
-      const UNI_START=700, UNI_FADE=450, UNI_HOLD=2400;
-      const UNI_END = UNI_START + UNI_FADE + UNI_HOLD + UNI_FADE;
-      if(this.hasUniversity){
-        this.time.delayedCall(UNI_START,()=>{
-          this._tempMessage('The Research University opens its doors.\nGraduates create companies. Income rises. Your patience pays off.',UNI_HOLD,UNI_FADE);
-          this.districts[0].receiveResource(2); this.districts[1].receiveResource(1);
-          this._addLandmark(this.districts[2],'\uD83C\uDF93','University open',0x296b72);
-          this._updateStats(10,15,0);
-        });
-      }
-      this.time.delayedCall(this.hasUniversity?(UNI_END+250):1650,()=>{
-        this._showPersistentMessage('An economic storm hits every city.\nYou cannot prevent it. What do you protect?');
-        this._showDecisionPanel([
-          {icon:'🏃',label:'Sell all',desc:'Protect remaining\nresources.',value:'sell_all',color:0xe74c3c},
-          {icon:'🏛',label:'Protect essentials',desc:'Shield critical services.\nHold the plan.',value:'hold',color:0x4aaa5c},
-          {icon:'⚖',label:'Rebalance',desc:'Restructure\nthoughtfully.',value:'rebalance',color:0x296b72},
-          {icon:'📈',label:'Buy the dip',desc:'Invest selectively\nwhile low.',value:'opportunistic',color:0xe2a840}
-        ],(c)=>{
-          ScoringEngine.recordDecision(8,c); this._clearPersistentMessage();
-          this.weather.stopStorm(250);
-          this.time.delayedCall(700,()=>{
-            this.districts.forEach(d=>d.setStorm(false));
-            this.weather.startRecovery(()=>{ this.districts.forEach(d=>d.receiveResource(1)); this._updateStats(8,12,5); });
-            const m={sell_all:'Resources secured.\nThe city stops building and waits for calmer times.',
-                     hold:'The plan holds.\nThe city weathers the storm with its structure intact.',
-                     rebalance:'A more resilient structure emerges.\nThe city reorganises thoughtfully.',
-                     opportunistic:'The city invests carefully during the downturn.\nIf recovery comes, these decisions will matter.'};
-            const dl={sell_all:[-5,-15,15],hold:[5,0,-5],rebalance:[5,8,-5],opportunistic:[3,12,-10]}[c]||[0,0,0];
-            this._updateStats(dl[0],dl[1],dl[2]);
-            // Final level: same clickable Continue flow as every other level —
-            // the player decides when to move on to their result, rather than
-            // it advancing automatically.
-            this._showConsequence(m[c]||m.hold,()=>this._nextLevel());
-          });
-        });
-      });
-    });
-  }
+    // Dim overlay
+    const overlay = this.add.graphics().setDepth(190);
+    overlay.fillStyle(0x000000, 0.45);
+    overlay.fillRect(0, 0, this.W, this.H);
 
-  // ══ LEVEL 9 — The Project Review (disposition effect) ══
-  // Beat A: the city needs cash — sell a project that is up, or one that is
-  // down? Both have the SAME outlook, so only the past price differs.
-  // Beat B: two identical workshops, same future, bought at different prices.
-  _level9() {
-    this._showPersistentMessage('The city needs cash for next year\u2019s budget. It must sell one project.\nAnalysts rate both with exactly the same outlook from here.');
-    this._showDecisionPanel([
-      {icon:'\u2600',label:'Sell Solar Park',desc:'Bought for 400.\nNow worth 560 (+40%).',value:'sell_winner',color:0x4aaa5c},
-      {icon:'🚏',label:'Sell Tram Line',desc:'Bought for 400.\nNow worth 280 (\u221230%).',value:'sell_loser',color:0xe2a840}
-    ],(c)=>{
-      ScoringEngine.recordDecision(9,c,{phase:'pair'}); this._clearPersistentMessage();
-      this._updateStats(0,0,6);
-      const m = c==='sell_winner'
-        ? 'The Solar Park is sold and the gain feels good.\nThe Tram Line stays \u2014 its outlook is the same, but its loss is still on the books.'
-        : 'The Tram Line is sold and the loss becomes real.\nThe Solar Park keeps working for the city.';
-      this._showConsequence(m,()=>this._level9Twins());
-    });
-  }
+    // Card background
+    const cardBg = this.add.graphics().setDepth(191);
+    cardBg.fillStyle(0xfffbf1, 0.97);
+    cardBg.fillRoundedRect(cx - msgWidth/2, py, msgWidth, ph, this.s(14));
+    cardBg.lineStyle(this.s(2), 0x296b72, 0.8);
+    cardBg.strokeRoundedRect(cx - msgWidth/2, py, msgWidth, ph, this.s(14));
 
-  _level9Twins() {
-    this._showPersistentMessage('Two identical workshops, same street, same future.\nThe city bought one early and cheap, the other later and expensive. One must go.');
-    this._showDecisionPanel([
-      {icon:'\uD83D\uDD28',label:'Sell Workshop A',desc:'Bought for 200.\nWorth 300 today.',value:'sell_gain',color:0x4aaa5c},
-      {icon:'\uD83D\uDD28',label:'Sell Workshop B',desc:'Bought for 400.\nWorth 300 today.',value:'sell_loss',color:0xe2a840},
-      {icon:'\u2696',label:'Either one',desc:'Same value, same future.\nThe price paid is history.',value:'either',color:0x5c8ab0}
-    ],(c)=>{
-      ScoringEngine.recordDecision(9,c,{phase:'twin'}); this._clearPersistentMessage();
-      this._updateStats(0,2,4);
-      this._showConsequence('Both workshops were worth 300 and had the same future.\nWhat the city once paid does not change what either will earn from here.',()=>this._nextLevel());
-    });
-  }
+    const guideBox = this.add.text(cx, py + this.s(30), text, {
+      fontFamily: CityTheme.heading, fontSize: this.s(20), color: '#173b40',
+      align: 'center', wordWrap: { width: msgWidth - this.s(48) },
+      lineSpacing: this.s(6)
+    }).setOrigin(0.5, 0).setDepth(192).setAlpha(0);
+    this.tweens.add({ targets: [overlay, cardBg, guideBox], alpha: 1, duration: 300 });
 
-  // ══ LEVEL 10 — The Planning Desk (forecast calibration) ══
-  _level10() {
-    this._forecasts=[]; this._fcIndex=0;
-    this._level10Ask();
-  }
+    const btnY = py + ph - this.s(20);
+    const contBtn = this.add.text(cx, btnY, this._tr('guide.continue', 'Continue →'), {
+      fontFamily: CityTheme.body, fontSize: this.s(17), color: '#fffbf1',
+      backgroundColor: '#296b72', padding: { x: this.s(24), y: this.s(12) }
+    }).setOrigin(0.5, 1).setDepth(192).setInteractive({ useHandCursor: true });
 
-  _forecastOptions(){
-    return [
-      {icon:'\u2714',label:'Yes \u2014 very sure',desc:'90% confident',value:'y90',color:0x4aaa5c},
-      {icon:'\u2713',label:'Yes \u2014 probably',desc:'65% confident',value:'y65',color:0x296b72},
-      {icon:'\u2753',label:'No idea',desc:'50 / 50',value:'n50',color:0x6b7a8d},
-      {icon:'\u2717',label:'No \u2014 probably',desc:'65% confident',value:'x65',color:0xe2a840},
-      {icon:'\u2718',label:'No \u2014 very sure',desc:'90% confident',value:'x90',color:0xe74c3c}
-    ];
-  }
-  _parseForecast(v){ return { pick: v==='n50'?null:v[0]==='y', conf: parseInt(v.slice(1),10) }; }
+    const dismiss = () => {
+      [overlay, cardBg, guideBox, contBtn].forEach(el => { try { el.destroy(); } catch(e) {} });
+      if (onContinue) onContinue();
+    };
+    contBtn.on('pointerdown', dismiss);
 
-  _level10Ask() {
-    const F=Assessment.FORECASTS, i=this._fcIndex;
-    if (i>=F.length) return this._level10Reveal();
-    this._showPersistentMessage('Forecast '+(i+1)+' of '+F.length+':\n'+F[i].q);
-    this._showDecisionPanel(this._forecastOptions(),(v)=>{
-      const f=this._parseForecast(v);
-      ScoringEngine.recordDecision(10,v,{phase:'forecast',id:F[i].id,pick:f.pick,conf:f.conf,outcome:F[i].outcome});
-      this._forecasts.push(Object.assign({outcome:F[i].outcome},f));
-      this._clearPersistentMessage();
-      this._fcIndex++;
-      this.time.delayedCall(250,()=>this._level10Ask());
-    });
+    this._guideBox = guideBox;
+    this._guideBtn = { destroy: () => { try { overlay.destroy(); cardBg.destroy(); guideBox.destroy(); contBtn.destroy(); } catch(e) {} } };
   }
-
-  _level10Reveal() {
-    const r=Assessment.forecastResult(this._forecasts);
-    this.hud.advanceYear(1);
-    const lines=Assessment.FORECASTS.map((q,i)=>{
-      const f=this._forecasts[i]; const ok=f.pick===null?'\u2013':(f.pick===q.outcome?'\u2714':'\u2718');
-      return ok+'  '+q.q+'  \u2192 '+(q.outcome?'Yes':'No');
-    }).join('\n');
-    const summary='\n\nAverage confidence: '+Math.round(r.avgConf*100)+'%   \u00b7   Correct: '+Math.round(r.hitRate*100)+'%'
-      +(r.gap>0.1?'\nYou were more confident than you were right.':r.gap<-0.1?'\nYou were right more often than you expected.':'\nYour confidence matched your accuracy closely.')
-      +'\nFour forecasts describe this session, not your personality.';
-    this._reportModal('How did the forecasts turn out?',lines+summary,()=>this._level10Practice());
-  }
-
-  _level10Practice() {
-    const P=Assessment.PRACTICE;
-    this._showPersistentMessage('One practice forecast, now that you have seen your results:\n'+P.q);
-    this._showDecisionPanel(this._forecastOptions(),(v)=>{
-      const f=this._parseForecast(v);
-      ScoringEngine.recordDecision(10,v,{phase:'practice',id:P.id,pick:f.pick,conf:f.conf,outcome:P.outcome});
-      this._clearPersistentMessage();
-      const ok=f.pick===null?'You called it 50/50.':(f.pick===P.outcome?'You were right.':'You were wrong.');
-      this._updateStats(2,4,0);
-      this._showConsequence('The transport district did recover. '+ok+'\nGood forecasters are not always right \u2014 their confidence matches how often they are.',()=>this._finish());
-    });
-  }
-
-  _finish() {
-    this._clearConsequence(); this._clearWorldBtn();
-    this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,10);
-    const ov=this.add.graphics().setDepth(190);
-    const o={a:0};
-    this.tweens.add({targets:o,a:1,duration:1800,
-      onUpdate:()=>{ov.clear();ov.fillStyle(CityTheme.colors.cream,o.a);ov.fillRect(0,0,this.W,this.H);},
-      onComplete:()=>this._toProfile()});
-  }
-
-  _newsTicker(lines){
-    this.tickerActive = true;
-    const top=this.s(44), h=this.s(36);
-    const bg=this.add.graphics().setDepth(45);
-    bg.fillStyle(0xfffbf1,0.97); bg.fillRect(0,top,this.W,h);
-    bg.lineStyle(1,0xff4422,0.85); bg.lineBetween(0,top+h,this.W,top+h);
-    const br=this.add.text(this.s(16),top+h/2,'BREAKING',{
-       fontFamily:CityTheme.body,fontSize:this.s(12),color:'#c85848',fontStyle:'700',letterSpacing:2
-    }).setOrigin(0,0.5).setDepth(46);
-    const sep=this.add.graphics().setDepth(46);
-     sep.fillStyle(0x7ca5a1,0.5); sep.fillRect(this.s(96),top+this.s(8),1,h-this.s(16));
-    const tk=this.add.text(this.W+20,top+h/2,lines.join('   ★   '),{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',fontStyle:'600'
-    }).setOrigin(0,0.5).setDepth(46);
-    const dur=Math.max(19200, tk.width*24);
-    this.tweens.add({targets:tk,x:-(tk.width+120),duration:dur,ease:'Linear',
-      onComplete:()=>{tk.destroy();bg.destroy();br.destroy();sep.destroy();this.tickerActive=false;}});
-  }
-
-  _reportModal(title,text,cb){
-    const W=this.W,H=this.H;
-    const ov=this.add.graphics().setDepth(90); ov.fillStyle(0x000000,0.7); ov.fillRect(0,0,W,H);
-    const bw=Math.min(this.s(620),W-this.s(80));
-    const b=this.add.text(W/2,0,text,{
-      fontFamily:CityTheme.body,fontSize:this.s(15),color:'#365d60',
-      wordWrap:{width:bw-this.s(70)},align:'center',lineSpacing:this.s(6)}).setOrigin(0.5,0).setDepth(92);
-    const bh=Math.max(this.s(250), b.height+this.s(150)), bx=(W-bw)/2, by=(H-bh)/2;
-    b.setY(by+this.s(66));
-    const box=this.add.graphics().setDepth(91);
-    box.fillStyle(0xfffbf1,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
-    box.lineStyle(1,0xe2a840,0.55); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
-    const t=this.add.text(W/2,by+this.s(34),title,{
-      fontFamily:CityTheme.heading,fontSize:this.s(19),color:'#296b72'}).setOrigin(0.5).setDepth(92);
-    const btn=this.add.text(W/2,by+bh-this.s(36),'Continue \u2192',{
-      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#296b72',backgroundColor:'#e0a82e',padding:{x:this.s(18),y:this.s(8)}})
-      .setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
-    btn.on('pointerover',()=>btn.setColor('#173b40')); btn.on('pointerout',()=>btn.setColor('#296b72'));
-    btn.on('pointerdown',()=>{ov.destroy();box.destroy();t.destroy();b.destroy();btn.destroy();if(cb)cb();});
-  }
-
-  _msgY(){ return this.tickerActive ? this.s(134) : this.s(92); }
 
   _showPersistentMessage(text,opts){
     this._clearPersistentMessage();
@@ -920,27 +871,26 @@ class GameScene extends Phaser.Scene {
     const y=this._msgY();
     const corner=!!opts.corner&&!this.isCompact;
     const msgWidth=corner?Math.min(this.s(390),this.W*.3):Math.min(this.s(760),this._availW());
-    // Corner messages sit inside the playable area, never under the side panel.
     const msgX=corner?this.PANEL+this.s(20):this._cx();
     this.persistentMsg=this.add.text(msgX,y-this.s(6),text,{
       fontFamily:CityTheme.heading,fontSize:this.s(corner?15:18),color:'#173b40',
       align:corner?'left':'center',wordWrap:{width:msgWidth},
       backgroundColor:'#fffbf1',padding:{x:this.s(22),y:this.s(13)},lineSpacing:this.s(5),stroke:'#fffbf1',strokeThickness:1
     }).setOrigin(corner?0:0.5,0).setDepth(48).setAlpha(0);
-    // Anchor the top edge under the header so multi-line text is never cut off.
     const top=y;
     this.persistentMsg.y=top-this.s(6);
     this.tweens.add({targets:this.persistentMsg,alpha:1,y:top,duration:600});
   }
-  _clearPersistentMessage(){ if(this.persistentMsg){this.tweens.killTweensOf(this.persistentMsg);this.persistentMsg.destroy();this.persistentMsg=null;} }
+  _clearPersistentMessage(){
+    if(this._guideBox){try{this._guideBox.destroy();}catch(e){}this._guideBox=null;}
+    if(this._guideBtn){try{this._guideBtn.destroy();}catch(e){}this._guideBtn=null;}
+    if(this.persistentMsg){this.tweens.killTweensOf(this.persistentMsg);this.persistentMsg.destroy();this.persistentMsg=null;}
+  }
 
   _showDropRetry(){
     if(this.dropFeedbackTimer){this.dropFeedbackTimer.remove(false);this.dropFeedbackTimer=null;}
     if(this.dropFeedback){this.tweens.killTweensOf(this.dropFeedback);this.dropFeedback.destroy();}
-    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    this.dropFeedback=this.add.text(this._cx(),this.H-this.s(92),de
-      ? 'Noch einmal versuchen — lege die Münze in die Mitte eines Viertels.'
-      : 'Try again — drop the coin on the centre of a district.',{
+    this.dropFeedback=this.add.text(this._cx(),this.H-this.s(92),this._tr('guide.dropRetry','Try again — drop the coin on the centre of a district.'),{
       fontFamily:CityTheme.heading,fontSize:this.s(16),color:'#173b40',align:'center',
       backgroundColor:'#fffbf1',padding:{x:this.s(18),y:this.s(11)}
     }).setOrigin(0.5).setDepth(80).setAlpha(0);
@@ -952,41 +902,29 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  // fadeDur lets specific callers (e.g. the Level 8 university reveal) use a
-  // slower, gentler fade than the default so it doesn't visually collide
-  // with whatever appears right after it.
   _tempMessage(text,dur,fadeDur){
     fadeDur = fadeDur || 800;
     const m=this.add.text(this._cx(),this.H-this.s(120),text,{
       fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#173b40',
-      align:'center',backgroundColor:'#fffbf1',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5)
+      align:'center',backgroundColor:'#fffbf1',padding:{x:this.s(20),y:this.s(12)},lineSpacing:this.s(5),
+      wordWrap:{width:this._availW()}
     }).setOrigin(0.5).setDepth(66).setAlpha(0);
     this.tweens.add({targets:m,alpha:1,y:this.H-this.s(128),duration:fadeDur,hold:dur?dur*.8:4000,yoyo:true,onComplete:()=>m.destroy()});
   }
 
-  // Consequences remain visible long enough to read, then advance without
-  // requiring a second acknowledgement click.
   _showConsequence(text,onContinue,opts){
-    // Short, readable pause scaled to the text; a tap skips ahead.
     const readMs=Math.max(1760,Math.min(3200,1040+String(text||'').length*16));
     opts = Object.assign({auto:true,autoDelay:readMs},opts||{});
-    // Clearing any existing world button/timer here (not just on level
-    // transitions) is what stops Continue buttons from stacking if this
-    // method is ever called again before a previous button's callback fired.
     this._clearWorldBtn();
     this._clearConsequence(); this._clearDecisionPanel();
     const cx=this._cx();
     const pw=Math.min(this.s(720),this._availW()), ph=this.s(104), px=cx-pw/2, py=this.H-this.s(186);
 
-    // The city stays visible behind the result: only a light veil plus a
-    // stronger shade behind the message band, so the player can actually
-    // see the consequence they caused instead of a black screen.
     const dim=this.add.graphics();
     dim.fillStyle(0x173b40, 0.12);
     dim.fillRect(0, 0, this.W, this.H);
     dim.fillStyle(0x173b40, 0.22);
     dim.fillRect(0, py-this.s(26), this.W, this.H-(py-this.s(26)));
-
 
     const bg=this.add.graphics();
     bg.fillStyle(0xfffbf1,0.95); bg.fillRoundedRect(px,py,pw,ph,this.s(12));
@@ -1002,7 +940,7 @@ class GameScene extends Phaser.Scene {
       const rw=this.s(120), rh=this.s(30);
       const rx=px+pw-rw-this.s(12), ry=py+ph+this.s(10);
       const rg=this.add.graphics();
-      const rTxt=this.add.text(rx+rw/2, ry+rh/2, (typeof currentLang!=='undefined'&&currentLang==='de')?'↺ Wiederholen':'↺ Retry level',{
+      const rTxt=this.add.text(rx+rw/2, ry+rh/2, this._tr('game.retry','↺ Retry level'),{
         fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a'}).setOrigin(0.5);
       const drawR=(hv)=>{ rg.clear();
         rg.fillStyle(0x0b1725,hv?1:0.85); rg.fillRoundedRect(rx,ry,rw,rh,this.s(7));
@@ -1032,19 +970,15 @@ class GameScene extends Phaser.Scene {
       return;
     }
 
-    // The button itself is created after a short delay so it doesn't appear
-    // instantly on top of the consequence text. That delay is tracked so it
-    // can be cancelled if the level changes before it fires.
     this.worldBtnTimer = this.time.delayedCall(1100,()=>{
       this.worldBtnTimer=null;
-      const lbl=(typeof currentLang!=='undefined'&&currentLang==='de')?'Weiter →':'Continue →';
-      this.worldBtn=new WorldButton(this,cx,this.H-this.s(262),lbl,()=>{this.worldBtn=null;this._clearConsequence();if(onContinue)onContinue();});
+      this.worldBtn=new WorldButton(this,cx,this.H-this.s(262),this._tr('game.continue','Continue →'),()=>{this.worldBtn=null;this._clearConsequence();if(onContinue)onContinue();});
     });
   }
   _clearConsequence(){ if(this.consequencePanel){this.tweens.killTweensOf(this.consequencePanel);this.consequencePanel.destroy();this.consequencePanel=null;} }
 
   _showDecisionPanel(options,cb){
-    if (typeof ScoringEngine!=='undefined') ScoringEngine.startTimer(); // deliberation time starts when choices appear
+    if (typeof ScoringEngine!=='undefined') ScoringEngine.startTimer();
     this._clearDecisionPanel(); this._clearConsequence();
     const cx=this._cx();
     const cols=options.length;
@@ -1076,7 +1010,12 @@ class GameScene extends Phaser.Scene {
       const hit=this.add.rectangle(bx+btnW/2,by+btnH/2,btnW-this.s(4),btnH-this.s(2),0xffffff,0)
         .setInteractive({useHandCursor:true});
       hit.on('pointerover',()=>draw(true)); hit.on('pointerout',()=>draw(false));
-      hit.on('pointerdown',()=>{this._shake(70,0.002);this._clearDecisionPanel();if(cb)cb(o.value);});
+      hit.on('pointerdown',()=>{
+        // Resume AudioContext on first user gesture (Bug #10)
+        if(this._audioCtx && this._audioCtx.state==='suspended') this._audioCtx.resume();
+        this._playClick();
+        this._shake(70,0.002);this._clearDecisionPanel();if(cb)cb(o.value);
+      });
       this.decisionPanel.add(hit);
     });
     this.decisionPanel.y=this.s(80);
@@ -1107,5 +1046,197 @@ class GameScene extends Phaser.Scene {
     if(!this.roads.quiet || this.roads.visitor) this.roads.update(delta,night);
 
     this.districts.forEach(d=>d.update(time,delta));
+  }
+
+  // ══ Bug #10 — Web Audio sound system ══
+  _initAudio() {
+    try {
+      this._audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      this._muted = false;
+      this._ambientNode = null;
+      this._startAmbient();
+    } catch(e) { this._audioCtx = null; }
+  }
+
+  _startAmbient() {
+    if (!this._audioCtx || this._muted) return;
+    const ctx = this._audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(55, ctx.currentTime);
+    gain.gain.setValueAtTime(0.04, ctx.currentTime);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start();
+    this._ambientNode = { osc, gain };
+  }
+
+  _stopAmbient() {
+    if (this._ambientNode) {
+      try { this._ambientNode.osc.stop(); } catch(e) {}
+      this._ambientNode = null;
+    }
+  }
+
+  _playClick() {
+    if (!this._audioCtx || this._muted) return;
+    const ctx = this._audioCtx;
+    const osc = ctx.createOscillator();
+    const gain = ctx.createGain();
+    osc.frequency.setValueAtTime(440, ctx.currentTime);
+    osc.frequency.exponentialRampToValueAtTime(220, ctx.currentTime + 0.1);
+    gain.gain.setValueAtTime(0.3, ctx.currentTime);
+    gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+    osc.connect(gain); gain.connect(ctx.destination);
+    osc.start(); osc.stop(ctx.currentTime + 0.15);
+  }
+
+  _playTransition() {
+    if (!this._audioCtx || this._muted) return;
+    const ctx = this._audioCtx;
+    [261, 329, 392].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.12);
+      gain.gain.linearRampToValueAtTime(0.2, ctx.currentTime + i * 0.12 + 0.05);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.12 + 0.5);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.12);
+      osc.stop(ctx.currentTime + i * 0.12 + 0.5);
+    });
+  }
+
+  _playCelebration() {
+    if (!this._audioCtx || this._muted) return;
+    const ctx = this._audioCtx;
+    [523, 659, 784, 1046].forEach((freq, i) => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = 'triangle';
+      osc.frequency.value = freq;
+      gain.gain.setValueAtTime(0, ctx.currentTime + i * 0.08);
+      gain.gain.linearRampToValueAtTime(0.25, ctx.currentTime + i * 0.08 + 0.04);
+      gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + i * 0.08 + 0.6);
+      osc.connect(gain); gain.connect(ctx.destination);
+      osc.start(ctx.currentTime + i * 0.08);
+      osc.stop(ctx.currentTime + i * 0.08 + 0.7);
+    });
+  }
+
+  _toggleMute() {
+    this._muted = !this._muted;
+    if (this._muted) {
+      this._stopAmbient();
+    } else {
+      if (this._audioCtx && this._audioCtx.state === 'suspended') {
+        this._audioCtx.resume();
+      }
+      this._startAmbient();
+    }
+    if (this._muteBtn) this._muteBtn.setText(this._muted ? this._tr('game.unmute', '🔇 Unmute') : this._tr('game.mute', '🔊 Mute'));
+  }
+
+  _addMuteButton() {
+    this._muteBtn = this.add.text(this.W - this.s(10), this.s(10), this._tr('game.mute', '🔊 Mute'), {
+      fontFamily: CityTheme.body, fontSize: this.s(12), color: '#7dbfc8',
+      backgroundColor: '#0d2b2e', padding: { x: this.s(8), y: this.s(4) }
+    }).setOrigin(1, 0).setDepth(200).setInteractive({ useHandCursor: true });
+    this._muteBtn.on('pointerdown', () => this._toggleMute());
+  }
+
+  // ══ Bug #4 — City tour at level 1 start ══
+  _cityTour(done) {
+    const steps = [
+      {
+        title: this._tr('tour.step1.title', '🏙 Welcome to Your City!'),
+        text: this._tr('tour.step1.text', 'This is your city dashboard. The top bar (HUD) shows the city name, current year, and level. Watch it update as your city grows!')
+      },
+      {
+        title: this._tr('tour.step2.title', '🏘 Your Districts'),
+        text: this._tr('tour.step2.text', 'Each coloured area on the map is a district: Housing, Transport, Technology, and Energy. Each district has a different risk and growth profile.')
+      },
+      {
+        title: this._tr('tour.step3.title', '📊 Stats Panel'),
+        text: this._tr('tour.step3.text', 'On the left you can see three key stats: Happiness, Development, and Resources. Every decision you make affects these numbers.')
+      },
+      {
+        title: this._tr('tour.step4.title', '🗳 Decision Area'),
+        text: this._tr('tour.step4.text', 'At the bottom of the screen you\'ll see decision panels. Read each option carefully — your choices have lasting consequences for the city!')
+      },
+      {
+        title: this._tr('tour.step5.title', '🏆 Level Progress'),
+        text: this._tr('tour.step5.text', 'Complete each level by making a key decision. There are 10 levels total. Each one teaches a different lesson about wealth and city management.')
+      }
+    ];
+
+    let currentStep = 0;
+    let tourOverlay = null;
+    let tourBg = null;
+    let tourTitle = null;
+    let tourText = null;
+    let nextBtn = null;
+    let skipBtn = null;
+
+    const cleanup = () => {
+      [tourOverlay, tourBg, tourTitle, tourText, nextBtn, skipBtn].forEach(el => {
+        if (el) { try { el.destroy(); } catch(e) {} }
+      });
+      tourOverlay = tourBg = tourTitle = tourText = nextBtn = skipBtn = null;
+    };
+
+    const showStep = (idx) => {
+      cleanup();
+      if (idx >= steps.length) return;
+
+      const step = steps[idx];
+      const cx = this._cx();
+      const cy = this.H / 2;
+      const pw = Math.min(this.s(560), this._availW());
+      const ph = this.s(260);
+      const px = cx - pw / 2;
+      const py = cy - ph / 2;
+
+      tourOverlay = this.add.graphics().setDepth(180);
+      tourOverlay.fillStyle(0x000000, 0.45);
+      tourOverlay.fillRect(0, 0, this.W, this.H);
+
+      tourBg = this.add.graphics().setDepth(181);
+      tourBg.fillStyle(0xfffbf1, 0.97);
+      tourBg.fillRoundedRect(px, py, pw, ph, this.s(14));
+      tourBg.lineStyle(this.s(2), 0x296b72, 0.8);
+      tourBg.strokeRoundedRect(px, py, pw, ph, this.s(14));
+
+      tourTitle = this.add.text(cx, py + this.s(26), step.title, {
+        fontFamily: CityTheme.heading, fontSize: this.s(26), color: '#173b40',
+        align: 'center', fontStyle: '700'
+      }).setOrigin(0.5, 0).setDepth(182);
+
+      tourText = this.add.text(cx, py + this.s(60), step.text, {
+        fontFamily: CityTheme.body, fontSize: this.s(19), color: '#2a5a60',
+        align: 'center', wordWrap: { width: pw - this.s(48) }, lineSpacing: this.s(6)
+      }).setOrigin(0.5, 0).setDepth(182);
+
+      const stepLabel = (idx + 1) + ' / ' + steps.length;
+      const stepTxt = this.add.text(cx, py + ph - this.s(14), stepLabel, {
+        fontFamily: CityTheme.body, fontSize: this.s(14), color: '#7dbfc8'
+      }).setOrigin(0.5, 1).setDepth(182);
+
+      const nextLabel = idx < steps.length - 1 ? this._tr('tour.next', 'Next →') : this._tr('tour.done', 'Start Game →');
+      nextBtn = this.add.text(cx + this.s(70), py + ph + this.s(14), nextLabel, {
+        fontFamily: CityTheme.body, fontSize: this.s(17), color: '#fffbf1',
+        backgroundColor: '#296b72', padding: { x: this.s(20), y: this.s(11) }
+      }).setOrigin(0.5, 0).setDepth(182).setInteractive({ useHandCursor: true });
+      nextBtn.on('pointerdown', () => { cleanup(); try { stepTxt.destroy(); } catch(e) {} if (idx + 1 >= steps.length) { if (typeof done === 'function') done(); } else { showStep(idx + 1); } });
+
+      skipBtn = this.add.text(cx - this.s(70), py + ph + this.s(14), this._tr('tour.skip', 'Skip Tour'), {
+        fontFamily: CityTheme.body, fontSize: this.s(16), color: '#7dbfc8',
+        backgroundColor: '#0d2b2e', padding: { x: this.s(16), y: this.s(11) }
+      }).setOrigin(0.5, 0).setDepth(182).setInteractive({ useHandCursor: true });
+      skipBtn.on('pointerdown', () => { cleanup(); try { stepTxt.destroy(); } catch(e) {} if (typeof done === 'function') done(); });
+    };
+
+    showStep(0);
   }
 }

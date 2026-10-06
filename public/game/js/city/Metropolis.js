@@ -71,8 +71,8 @@ class Metropolis {
     this.districtPoints = [
       p(0.115, 0.430),  // Housing — west bank old town
       p(0.635, 0.195),  // Transport — moved right and up, clear of the avenue
-      p(0.500, 0.820),  // Technology — shifted left into the south-east office streets
-      p(0.900, 0.195),  // Energy — solar field lifted farther above the hill road
+      p(0.800, 0.820),  // Technology — right side of map
+      p(0.900, 0.350),  // Energy — on the hills, lower
     ];
 
 
@@ -301,11 +301,6 @@ class Metropolis {
   }
 
   _drawDusk() {
-    // A single, deep night layer sitting UNDER every animated light
-    // (depth 3, below the anim layer at 4). Real dark-mode night: the
-    // ground and blocks go dark, while windows, headlights, street lamps
-    // and signage stay at full brightness on top instead of being washed
-    // out by a grey film over the whole screen.
     const g = this.dusk;
     g.fillStyle(0x050f22, 0.80); g.fillRect(0, 0, this.W, this.H);
     g.fillStyle(0x0b2038, 0.30); g.fillRect(0, this.H * 0.45, this.W, this.H * 0.55);
