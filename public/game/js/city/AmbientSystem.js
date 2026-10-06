@@ -86,7 +86,7 @@ class AmbientSystem {
     if(this.phase===undefined){ this.phase=0; this.phaseTarget=0; this.phaseRate=1/4000; }
     // Lighting preview (side panel): jump straight to day/dusk/night for
     // inspection without changing the story-driven schedule underneath.
-    if(this.previewPhase!==null&&this.previewPhase!==undefined){ this.phase+= (this.previewPhase-this.phase)*Math.min(1,delta/350); }
+    if(this.previewPhase!==null&&this.previewPhase!==undefined){ this.phase=this.previewPhase; }
     else {
     const step=delta*(this.phaseRate||1/4000);
     if(this.phase<this.phaseTarget) this.phase=Math.min(this.phaseTarget,this.phase+step);
