@@ -1215,7 +1215,7 @@ class GameScene extends Phaser.Scene {
     const cityTop = hudH + this.s(10), cityBottom = H - this.s(150);
     const steps = [
       { r: { x: 0, y: 0, w: W, h: hudH },
-        t: this._tr('tour.step1.title', de ? 'Die Kopfleiste' : 'The top bar'),
+        t: de ? 'Die Kopfleiste' : 'The top bar',
         b: de ? 'Hier stehen Stadtname, aktuelles Jahr und Level. Sie ändern sich, während deine Stadt wächst.' : 'City name, current year and level live here. They update as your city grows.' },
       { r: { x: P + this.s(10), y: cityTop, w: W - P - this.s(20), h: cityBottom - cityTop },
         t: de ? 'Deine vier Stadtteile' : 'Your four districts',
