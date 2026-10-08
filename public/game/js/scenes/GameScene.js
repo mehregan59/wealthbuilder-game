@@ -470,7 +470,7 @@ class GameScene extends Phaser.Scene {
 
   _spawnResourceCubes(n) {
     this.cubeTotal=n; this.cubeDropped=0;
-    const usableTop=Math.max(this._msgY()+this.s(130),this.H*this.isCompact?.38:.44);
+    const usableTop=Math.max(this._msgY()+this.s(130),this.H*(this.isCompact?.38:.44));
     if(this.isCompact){
       const gap=Math.min(this.s(70),(this.W-this.s(80))/(n-1));
       const start=this.W/2-gap*(n-1)/2;
