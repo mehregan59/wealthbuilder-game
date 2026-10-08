@@ -772,18 +772,40 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  _level10Reveal() {
+  _level10Reveal(index=0) {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    if(index<Assessment.FORECASTS.length){
+      const q=Assessment.FORECASTS[index],f=this._forecasts[index];
+      const unsure=f.pick===null,correct=f.pick===q.outcome;
+      const verdict=unsure?(de?'Keine feste Prognose':'No firm prediction'):
+        correct?(de?'✓ Deine Prognose traf ein':'✓ Your prediction matched the outcome'):
+        (de?'✗ Deine Prognose traf nicht ein':'✗ Your prediction did not match');
+      const answer=v=>v?(de?'Ja':'Yes'):(de?'Nein':'No');
+      const events=de?[
+        'Das Wohnviertel gewann an Wert.',
+        'Die Energiekosten fielen nicht um mehr als 10 %.',
+        'Technologie übertraf Verkehr nicht.',
+        'Die Zufriedenheit stieg bis zum Jahresende.'
+      ]:[
+        'Housing gained value.',
+        'Energy costs did not fall by more than 10%.',
+        'Technology did not outperform transport.',
+        'Citizen happiness finished the year higher.'
+      ];
+      this._reportModal((de?'Ergebnis ':'Outcome ')+(index+1)+' / 4',
+        q.q+'\n\n'+(de?'Deine Antwort: ':'Your answer: ')+(unsure?'50 / 50':answer(f.pick))+
+        ' · '+f.conf+'% '+(de?'sicher':'confident')+'\n\n'+events[index]+'\n'+verdict+
+        '\n\n'+(de?'Ein einzelnes Ergebnis macht eine Entscheidung nicht gut oder schlecht.':'One outcome does not make a decision good or bad.'),
+        ()=>this._level10Reveal(index+1));
+      return;
+    }
     const r=Assessment.forecastResult(this._forecasts);
     this.hud.advanceYear(1);
-    const lines=Assessment.FORECASTS.map((q,i)=>{
-      const f=this._forecasts[i],ok=f.pick===null?'–':(f.pick===q.outcome?'✔':'✘');
-      return ok+'  '+q.q+'  → '+(q.outcome?(de?'Ja':'Yes'):(de?'Nein':'No'));
-    }).join('\n');
-    const summary='\n\n'+(de?'Durchschnittliche Sicherheit: ':'Average confidence: ')+Math.round(r.avgConf*100)+'%   ·   '+(de?'Richtig: ':'Correct: ')+Math.round(r.hitRate*100)+'%'
-      +(r.gap>.1?(de?'\nDu warst sicherer, als du richtig lagst.':'\nYou were more confident than you were right.'):r.gap<-.1?(de?'\nDu lagst öfter richtig, als du erwartet hast.':'\nYou were right more often than you expected.'):(de?'\nDeine Sicherheit passte gut zu deiner Trefferquote.':'\nYour confidence matched your accuracy closely.'))
-      +(de?'\nVier Prognosen beschreiben diese Sitzung, nicht deine Persönlichkeit.':'\nFour forecasts describe this session, not your personality.');
-    this._reportModal(de?'Wie fielen die Prognosen aus?':'How did the forecasts turn out?',lines+summary,()=>this._level10Practice());
+    const summary=(de?'Durchschnittliche Sicherheit: ':'Average confidence: ')+Math.round(r.avgConf*100)+'%\n'+
+      (de?'Trefferquote: ':'Accuracy: ')+Math.round(r.hitRate*100)+'%'+
+      (r.gap>.1?(de?'\n\nDu warst sicherer, als du richtig lagst.':'\n\nYou were more confident than you were right.'):r.gap<-.1?(de?'\n\nDu lagst öfter richtig, als du erwartet hast.':'\n\nYou were right more often than you expected.'):(de?'\n\nDeine Sicherheit passte gut zu deiner Trefferquote.':'\n\nYour confidence matched your accuracy closely.'))+
+      (de?'\n\nVier Prognosen beschreiben diese Sitzung, nicht deine Persönlichkeit.':'\n\nFour forecasts describe this session, not your personality.');
+    this._reportModal(de?'Deine vier Prognosen':'Your four forecasts',summary,()=>this._level10Practice());
   }
 
   _level10Practice() {
@@ -835,30 +857,24 @@ class GameScene extends Phaser.Scene {
   }
 
   _reportModal(title, text, onClose) {
-    const cx=this._cx(), cy=this.H/2;
-    const pw=Math.min(this.s(560),this._availW()), ph=this.s(280);
-    const px=cx-pw/2, py=cy-ph/2;
+    const cx=this._cx(),pw=Math.min(this.s(680),this._availW());
+    const ink='#'+CityTheme.colors.ink.toString(16).padStart(6,'0');
+    const paper='#'+CityTheme.colors.paper.toString(16).padStart(6,'0');
+    const ttl=this.add.text(cx,0,title,{fontFamily:CityTheme.heading,fontSize:this.s(22),color:ink,fontStyle:'700',align:'center',wordWrap:{width:pw-this.s(48)}}).setOrigin(.5,0).setDepth(92);
+    const txt=this.add.text(cx,0,text,{fontFamily:CityTheme.body,fontSize:this.s(17),color:ink,align:'center',wordWrap:{width:pw-this.s(48)},lineSpacing:this.s(5)}).setOrigin(.5,0).setDepth(92);
+    const maxH=this.H-this.s(48);
+    while(ttl.height+txt.height+this.s(130)>maxH && parseInt(txt.style.fontSize,10)>this.s(12)) txt.setFontSize(parseInt(txt.style.fontSize,10)-1);
+    const ph=ttl.height+txt.height+this.s(130),py=(this.H-ph)/2,px=cx-pw/2;
     const dim=this.add.graphics().setDepth(90);
-    dim.fillStyle(0x000000,0.55); dim.fillRect(0,0,this.W,this.H);
+    dim.fillStyle(CityTheme.colors.ink,.55);dim.fillRect(0,0,this.W,this.H);
     const bg=this.add.graphics().setDepth(91);
-    bg.fillStyle(0xfffbf1,0.98); bg.fillRoundedRect(px,py,pw,ph,this.s(14));
-    bg.lineStyle(this.s(2),0x296b72,0.8); bg.strokeRoundedRect(px,py,pw,ph,this.s(14));
-    const ttl=this.add.text(cx,py+this.s(24),title,{
-      fontFamily:CityTheme.heading,fontSize:this.s(19),color:'#173b40',fontStyle:'700',align:'center'
-    }).setOrigin(0.5,0).setDepth(92);
-    const txt=this.add.text(cx,py+this.s(60),text,{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#2a5a60',
-      align:'center',wordWrap:{width:pw-this.s(48)},lineSpacing:this.s(5)
-    }).setOrigin(0.5,0).setDepth(92);
-    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const btn=this.add.text(cx,py+ph-this.s(30),this._tr('game.close','Close'),{
-      fontFamily:CityTheme.body,fontSize:this.s(14),color:'#fffbf1',
-      backgroundColor:'#296b72',padding:{x:this.s(20),y:this.s(10)}
-    }).setOrigin(0.5).setDepth(92).setInteractive({useHandCursor:true});
-    btn.on('pointerdown',()=>{
-      [dim,bg,ttl,txt,btn].forEach(e=>{try{e.destroy();}catch(e){}});
-      if(onClose)onClose();
-    });
+    CityTheme.panel(bg,px,py,pw,ph);
+    ttl.y=py+this.s(24);txt.y=ttl.y+ttl.height+this.s(18);
+    const btn=this.add.text(cx,py+ph-this.s(32),this._tr('guide.continue','Continue →'),{
+      fontFamily:CityTheme.body,fontSize:this.s(17),color:paper,
+      backgroundColor:'#'+CityTheme.colors.teal.toString(16),padding:{x:this.s(24),y:this.s(10)}
+    }).setOrigin(.5).setDepth(92).setInteractive({useHandCursor:true});
+    btn.on('pointerdown',()=>{[dim,bg,ttl,txt,btn].forEach(e=>e.destroy());if(onClose)onClose();});
   }
 
   _saveSnapshot(n){
@@ -1042,12 +1058,19 @@ class GameScene extends Phaser.Scene {
     const cols=options.length;
     const avail=this._availW();
     const btnW=Math.min(this.s(180),(avail-this.s(48)-(cols-1)*this.s(12))/cols);
-    const btnH=this.s(132);
+    const ink='#'+CityTheme.colors.ink.toString(16).padStart(6,'0');
+    const muted='#'+CityTheme.colors.muted.toString(16).padStart(6,'0');
+    const measured=options.map(o=>{
+      const label=this.add.text(0,0,o.label,{fontFamily:CityTheme.body,fontSize:this.s(16),color:ink,fontStyle:'700',align:'center',wordWrap:{width:btnW-this.s(24)}}).setOrigin(.5,0);
+      const description=this.add.text(0,0,o.desc,{fontFamily:CityTheme.body,fontSize:this.s(14),color:muted,align:'center',wordWrap:{width:btnW-this.s(24)},lineSpacing:this.s(3)}).setOrigin(.5,0);
+      return {label,description,height:this.s(39)+label.height+this.s(12)+description.height+this.s(18)};
+    });
+    const btnH=Math.max(this.s(132),...measured.map(m=>m.height));
     const panelW=cols*btnW+(cols-1)*this.s(12)+this.s(48);
     const panelH=btnH+this.s(28), panelX=cx-panelW/2, panelY=this.H-panelH-this.s(18);
     this.decisionPanel=this.add.container(0,0).setDepth(60);
     const bg=this.add.graphics();
-    bg.fillStyle(0xfffbf1,0.96); bg.fillRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
+    bg.fillStyle(CityTheme.colors.paper,0.98); bg.fillRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
     bg.lineStyle(1,0x24405f,1); bg.strokeRoundedRect(panelX,panelY,panelW,panelH,this.s(12));
     this.decisionPanel.add(bg);
     options.forEach((o,i)=>{
@@ -1058,13 +1081,9 @@ class GameScene extends Phaser.Scene {
         g.lineStyle(hv?this.s(2.4):1,o.color,hv?0.98:0.5); g.strokeRoundedRect(bx,by,btnW,btnH,this.s(9));};
       draw(false); this.decisionPanel.add(g);
       const ic=this.add.text(bx+btnW/2,by+this.s(18),o.icon,{fontSize:this.s(22)}).setOrigin(0.5);
-      const lb=this.add.text(bx+btnW/2,by+this.s(39),o.label,{
-        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',
-        fontStyle:'700',align:'center',wordWrap:{width:btnW-this.s(18)}}).setOrigin(0.5,0);
-      const descY=Math.max(by+this.s(82),lb.y+lb.height+this.s(7));
-      const de=this.add.text(bx+btnW/2,descY,o.desc,{
-        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a',
-        align:'center',wordWrap:{width:btnW-this.s(18)},lineSpacing:this.s(3)}).setOrigin(0.5,0);
+      const lb=measured[i].label,de=measured[i].description;
+      lb.setPosition(bx+btnW/2,by+this.s(39));
+      de.setPosition(bx+btnW/2,lb.y+lb.height+this.s(12));
       this.decisionPanel.add([ic,lb,de]);
       const hit=this.add.rectangle(bx+btnW/2,by+btnH/2,btnW-this.s(4),btnH-this.s(2),0xffffff,0)
         .setInteractive({useHandCursor:true});
