@@ -22,4 +22,4 @@
 - [x] Combine the opening city and first-opportunity titles, and move the station label clear of the instruction card.
 - [x] Enlarge the three starting questions, move Level 3 instructions into the empty corner, show failed-drop guidance, widen results, and make pension details toggle closed.
 
-- [ ] Fit decision and report borders to wrapped text; separate opposing trains onto dual tracks; reveal Level 10 forecast outcomes individually.
+- [x] Fit decision and report borders to wrapped text; separate opposing trains onto dual tracks; reveal Level 10 forecast outcomes individually.
