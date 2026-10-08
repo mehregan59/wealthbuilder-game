@@ -10,6 +10,8 @@
 - [x] Guides below top bar, faster pacing with tap-to-skip, vertical city coins, per-coin growth in all districts, energy cleanup + power station, river offer ship, plain status labels, Back to home fix.
 - [x] Move Energy, Transport, and Technology landmarks clear of roads; add outward Technology growth; shorten Level 8 storm; simplify result statuses and prevent text overlap.
 - [ ] Verify the complete Level 1–10 results flow in the preview.
+- [x] Restore all six Level 3 coins, the complete Level 9–10 question sequences, and the final results transition.
+- [x] Prevent option titles and descriptions from overlapping inside decision cards.
 - [x] Refine solar tilt/placement, station alignment, ship docking, and faster level openings.
 - [x] Add progression-linked day/night lighting and interactive district detail panels.
 - [x] Always open the landing page after refresh and keep Back to home visible on the final screen.

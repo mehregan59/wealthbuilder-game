@@ -176,7 +176,7 @@ class GameScene extends Phaser.Scene {
   }
 
   _msgY() {
-    const hudH = this.hud ? this.hud.height : this.s(56);
+    const hudH = this.hud && Number.isFinite(this.hud.height) ? this.hud.height : this.s(56);
     return hudH + this.s(14);
   }
 
@@ -446,23 +446,49 @@ class GameScene extends Phaser.Scene {
 
   // ══ LEVEL 3 ══
   _level3() {
-    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const ld = this._levelData(3);
-    const storyMsg = ld && ld.story ? ld.story
-      : this._tr('level3.story', 'The city has grown. Now it\'s time to expand.\nYou have resources to invest. Choose wisely.');
-    this._showPersistentMessage(storyMsg);
-    const opts = ld && ld.options ? ld.options : null;
-    this.districts.forEach((d,i)=>{
-      d.setSelectable(true,()=>this._onLevel3Choice(d,i));
-    });
-    this.cubeTotal=3;
-    this._spawnCube();
+    this._level3PlacedCubes = new Set();
+    this._level3Resolved = false;
+    this._spawnResourceCubes(6);
+    this.districts.forEach(d=>d.setSelectable(true,dd=>this._tapAllocate(dd)));
+    this._showLevel3Progress();
     this._level3Idle();
+  }
+
+  _showLevel3Progress() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const placed=this.cubeDropped||0;
+    this._showPersistentMessage(de
+      ? `600 neue Credits\nZiehe jede Münze in die Mitte eines Viertels\noder tippe ein Viertel an.\n${placed} von 6 platziert.`
+      : `600 new credits\nDrop each coin on the centre of a district\nor tap a district to send the next coin.\n${placed} of 6 placed.`,{corner:true});
+  }
+
+  _tapAllocate(district) {
+    if(this.currentLevel!==3 || this._level3Resolved) return;
+    const cube=(this.cubes||[]).find(c=>c&&!c._used&&!c.isDragging&&c.container&&c.container.active);
+    if(cube) cube._dropOnDistrict(district);
+  }
+
+  _spawnResourceCubes(n) {
+    this.cubeTotal=n; this.cubeDropped=0;
+    const usableTop=Math.max(this._msgY()+this.s(130),this.H*(this.isCompact ? 0.38 : 0.44));
+    if(this.isCompact){
+      const gap=Math.min(this.s(70),(this.W-this.s(80))/(n-1));
+      const start=this.W/2-gap*(n-1)/2;
+      for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>{
+        if(this.currentLevel===3) this.cubes.push(new ResourceCube(this,start+i*gap,this.H-this.s(70),1));
+      });
+      return;
+    }
+    const x=this.PANEL+this.s(48);
+    const gap=Math.max(this.s(48),Math.min(this.s(66),(this.H-usableTop-this.s(50))/(n-1)));
+    for(let i=0;i<n;i++) this.time.delayedCall(i*70,()=>{
+      if(this.currentLevel===3) this.cubes.push(new ResourceCube(this,x,usableTop+i*gap,1));
+    });
   }
 
   _level3Idle() {
     this._clearLevel3Idle();
-    this._level3IdleTimer = this.time.delayedCall(18000,()=>{
+    this._level3IdleTimer = this.time.delayedCall(9000,()=>{
       if(this.cubeDropped<this.cubeTotal) this._showDropRetry();
     });
   }
@@ -470,39 +496,46 @@ class GameScene extends Phaser.Scene {
     if(this._level3IdleTimer){this._level3IdleTimer.remove(false);this._level3IdleTimer=null;}
   }
 
-  _spawnCube(){
-    if(this.cubeDropped>=this.cubeTotal)return;
-    const cube=new ResourceCube(this,this._cx(),this.s(100));
-    this.cubes.push(cube);
-  }
-
   _onResourceDropped(district,value,cube) {
-    if(this.currentLevel!==3)return;
-    this.cubeDropped++;
-    district.receiveResource(value);
+    if(this.currentLevel!==3 || this._level3Resolved)return;
+    if(!this._level3PlacedCubes)this._level3PlacedCubes=new Set();
+    if(!cube||this._level3PlacedCubes.has(cube))return;
+    this._level3PlacedCubes.add(cube);
+    this.cubeDropped=this._level3PlacedCubes.size;
     this._shake(160,0.003);
-    ScoringEngine.recordDecision(3,'drop',{districtId:district.id,value});
-    this._updateStats(0,8,-10);
+    ScoringEngine.recordDecision(3,'allocate',{districtId:district.id,value});
+    this._updateStats(2,4,-3);
     if(this.cubeDropped>=this.cubeTotal){
+      this._level3Resolved=true;
       this._clearLevel3Idle();
-      this.time.delayedCall(600,()=>this._level3Outcome());
+      this.districts.forEach(d=>d.setSelectable(false));
+      const counts={};
+      (ScoringEngine.decisions||[]).filter(d=>d.level===3).forEach(d=>{counts[d.districtId]=(counts[d.districtId]||0)+1;});
+      const spread=Object.entries(counts).map(([k,n])=>`${Number(n)*100} in ${k}`).join(', ');
+      const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+      this._showPersistentMessage(de
+        ? `Alle sechs platziert.\nDeine Credits: ${spread}.\nNächstes Jahr wird ein unbekanntes Viertel getroffen.`
+        : `All six placed.\nYour credits: ${spread}.\nNext year one unknown district will be hit.`,{corner:true});
+      this.time.delayedCall(2600,()=>{this._clearPersistentMessage();this._level3Outcome();});
     } else {
-      this.time.delayedCall(400,()=>{ this._spawnCube(); this._level3Idle(); });
+      this._showLevel3Progress();
+      this._level3Idle();
     }
   }
 
   _level3Outcome() {
     this.districts.forEach(d=>d.setSelectable(false));
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const ld = this._levelData(3);
-    const resultMsg = ld && ld.outcome ? ld.outcome
-      : this._tr('level3.outcome', 'Resources invested. The city expands.\nWatch how each district develops over time.');
-    this._showConsequence(resultMsg,()=>this._nextLevel());
-  }
-
-  _onLevel3Choice(d,i) {
-    // Districts are selectable in level 3 for visual feedback only
-    // actual resource allocation is via cube drops
+    const loser=this.districts[Phaser.Math.Between(0,3)];
+    const placed=(ScoringEngine.decisions||[]).filter(d=>d.level===3&&d.districtId===loser.id).length;
+    const exposed=placed*100, lost=Math.round(exposed*.4), share=placed/(this.cubeTotal||6);
+    loser.takeDamage(8+Math.round(40*share));
+    this._shake(120+Math.round(400*share),.002+.006*share);
+    this._updateStats(-Math.round(10*share),-Math.round(15*share),0);
+    const name=de?(loser.nameDE||loser.name):loser.name;
+    this._showConsequence(de
+      ? `Das ${name}-Viertel fällt um 40 %.\nDu hattest ${exposed} Credits dort → Verlust: ${lost} Credits.`
+      : `The ${name} district fell 40%.\nYou had ${exposed} credits there → you lost ${lost} credits.`,()=>this._nextLevel());
   }
 
   // ══ LEVEL 4 ══
@@ -669,77 +702,109 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  // ══ LEVEL 9 ══
+  // ══ LEVEL 9 — The Project Review (disposition effect) ══
   _level9() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const ld = this._levelData(9);
-    const storyMsg = ld && ld.story ? ld.story
-      : this._tr('level9.story', 'Project review time.\nSome districts thrived, others struggled. How does the city allocate remaining resources?');
-    const opts = ld && ld.options ? ld.options : null;
-    this._showPersistentMessage(storyMsg);
+    this._showPersistentMessage(de
+      ? 'Die Stadt braucht Geld für das Budget im nächsten Jahr. Ein Projekt muss verkauft werden.\nAnalysten bewerten beide Projekte ab heute exakt gleich.'
+      : 'The city needs cash for next year’s budget. It must sell one project.\nAnalysts rate both with exactly the same outlook from here.');
     this._showDecisionPanel([
-      {icon:'🏆',label: opts && opts[0] ? opts[0].label : this._tr('level9.opt0','Reward success'), desc: opts && opts[0] ? opts[0].description : this._tr('level9.opt0desc','Invest in top performers'),value:'reward',color:0xddaa00},
-      {icon:'⚖️',label: opts && opts[1] ? opts[1].label : this._tr('level9.opt1','Balance the city'), desc: opts && opts[1] ? opts[1].description : this._tr('level9.opt1desc','Support struggling districts'),value:'balance',color:0x5c8ab0},
-      {icon:'🔬',label: opts && opts[2] ? opts[2].label : this._tr('level9.opt2','Invest in research'), desc: opts && opts[2] ? opts[2].description : this._tr('level9.opt2desc','Fund future innovation'),value:'research',color:0x9966cc}
+      {icon:'☀',label:de?'Solarpark verkaufen':'Sell Solar Park',desc:de?'Für 400 gekauft.\nHeute 560 wert (+40 %).':'Bought for 400.\nNow worth 560 (+40%).',value:'sell_winner',color:0x4aaa5c},
+      {icon:'🚋',label:de?'Straßenbahn verkaufen':'Sell Tram Line',desc:de?'Für 400 gekauft.\nHeute 280 wert (−30 %).':'Bought for 400.\nNow worth 280 (−30%).',value:'sell_loser',color:0xe2a840}
     ],(c)=>{
-      ScoringEngine.recordDecision(9,c);
+      ScoringEngine.recordDecision(9,c,{phase:'pair'});
       this._clearPersistentMessage();
-      const e={reward:{d:[5,12,-10],m:this._tr('level9.rewardResult','Top performers accelerate.\nThe gap between districts widens.')},
-               balance:{d:[8,5,-8],m:this._tr('level9.balanceResult','Balance restored.\nAll districts move forward together.')},
-               research:{d:[3,10,-12],m:this._tr('level9.researchResult','Research investment pays dividends.\nFuture growth looks promising.')}}[c]
-               ||{d:[0,0,0],m:'Decision recorded.'};
-      this._updateStats(e.d[0],e.d[1],e.d[2]);
-      this._showConsequence(e.m,()=>this._nextLevel());
+      this._updateStats(0,0,6);
+      const msg=c==='sell_winner'
+        ? (de?'Der Solarpark wird verkauft und der Gewinn fühlt sich gut an.\nDie Straßenbahn bleibt — gleicher Ausblick, aber der Verlust steht weiter in den Büchern.':'The Solar Park is sold and the gain feels good.\nThe Tram Line stays — its outlook is the same, but its loss is still on the books.')
+        : (de?'Die Straßenbahn wird verkauft und der Verlust wird real.\nDer Solarpark arbeitet weiter für die Stadt.':'The Tram Line is sold and the loss becomes real.\nThe Solar Park keeps working for the city.');
+      this._showConsequence(msg,()=>this._level9Twins());
     });
   }
 
-  // ══ LEVEL 10 ══
-  _level10() {
+  _level9Twins() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const ld = this._levelData(10);
-    const storyMsg = ld && ld.story ? ld.story
-      : this._tr('level10.story', 'The Planning Desk.\nThe city has grown. Now design its future.');
-    this._showPersistentMessage(storyMsg);
-    this.time.delayedCall(1200,()=>this._level10Ask());
+    this._showPersistentMessage(de
+      ? 'Zwei identische Werkstätten, gleiche Straße, gleiche Zukunft.\nDie Stadt kaufte eine früh und günstig, die andere später und teuer. Eine muss gehen.'
+      : 'Two identical workshops, same street, same future.\nThe city bought one early and cheap, the other later and expensive. One must go.');
+    this._showDecisionPanel([
+      {icon:'🔨',label:de?'Werkstatt A verkaufen':'Sell Workshop A',desc:de?'Für 200 gekauft.\nHeute 300 wert.':'Bought for 200.\nWorth 300 today.',value:'sell_gain',color:0x4aaa5c},
+      {icon:'🔨',label:de?'Werkstatt B verkaufen':'Sell Workshop B',desc:de?'Für 400 gekauft.\nHeute 300 wert.':'Bought for 400.\nWorth 300 today.',value:'sell_loss',color:0xe2a840},
+      {icon:'⚖',label:de?'Eine von beiden':'Either one',desc:de?'Gleicher Wert, gleiche Zukunft.\nDer Kaufpreis ist Vergangenheit.':'Same value, same future.\nThe price paid is history.',value:'either',color:0x5c8ab0}
+    ],(c)=>{
+      ScoringEngine.recordDecision(9,c,{phase:'twin'}); this._clearPersistentMessage();
+      this._updateStats(0,2,4);
+      this._showConsequence(de
+        ? 'Beide Werkstätten waren 300 wert und hatten dieselbe Zukunft.\nWas die Stadt einst zahlte, ändert ihre künftigen Erträge nicht.'
+        : 'Both workshops were worth 300 and had the same future.\nWhat the city once paid does not change what either will earn from here.',()=>this._nextLevel());
+    });
   }
+
+  // ══ LEVEL 10 — The Planning Desk (forecast calibration) ══
+  _level10() {
+    this._forecasts=[]; this._fcIndex=0; this._level10Ask();
+  }
+
+  _forecastOptions(){
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    return [
+      {icon:'✔',label:de?'Ja — sehr sicher':'Yes — very sure',desc:de?'90 % sicher':'90% confident',value:'y90',color:0x4aaa5c},
+      {icon:'✓',label:de?'Ja — wahrscheinlich':'Yes — probably',desc:de?'65 % sicher':'65% confident',value:'y65',color:0x4ecdc4},
+      {icon:'❓',label:de?'Keine Ahnung':'No idea',desc:'50 / 50',value:'n50',color:0x6b7a8d},
+      {icon:'✗',label:de?'Nein — wahrscheinlich':'No — probably',desc:de?'65 % sicher':'65% confident',value:'x65',color:0xe2a840},
+      {icon:'✘',label:de?'Nein — sehr sicher':'No — very sure',desc:de?'90 % sicher':'90% confident',value:'x90',color:0xe74c3c}
+    ];
+  }
+  _parseForecast(v){return{pick:v==='n50'?null:v[0]==='y',conf:parseInt(v.slice(1),10)};}
 
   _level10Ask() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const ld = this._levelData(10);
-    const opts = ld && ld.options ? ld.options : null;
-    this._showDecisionPanel([
-      {icon:'🌱',label: opts && opts[0] ? opts[0].label : this._tr('level10.opt0','Green city'), desc: opts && opts[0] ? opts[0].description : this._tr('level10.opt0desc','Prioritise sustainability'),value:'green',color:0x4aaa5c},
-      {icon:'🏙',label: opts && opts[1] ? opts[1].label : this._tr('level10.opt1','Smart city'), desc: opts && opts[1] ? opts[1].description : this._tr('level10.opt1desc','Prioritise technology'),value:'smart',color:0x5c8ab0},
-      {icon:'🫦',label: opts && opts[2] ? opts[2].label : this._tr('level10.opt2','People first'), desc: opts && opts[2] ? opts[2].description : this._tr('level10.opt2desc','Prioritise community'),value:'people',color:0xddaa00}
-    ],(c)=>{
-      ScoringEngine.recordDecision(10,c);
+    const F=Assessment.FORECASTS,i=this._fcIndex;
+    if(i>=F.length)return this._level10Reveal();
+    this._showPersistentMessage((de?'Prognose ':'Forecast ')+(i+1)+' '+(de?'von':'of')+' '+F.length+':\n'+F[i].q);
+    this._showDecisionPanel(this._forecastOptions(),(v)=>{
+      const f=this._parseForecast(v);
+      ScoringEngine.recordDecision(10,v,{phase:'forecast',id:F[i].id,pick:f.pick,conf:f.conf,outcome:F[i].outcome});
+      this._forecasts.push(Object.assign({outcome:F[i].outcome},f));
       this._clearPersistentMessage();
-      this.time.delayedCall(400,()=>this._level10Reveal(c));
+      this._fcIndex++;
+      this.time.delayedCall(250,()=>this._level10Ask());
     });
   }
 
-  _level10Reveal(choice) {
-    const e={
-      green:{d:[8,12,-10],m:this._tr('level10.greenResult','A green city emerges.\nSustainable, healthy, and resilient.')},
-      smart:{d:[5,15,-12],m:this._tr('level10.smartResult','A smart city takes shape.\nEfficient systems, data-driven decisions.')},
-      people:{d:[12,8,-8],m:this._tr('level10.peopleResult','A people-first city flourishes.\nCommunity bonds are its greatest asset.')}
-    }[choice]||{d:[0,0,0],m:'The city\'s future is set.'};
-    this._updateStats(e.d[0],e.d[1],e.d[2]);
-    this.districts.forEach(d=>d.receiveResource(2));
-    this._celebrateCity(this._tr('level10.celebrate','🏆 City Complete!'));
-    this._showConsequence(e.m,()=>this._level10Practice());
+  _level10Reveal() {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const r=Assessment.forecastResult(this._forecasts);
+    this.hud.advanceYear(1);
+    const lines=Assessment.FORECASTS.map((q,i)=>{
+      const f=this._forecasts[i],ok=f.pick===null?'–':(f.pick===q.outcome?'✔':'✘');
+      return ok+'  '+q.q+'  → '+(q.outcome?(de?'Ja':'Yes'):(de?'Nein':'No'));
+    }).join('\n');
+    const summary='\n\n'+(de?'Durchschnittliche Sicherheit: ':'Average confidence: ')+Math.round(r.avgConf*100)+'%   ·   '+(de?'Richtig: ':'Correct: ')+Math.round(r.hitRate*100)+'%'
+      +(r.gap>.1?(de?'\nDu warst sicherer, als du richtig lagst.':'\nYou were more confident than you were right.'):r.gap<-.1?(de?'\nDu lagst öfter richtig, als du erwartet hast.':'\nYou were right more often than you expected.'):(de?'\nDeine Sicherheit passte gut zu deiner Trefferquote.':'\nYour confidence matched your accuracy closely.'))
+      +(de?'\nVier Prognosen beschreiben diese Sitzung, nicht deine Persönlichkeit.':'\nFour forecasts describe this session, not your personality.');
+    this._reportModal(de?'Wie fielen die Prognosen aus?':'How did the forecasts turn out?',lines+summary,()=>this._level10Practice());
   }
 
   _level10Practice() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const summary = ScoringEngine.getSummary ? ScoringEngine.getSummary() : null;
-    const finalMsg = summary
-      ? this._tr('level10.finalWithScore', 'Journey complete. Your decisions shaped this city.\nYour score reflects your choices across all levels.')
-      : this._tr('level10.final', 'Journey complete.\nEvery decision you made shaped this city.\nYou can now explore or restart.');
-    this._showConsequence(finalMsg, ()=>{
-      this._clearConsequence();
-      this._showPersistentMessage(this._tr('level10.done', '🏙 Your city journey is complete. Well done!'));
-    }, {auto:false});
+    const P=Assessment.PRACTICE;
+    this._showPersistentMessage((de?'Eine Übungsprognose, nachdem du deine Ergebnisse gesehen hast:\n':'One practice forecast, now that you have seen your results:\n')+P.q);
+    this._showDecisionPanel(this._forecastOptions(),v=>{
+      const f=this._parseForecast(v);
+      ScoringEngine.recordDecision(10,v,{phase:'practice',id:P.id,pick:f.pick,conf:f.conf,outcome:P.outcome});
+      this._clearPersistentMessage();
+      const result=f.pick===null?(de?'Du nanntest 50/50.':'You called it 50/50.'):(f.pick===P.outcome?(de?'Du lagst richtig.':'You were right.'):(de?'Du lagst falsch.':'You were wrong.'));
+      this._updateStats(2,4,0);
+      this._showConsequence((de?'Das Verkehrsviertel erholte sich. ':'The transport district did recover. ')+result+'\n'+(de?'Gute Prognosen sind nicht immer richtig — ihre Sicherheit passt dazu, wie oft sie stimmen.':'Good forecasters are not always right — their confidence matches how often they are.'),()=>this._finish());
+    });
+  }
+
+  _finish() {
+    this._clearConsequence(); this._clearWorldBtn();
+    this.statsPanel.recordSnapshot(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources,10);
+    const overlay=this.add.graphics().setDepth(190),fade={alpha:0};
+    this.tweens.add({targets:fade,alpha:1,duration:1800,onUpdate:()=>{overlay.clear();overlay.fillStyle(0x061019,fade.alpha);overlay.fillRect(0,0,this.W,this.H);},onComplete:()=>this._toProfile()});
   }
 
   // City-wide celebration burst
@@ -977,7 +1042,7 @@ class GameScene extends Phaser.Scene {
     const cols=options.length;
     const avail=this._availW();
     const btnW=Math.min(this.s(180),(avail-this.s(48)-(cols-1)*this.s(12))/cols);
-    const btnH=this.s(100);
+    const btnH=this.s(132);
     const panelW=cols*btnW+(cols-1)*this.s(12)+this.s(48);
     const panelH=btnH+this.s(28), panelX=cx-panelW/2, panelY=this.H-panelH-this.s(18);
     this.decisionPanel=this.add.container(0,0).setDepth(60);
@@ -992,13 +1057,14 @@ class GameScene extends Phaser.Scene {
         g.fillStyle(o.color,hv?0.42:0.15); g.fillRoundedRect(bx,by,btnW,btnH,this.s(9));
         g.lineStyle(hv?this.s(2.4):1,o.color,hv?0.98:0.5); g.strokeRoundedRect(bx,by,btnW,btnH,this.s(9));};
       draw(false); this.decisionPanel.add(g);
-      const ic=this.add.text(bx+btnW/2,by+this.s(20),o.icon,{fontSize:this.s(23)}).setOrigin(0.5);
-      const lb=this.add.text(bx+btnW/2,by+this.s(50),o.label,{
+      const ic=this.add.text(bx+btnW/2,by+this.s(18),o.icon,{fontSize:this.s(22)}).setOrigin(0.5);
+      const lb=this.add.text(bx+btnW/2,by+this.s(39),o.label,{
         fontFamily:CityTheme.body,fontSize:this.s(14),color:'#173b40',
-        fontStyle:'700',align:'center',wordWrap:{width:btnW-this.s(14)}}).setOrigin(0.5);
-      const de=this.add.text(bx+btnW/2,by+this.s(78),o.desc,{
+        fontStyle:'700',align:'center',wordWrap:{width:btnW-this.s(18)}}).setOrigin(0.5,0);
+      const descY=Math.max(by+this.s(82),lb.y+lb.height+this.s(7));
+      const de=this.add.text(bx+btnW/2,descY,o.desc,{
         fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a',
-        align:'center',wordWrap:{width:btnW-this.s(14)},lineSpacing:this.s(3)}).setOrigin(0.5);
+        align:'center',wordWrap:{width:btnW-this.s(18)},lineSpacing:this.s(3)}).setOrigin(0.5,0);
       this.decisionPanel.add([ic,lb,de]);
       const hit=this.add.rectangle(bx+btnW/2,by+btnH/2,btnW-this.s(4),btnH-this.s(2),0xffffff,0)
         .setInteractive({useHandCursor:true});
