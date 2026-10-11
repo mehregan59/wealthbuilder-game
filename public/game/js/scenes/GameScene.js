@@ -1177,12 +1177,6 @@ class GameScene extends Phaser.Scene {
     const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
     wind.connect(wf); wf.connect(wg); wg.connect(bus);
     wind.start(); lfo.start(); lfo2.start(); nodes.push(wind, lfo, lfo2);
-    // Continuous soft traffic bed: distant road noise that swells and fades.
-    const tr = ctx.createBufferSource(); tr.buffer = this._noiseBuffer(8, true); tr.loop = true;
-    const tf = ctx.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = 320; tf.Q.value = 0.7;
-    const tg = ctx.createGain(); tg.gain.value = 0.09;
-    const tl = ctx.createOscillator(); tl.frequency.value = 0.11; const tlg = ctx.createGain(); tlg.gain.value = 0.05; tl.connect(tlg); tlg.connect(tg.gain);
-    tr.connect(tf); tf.connect(tg); tg.connect(bus); tr.start(); tl.start(); nodes.push(tr, tl);
     this._ambientNode = { bus, nodes };
     // 2) city life: one sound at a time, spaced randomly, like a real street.
     const schedule = () => {
