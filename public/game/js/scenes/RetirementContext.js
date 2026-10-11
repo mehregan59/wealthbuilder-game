@@ -106,7 +106,7 @@ class RetirementContext extends Phaser.Scene {
   _buildSauleSection(y,label,options) {
     const cx=this.W/2,sW=Math.min(920,this.W-56),startX=cx-sW/2;
     const cols=2,cW=Math.floor((sW-14)/cols),cH=88;
-    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50',fontStyle:'bold'});
+    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:20,color:'#173b40',fontStyle:'bold'});
     options.forEach((opt,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
       const bx=startX+col*(cW+14),by=y+26+row*(cH+12);
@@ -145,7 +145,7 @@ class RetirementContext extends Phaser.Scene {
   _buildSimpleSection(y,label,key,options,cols) {
     const cx=this.W/2,sW=Math.min(920,this.W-56),startX=cx-sW/2;
     const cW=Math.floor((sW-(cols-1)*14)/cols),cH=76;
-    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50',fontStyle:'bold'});
+    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:20,color:'#173b40',fontStyle:'bold'});
     options.forEach((opt,i)=>{
       const col=i%cols,row=Math.floor(i/cols);
       const bx=startX+col*(cW+14),by=y+26+row*(cH+10);
