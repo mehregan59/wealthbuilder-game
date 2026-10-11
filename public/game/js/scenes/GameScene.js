@@ -1170,18 +1170,24 @@ class GameScene extends Phaser.Scene {
     // 1) distant city hum + breeze: brown noise, low-passed, slowly breathing
     const wind = ctx.createBufferSource(); wind.buffer = this._noiseBuffer(6, true); wind.loop = true;
     const wf = ctx.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 520; wf.Q.value = 0.4;
-    const wg = ctx.createGain(); wg.gain.value = 0.11;
+    const wg = ctx.createGain(); wg.gain.value = 0.05;
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
     const lfoG = ctx.createGain(); lfoG.gain.value = 0.05; lfo.connect(lfoG); lfoG.connect(wg.gain);
     const lfo2 = ctx.createOscillator(); lfo2.frequency.value = 0.045;
     const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
     wind.connect(wf); wf.connect(wg); wg.connect(bus);
     wind.start(); lfo.start(); lfo2.start(); nodes.push(wind, lfo, lfo2);
+    // Continuous soft traffic bed: distant road noise that swells and fades.
+    const tr = ctx.createBufferSource(); tr.buffer = this._noiseBuffer(8, true); tr.loop = true;
+    const tf = ctx.createBiquadFilter(); tf.type = 'bandpass'; tf.frequency.value = 320; tf.Q.value = 0.7;
+    const tg = ctx.createGain(); tg.gain.value = 0.09;
+    const tl = ctx.createOscillator(); tl.frequency.value = 0.11; const tlg = ctx.createGain(); tlg.gain.value = 0.05; tl.connect(tlg); tlg.connect(tg.gain);
+    tr.connect(tf); tf.connect(tg); tg.connect(bus); tr.start(); tl.start(); nodes.push(tr, tl);
     this._ambientNode = { bus, nodes };
     // 2) city life: one sound at a time, spaced randomly, like a real street.
     const schedule = () => {
       if (!this._ambientNode) return;
-      this._ambientTimer = this.time.delayedCall(3500 + Math.random() * 6500, () => {
+      this._ambientTimer = this.time.delayedCall(1200 + Math.random() * 3000, () => {
         if (!this._ambientNode || this._muted) { schedule(); return; }
         const night = (this.nightStrength || 0) > 0.55;
         const pool = night
@@ -1209,7 +1215,7 @@ class GameScene extends Phaser.Scene {
       const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
       const f = base * (0.9 + Math.random() * 0.25);
       o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random()<.5?1.5:0.7), t + 0.07);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.02, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.06, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
       o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.1);
     }
   }
@@ -1219,7 +1225,7 @@ class GameScene extends Phaser.Scene {
     for (let i = 0; i < 18; i++) {
       const t = t0 + i * 0.07 + (i % 6 === 5 ? 0.3 : 0);
       const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 4300;
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.006, t + 0.01); g.gain.linearRampToValueAtTime(0, t + 0.04);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.02, t + 0.01); g.gain.linearRampToValueAtTime(0, t + 0.04);
       o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.05);
     }
   }
@@ -1229,7 +1235,7 @@ class GameScene extends Phaser.Scene {
     const ctx = this._audioCtx, t = ctx.currentTime, d = 2.6 + Math.random() * 1.5;
     const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, true);
     const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(700, t + d/2); f.frequency.linearRampToValueAtTime(240, t + d);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.5, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
     let last = g;
     if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); const dir = Math.random()<.5?-1:1; p.pan.setValueAtTime(-0.8*dir, t); p.pan.linearRampToValueAtTime(0.8*dir, t + d); g.connect(p); last = p; }
     src.connect(f); f.connect(g); last.connect(this._ambientNode.bus); src.start(t); src.stop(t + d);
@@ -1241,7 +1247,7 @@ class GameScene extends Phaser.Scene {
     [[0, 0.16], [0.24, 0.12]].forEach(([s, dur]) => {
       [415, 523].forEach(fr => {
         const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = fr;
-        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(0.012, t+s+0.02); g.gain.setValueAtTime(0.012, t+s+dur); g.gain.linearRampToValueAtTime(0, t+s+dur+0.04);
+        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(0.035, t+s+0.02); g.gain.setValueAtTime(0.035, t+s+dur); g.gain.linearRampToValueAtTime(0, t+s+dur+0.04);
         o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.06);
       });
     });
@@ -1254,14 +1260,14 @@ class GameScene extends Phaser.Scene {
     [[0, 330, 0.9], [1.0, 262, 1.3]].forEach(([s, fr, dur]) => {
       [1, 1.5, 2].forEach((m, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = fr * m;
-        const v = 0.016 / (i + 1);
+        const v = 0.05 / (i + 1);
         g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(v, t+s+0.12); g.gain.setValueAtTime(v, t+s+dur-0.2); g.gain.linearRampToValueAtTime(0, t+s+dur);
         o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.05);
       });
     });
     const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(5, true);
     const rf = ctx.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 180;
-    const rg = ctx.createGain(); rg.gain.setValueAtTime(0, t); rg.gain.linearRampToValueAtTime(0.2, t + 2); rg.gain.linearRampToValueAtTime(0, t + 5);
+    const rg = ctx.createGain(); rg.gain.setValueAtTime(0, t); rg.gain.linearRampToValueAtTime(0.5, t + 2); rg.gain.linearRampToValueAtTime(0, t + 5);
     src.connect(rf); rf.connect(rg); rg.connect(this._ambientNode.bus); src.start(t); src.stop(t + 5);
   }
 
@@ -1272,8 +1278,8 @@ class GameScene extends Phaser.Scene {
     const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 1.6;
     const g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
     for (let x = 0; x < d; x += 0.16 + Math.random() * 0.12) {
-      g.gain.linearRampToValueAtTime(0.012 + Math.random() * 0.02, t0 + x + 0.05);
-      g.gain.linearRampToValueAtTime(0.003, t0 + x + 0.14);
+      g.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.06, t0 + x + 0.05);
+      g.gain.linearRampToValueAtTime(0.01, t0 + x + 0.14);
       bp.frequency.setValueAtTime(380 + Math.random() * 420, t0 + x);
     }
     g.gain.linearRampToValueAtTime(0, t0 + d);
@@ -1284,7 +1290,7 @@ class GameScene extends Phaser.Scene {
     const ctx = this._audioCtx, t = ctx.currentTime;
     [1, 2.76, 5.4].forEach((m, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 660 * m;
-      g.gain.setValueAtTime(0.014 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
+      g.gain.setValueAtTime(0.035 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
       o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 1.7);
     });
   }
