@@ -5,7 +5,7 @@ class RetirementContext extends Phaser.Scene {
     this.W = this.scale.width;
     this.H = this.scale.height;
     this._yearsFromAge = this._deriveYears();
-    this.selections = { saule: [], buildexp: null, years: this._yearsFromAge.value };
+    this.selections = { saule: [], buildexp: (window.playerInfo&&window.playerInfo.experience)||'none', years: this._yearsFromAge.value };
     this._sectionCards = {};
     this._activeTooltip = null;
     this._btnBound = false;
@@ -36,6 +36,7 @@ class RetirementContext extends Phaser.Scene {
 
   _drawBackground() {
     this.backdrop = CityTheme.drawBackdrop(this, { depth:-2 });
+    CityTheme.contentCard(this);
   }
 
   _buildUI() {
@@ -87,10 +88,9 @@ class RetirementContext extends Phaser.Scene {
       {label:'📖 Learning the basics',sub:'I know the basics and save something',value:'basic'},
       {label:'📈 Already investing',sub:'I invest actively and regularly',value:'experienced'}
     ];
-    this._buildSimpleSection(486,q2Label,'buildexp',expOpts,3);
-    this._buildContinueBtn(632);
+    this._buildContinueBtn(420);
 
-    const sk=this.add.text(cx,700,
+    const sk=this.add.text(cx,500,
       this._tr('ui.retirement.skip','Skip and start building →'),
       {fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     sk.on('pointerover',()=>sk.setColor('#173b40'));
@@ -217,7 +217,7 @@ class RetirementContext extends Phaser.Scene {
 
   _checkAll() {
     const {saule,buildexp}=this.selections;
-    if(saule.length>0 && buildexp){this._drawBtn(true);if(!this._btnBound){this._btnBound=true;this.continueBtnHit.setInteractive({useHandCursor:true});this.continueBtnHit.on('pointerdown',()=>this._goNext());this.tweens.add({targets:this.continueBtnGfx,alpha:{from:1,to:0.75},duration:700,yoyo:true,repeat:-1});}}
+    if(saule.length>0){this._drawBtn(true);if(!this._btnBound){this._btnBound=true;this.continueBtnHit.setInteractive({useHandCursor:true});this.continueBtnHit.on('pointerdown',()=>this._goNext());this.tweens.add({targets:this.continueBtnGfx,alpha:{from:1,to:0.75},duration:700,yoyo:true,repeat:-1});}}
   }
 
   _goNext() {

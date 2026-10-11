@@ -29,12 +29,13 @@ class StartingQuestions extends Phaser.Scene {
       ];
     }
     this._drawBackground();
-    this.tutorial.showBriefing(()=>this._nameCity());
+    this.tutorial.showBriefing(()=>this._renderQuestion());
     this._fadeIn();
   }
 
   _drawBackground() {
     this.backdrop = CityTheme.drawBackdrop(this, { depth:-2 });
+    CityTheme.contentCard(this);
   }
 
   _nameCity() {

@@ -3,7 +3,7 @@ class PlayerSetup extends Phaser.Scene {
 
   create() {
     this.W = this.scale.width; this.H = this.scale.height;
-    this.selections = { age:null, employment:null, experience:null };
+    this.selections = { age:null, employment:'other', experience:null };
     this._sectionCards = {};
     this._continueBtnY = 560;
     this._btnBound = false;
@@ -15,6 +15,7 @@ class PlayerSetup extends Phaser.Scene {
 
   _drawBackground() {
     this.backdrop = CityTheme.drawBackdrop(this, { depth:-2 });
+    CityTheme.contentCard(this);
   }
 
   _tr(key, fallback) {
@@ -59,14 +60,11 @@ class PlayerSetup extends Phaser.Scene {
     this._buildSection(compact?150:180,
       this._tr('ui.playerSetup.ageLabel','Your age group'),
       'age', ageOptions, compact?3:5);
-    this._buildSection(compact?300:345,
-      this._tr('ui.playerSetup.employmentLabel','Your employment situation'),
-      'employment', empOptions, compact?3:5);
-    this._buildSection(compact?450:510,
+    this._buildSection(compact?320:380,
       this._tr('ui.playerSetup.experienceLabel','Previous investment experience'),
       'experience', expOptions, 3);
-    this._buildContinueBtn(compact?560:640);
-    this._buildSkipLink(compact?630:710);
+    this._buildContinueBtn(compact?440:540);
+    this._buildSkipLink(compact?520:620);
   }
 
   _buildSkipLink(y) {
@@ -121,7 +119,7 @@ class PlayerSetup extends Phaser.Scene {
 
   _checkAll() {
     const {age,employment,experience}=this.selections;
-    if(age&&employment&&experience){
+    if(age&&experience){
       this.continueBtnReady=true; this._drawBtn(true);
       if(!this._btnBound){
         this._btnBound=true;
