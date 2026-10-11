@@ -58,6 +58,7 @@ class StatsPanel {
       const bFill = this.scene.add.graphics();
       this.bars[st.id] = { fill:bFill, color:st.color, x:px+pad, y:y+this.s(12),
                            maxW:pw-pad*2, h:this.s(8), disp:50, text:vt };
+      if(st.id==='resources'){ this.fundsY=y; this.scene.statsPanel=this.scene.statsPanel||this; }
       this.container.add([ic,lb,vt,bBg,bFill]);
       y += this.s(40);
     });

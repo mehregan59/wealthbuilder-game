@@ -34,6 +34,17 @@ const CityTheme = {
     return g;
   },
 
+  // One solid paper card behind pre-game content so text never sits on scenery.
+  contentCard(scene) {
+    const W=scene.scale.width,H=scene.scale.height,m=W<700?10:24;
+    const w=Math.min(1260,W-m*2),x=(W-w)/2,y=m,h=H-m*2;
+    const g=scene.add.graphics().setDepth(-1);
+    g.fillStyle(this.colors.paper,0.97); g.fillRoundedRect(x,y,w,h,16);
+    g.lineStyle(1.5,this.colors.gold,0.7); g.strokeRoundedRect(x,y,w,h,16);
+    g.fillStyle(this.colors.gold,0.95); g.fillRect(x+10,y,w-20,4);
+    return g;
+  },
+
   panel(g,x,y,w,h,accent) {
     g.fillStyle(this.colors.paper,0.96); g.fillRoundedRect(x,y,w,h,10);
     g.lineStyle(1,accent||this.colors.teal,0.28); g.strokeRoundedRect(x,y,w,h,10);

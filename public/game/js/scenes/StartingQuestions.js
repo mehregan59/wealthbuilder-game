@@ -29,12 +29,13 @@ class StartingQuestions extends Phaser.Scene {
       ];
     }
     this._drawBackground();
-    this.tutorial.showBriefing(()=>this._nameCity());
+    this.tutorial.showBriefing(()=>this._renderQuestion());
     this._fadeIn();
   }
 
   _drawBackground() {
     this.backdrop = CityTheme.drawBackdrop(this, { depth:-2 });
+    CityTheme.contentCard(this);
   }
 
   _nameCity() {
@@ -104,7 +105,7 @@ class StartingQuestions extends Phaser.Scene {
     const de=(lang==='de');
     const cx=this.W/2,q=this.questions[this.currentQ];
     const stepGfx=this.add.graphics(); this._drawStepDots(stepGfx); this.questionElements.push(stepGfx);
-    const qNum=this.add.text(cx,45,`${this.currentQ+1} / ${this.questions.length}`,{fontFamily:CityTheme.body,fontSize:15,color:'#55777a'}).setOrigin(0.5).setAlpha(0);
+    const qNum=this.add.text(cx,45,`${this.currentQ+1} / ${this.questions.length}`,{fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50'}).setOrigin(0.5).setAlpha(0);
     this.questionElements.push(qNum); this.tweens.add({targets:qNum,alpha:1,duration:300});
     const bbg=this.add.graphics();bbg.fillStyle(0xd7e3d5,1);bbg.fillRoundedRect(cx-200,62,400,6,3);
     const bfill=this.add.graphics();bfill.fillStyle(0xe0a82e,0.8);bfill.fillRoundedRect(cx-200,62,400*((this.currentQ+1)/this.questions.length),6,3);
@@ -119,9 +120,9 @@ class StartingQuestions extends Phaser.Scene {
     q.options.forEach((opt,i)=>{
       const by=startY+i*(optH+optSp),bx=cx-optW/2;
       const card=this.add.graphics().setAlpha(0);
-      const lbl=this.add.text(cx,by+optH/2,opt.label,{fontFamily:CityTheme.body,fontSize:this.W<700?19:24,color:'#55777a',align:'center',wordWrap:{width:optW-36}}).setOrigin(0.5).setAlpha(0);
+      const lbl=this.add.text(cx,by+optH/2,opt.label,{fontFamily:CityTheme.body,fontSize:this.W<700?19:24,color:'#2b4d50',align:'center',wordWrap:{width:optW-36}}).setOrigin(0.5).setAlpha(0);
       this.questionElements.push(card,lbl);
-      const draw=(hover)=>{card.clear();if(hover){card.fillStyle(0xe0a82e,0.12);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(2,0xe0a82e,0.7);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#9b6c12');}else{card.fillStyle(0xf2e7c9,0.85);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(1,0x9bb5ae,1);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#55777a');}};
+      const draw=(hover)=>{card.clear();if(hover){card.fillStyle(0xe0a82e,0.3);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(2,0xe0a82e,0.7);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#0d1a2a');}else{card.fillStyle(0xfffbf1,1);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(1,0x9bb5ae,1);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#2b4d50');}};
       draw(false);
       this.tweens.add({targets:[card,lbl],alpha:1,duration:350,delay:200+i*100});
       const hit=this.add.rectangle(cx,by+optH/2,optW,optH,0xffffff,0).setInteractive({useHandCursor:true});
@@ -129,7 +130,7 @@ class StartingQuestions extends Phaser.Scene {
       hit.on('pointerover',()=>draw(true)); hit.on('pointerout',()=>draw(false));
       hit.on('pointerdown',()=>{
         this.cameras.main.shake(80,0.003);
-        card.clear();card.fillStyle(0xe0a82e,0.25);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(2,0xe0a82e,1);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#9b6c12');
+        card.clear();card.fillStyle(0xe0a82e,0.6);card.fillRoundedRect(bx,by,optW,optH,10);card.lineStyle(2,0xe0a82e,1);card.strokeRoundedRect(bx,by,optW,optH,10);lbl.setColor('#0d1a2a');
         if(typeof ScoringEngine!=='undefined')ScoringEngine.recordStartingAnswer(this.currentQ,opt.value);
         this.answers[this.currentQ]=opt.value;
         this.time.delayedCall(300,()=>this._nextQuestion());
@@ -138,8 +139,8 @@ class StartingQuestions extends Phaser.Scene {
     if(this.currentQ>0){
       const backLabel = (typeof t === 'function') ? t('questions.back') : null;
       const backTxt = backLabel || (de?'← Zurück':'← Back');
-      const back=this.add.text(cx-220,this.H-55,backTxt,{fontFamily:CityTheme.body,fontSize:16,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
-      back.on('pointerover',()=>back.setColor('#365d60')); back.on('pointerout',()=>back.setColor('#55777a'));
+      const back=this.add.text(cx-220,this.H-55,backTxt,{fontFamily:CityTheme.body,fontSize:16,color:'#2b4d50'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+      back.on('pointerover',()=>back.setColor('#173b40')); back.on('pointerout',()=>back.setColor('#2b4d50'));
       back.on('pointerdown',()=>{this.currentQ--;this._renderQuestion();});
       this.questionElements.push(back);
     }

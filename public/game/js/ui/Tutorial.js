@@ -96,10 +96,10 @@ class Tutorial {
     const bw = Math.min(this.s(centred?918:620), W-(centred?this.s(80):panelL+this.s(70)));
 
     const title=this.scene.add.text(0,0,titleTxt,{
-      fontFamily:CityTheme.heading, fontSize:this.s(centred?31:19), color:'#296b72'
+      fontFamily:CityTheme.heading, fontSize:this.s(centred?31:22), color:'#173b40', fontStyle:'700'
     }).setOrigin(0.5,0).setDepth(131);
     const body=this.scene.add.text(0,0,bodyTxt,{
-      fontFamily:CityTheme.body, fontSize:this.s(centred?22:15), color:'#365d60',
+      fontFamily:CityTheme.body, fontSize:this.s(centred?22:16), color:'#173b40',
       align:'center', lineSpacing:this.s(centred?11:8), wordWrap:{width:bw-this.s(60)}
     }).setOrigin(0.5,0).setDepth(131);
 
@@ -169,7 +169,7 @@ class Tutorial {
     this.scene.tweens.add({targets:this.card,alpha:1,duration:420});
     // Per-level guides should help briefly, then reveal the playable city
     // without waiting indefinitely for a click.
-    if(!centred)this.autoCloseTimer=this.scene.time.delayedCall(6900,complete);
+    // Cards stay until the player taps Continue.
   }
 
   hide(){

@@ -3,7 +3,7 @@ class PlayerSetup extends Phaser.Scene {
 
   create() {
     this.W = this.scale.width; this.H = this.scale.height;
-    this.selections = { age:null, employment:null, experience:null };
+    this.selections = { age:null, employment:'other', experience:null };
     this._sectionCards = {};
     this._continueBtnY = 560;
     this._btnBound = false;
@@ -15,6 +15,7 @@ class PlayerSetup extends Phaser.Scene {
 
   _drawBackground() {
     this.backdrop = CityTheme.drawBackdrop(this, { depth:-2 });
+    CityTheme.contentCard(this);
   }
 
   _tr(key, fallback) {
@@ -35,10 +36,10 @@ class PlayerSetup extends Phaser.Scene {
       {fontFamily:CityTheme.heading,fontSize:compact?28:40,color:'#000000'}).setOrigin(0.5);
     this.add.text(cx,compact?92:112,
       this._tr('ui.playerSetup.subtitle','This helps personalize your experience. It never changes the game.'),
-      {fontFamily:CityTheme.body,fontSize:compact?14:19,color:'#55777a',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+      {fontFamily:CityTheme.body,fontSize:compact?14:19,color:'#2b4d50',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
     this.add.text(cx,compact?118:142,
       this._tr('ui.playerSetup.disclosure','Note: this session observes your decision patterns and explains them to you in the final results.'),
-      {fontFamily:CityTheme.body,fontSize:compact?11:15,color:'#55777a',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+      {fontFamily:CityTheme.body,fontSize:compact?11:15,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
 
     const ageOptions = [
       {label:'18–27',value:'18-27'},{label:'28–37',value:'28-37'},
@@ -59,22 +60,19 @@ class PlayerSetup extends Phaser.Scene {
     this._buildSection(compact?150:180,
       this._tr('ui.playerSetup.ageLabel','Your age group'),
       'age', ageOptions, compact?3:5);
-    this._buildSection(compact?300:345,
-      this._tr('ui.playerSetup.employmentLabel','Your employment situation'),
-      'employment', empOptions, compact?3:5);
-    this._buildSection(compact?450:510,
+    this._buildSection(compact?280:330,
       this._tr('ui.playerSetup.experienceLabel','Previous investment experience'),
       'experience', expOptions, 3);
-    this._buildContinueBtn(compact?560:640);
-    this._buildSkipLink(compact?630:710);
+    this._buildContinueBtn(compact?400:480);
+    this._buildSkipLink(compact?475:560);
   }
 
   _buildSkipLink(y) {
     const lbl = this._tr('ui.playerSetup.skip','Skip and start building →');
     const t=this.add.text(this.W/2,y,lbl,
-      {fontFamily:CityTheme.body,fontSize:15,color:'#55777a'}).setOrigin(0.5).setInteractive({useHandCursor:true});
-    t.on('pointerover',()=>t.setColor('#365d60'));
-    t.on('pointerout',()=>t.setColor('#55777a'));
+      {fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+    t.on('pointerover',()=>t.setColor('#173b40'));
+    t.on('pointerout',()=>t.setColor('#2b4d50'));
     t.on('pointerdown',()=>{ this._skipped=true; this._goNext(); });
   }
 
@@ -86,12 +84,12 @@ class PlayerSetup extends Phaser.Scene {
 
   _buildSection(y, label, key, options, cols) {
     const compact=this.W<700,cx=this.W/2,sectionW=Math.min(1200,this.W-(compact?48:64)),cardW=Math.floor((sectionW-(cols-1)*(compact?10:16))/cols),cardH=compact?56:80,startX=cx-sectionW/2;
-    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:compact?14:21,color:'#365d60',fontStyle:'bold',letterSpacing:1});
+    this.add.text(startX,y,label,{fontFamily:CityTheme.body,fontSize:compact?14:21,color:'#173b40',fontStyle:'bold',letterSpacing:1});
     options.forEach((opt,i)=>{
       const col=i%cols,row=Math.floor(i/cols),bx=startX+col*(cardW+(compact?10:14)),by=y+(compact?24:32)+row*(cardH+12);
       const card=this.add.graphics();
-      const txt=this.add.text(bx+cardW/2,by+cardH/2,opt.label,{fontFamily:CityTheme.body,fontSize:compact?14:22,color:'#365d60',align:'center',wordWrap:{width:cardW-16}}).setOrigin(0.5);
-      const draw=(sel,hover)=>{card.clear();if(sel){card.fillStyle(0xe0a82e,0.15);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(2,0xe0a82e,0.9);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#9b6c12');}else if(hover){card.fillStyle(0xd7e3d5,1);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1,0x4a6080,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#365d60');}else{card.fillStyle(0xf2e7c9,0.9);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1,0xd7e3d5,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#55777a');}};
+      const txt=this.add.text(bx+cardW/2,by+cardH/2,opt.label,{fontFamily:CityTheme.body,fontSize:compact?14:22,color:'#173b40',align:'center',wordWrap:{width:cardW-16}}).setOrigin(0.5);
+      const draw=(sel,hover)=>{card.clear();if(sel){card.fillStyle(0xe0a82e,0.6);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(2,0xe0a82e,0.9);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#0d1a2a');}else if(hover){card.fillStyle(0xd7e3d5,1);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1,0x4a6080,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#173b40');}else{card.fillStyle(0xfffbf1,1);card.fillRoundedRect(bx,by,cardW,cardH,8);card.lineStyle(1.5,0x7ca5a1,1);card.strokeRoundedRect(bx,by,cardW,cardH,8);txt.setColor('#2b4d50');}};
       draw(false,false);
       const hit=this.add.rectangle(bx+cardW/2,by+cardH/2,cardW,cardH,0xffffff,0).setInteractive({useHandCursor:true});
       hit.on('pointerover',()=>{if(this.selections[key]!==opt.value)draw(false,true);});
@@ -106,7 +104,7 @@ class PlayerSetup extends Phaser.Scene {
     const cx=this.W/2,bw=280,bh=58;
     this.continueBtnGfx=this.add.graphics();
     this._continueBtnLabel = this._tr('ui.playerSetup.continue','Continue →');
-    this.continueBtnTxt=this.add.text(cx,y+bh/2,this._continueBtnLabel,{fontFamily:CityTheme.heading,fontSize:20,color:'#688486'}).setOrigin(0.5);
+    this.continueBtnTxt=this.add.text(cx,y+bh/2,this._continueBtnLabel,{fontFamily:CityTheme.heading,fontSize:20,color:'#2b4d50'}).setOrigin(0.5);
     this._continueBtnY=y;
     this._drawBtn(false);
     this.continueBtnHit=this.add.rectangle(cx,y+bh/2,bw,bh,0xffffff,0);
@@ -116,12 +114,12 @@ class PlayerSetup extends Phaser.Scene {
     const cx=this.W/2,bw=280,bh=58,y=this._continueBtnY,bx=cx-bw/2;
     this.continueBtnGfx.clear();
     if(ready){this.continueBtnGfx.fillStyle(0xe0a82e,1);this.continueBtnGfx.fillRoundedRect(bx,y,bw,bh,10);this.continueBtnTxt.setColor('#0d1a2a').setStyle({fontStyle:'bold'});}
-    else{this.continueBtnGfx.fillStyle(0xd7e3d5,1);this.continueBtnGfx.fillRoundedRect(bx,y,bw,bh,10);this.continueBtnGfx.lineStyle(1,0x9bb5ae,1);this.continueBtnGfx.strokeRoundedRect(bx,y,bw,bh,10);this.continueBtnTxt.setColor('#688486').setStyle({fontStyle:'normal'});}
+    else{this.continueBtnGfx.fillStyle(0xd7e3d5,1);this.continueBtnGfx.fillRoundedRect(bx,y,bw,bh,10);this.continueBtnGfx.lineStyle(1,0x9bb5ae,1);this.continueBtnGfx.strokeRoundedRect(bx,y,bw,bh,10);this.continueBtnTxt.setColor('#2b4d50').setStyle({fontStyle:'normal'});}
   }
 
   _checkAll() {
     const {age,employment,experience}=this.selections;
-    if(age&&employment&&experience){
+    if(age&&experience){
       this.continueBtnReady=true; this._drawBtn(true);
       if(!this._btnBound){
         this._btnBound=true;

@@ -182,13 +182,40 @@ class GameScene extends Phaser.Scene {
 
   _introSequence() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const splash = this.add.text(this._cx(), this.H*0.38,
-      de ? this.cityName+'\nWillkommen in deiner Stadt.' : this.cityName+'\nWelcome to your city.',
-      { fontFamily:CityTheme.heading, fontSize:this.s(36), color:'#173b40',
-        align:'center', stroke:'#fffbf1', strokeThickness:this.s(4),
-        lineSpacing:this.s(8) }).setOrigin(0.5).setDepth(70).setAlpha(0);
-    this.tweens.add({targets:splash,alpha:1,duration:700,hold:1200,yoyo:true,
-      onComplete:()=>{ splash.destroy(); this._introLevelTitleShown=true; this._startLevel(1); }});
+    const cx=this._cx(), els=[];
+    const bw=Math.min(this.s(560),this._availW()), bh=this.s(270), bx=cx-bw/2, by=this.H/2-bh/2;
+    const dim=this.add.graphics().setDepth(150); dim.fillStyle(0x173b40,0.22); dim.fillRect(0,0,this.W,this.H); els.push(dim);
+    const box=this.add.graphics().setDepth(151);
+    box.fillStyle(0xfffbf1,0.99); box.fillRoundedRect(bx,by,bw,bh,this.s(14));
+    box.lineStyle(1.5,0xe0a82e,0.7); box.strokeRoundedRect(bx,by,bw,bh,this.s(14));
+    box.fillStyle(0xe0a82e,0.95); box.fillRect(bx+this.s(8),by,bw-this.s(16),this.s(3)); els.push(box);
+    els.push(this.add.text(cx,by+this.s(26),de?'Willkommen, Bürgermeister:in':'Welcome, Mayor',{fontFamily:CityTheme.heading,fontSize:this.s(26),color:'#173b40',fontStyle:'700'}).setOrigin(0.5,0).setDepth(152));
+    els.push(this.add.text(cx,by+this.s(70),de?'Das ist deine Stadt. Dein erster Auftrag: Gib ihr einen Namen.':'This is your city. Your first task: give it a name.',{fontFamily:CityTheme.body,fontSize:this.s(17),color:'#173b40',align:'center',wordWrap:{width:bw-this.s(60)}}).setOrigin(0.5,0).setDepth(152));
+    const input=this.add.dom(cx,by+this.s(140),'input',
+      `width:${Math.round(bw-this.s(100))}px;padding:12px 14px;font-size:18px;font-family:DM Sans,Arial,sans-serif;background:#ffffff;color:#173b40;border:2px solid #296b72;border-radius:8px;outline:none;text-align:center;`).setDepth(152);
+    input.node.setAttribute('type','text'); input.node.setAttribute('maxlength','28'); input.node.value=this.cityName;
+    els.push(input);
+    this.time.delayedCall(80,()=>{try{input.node.focus();input.node.select();}catch(e){}});
+    const btnW=this.s(230),btnH=this.s(48),btnY=by+bh-btnH-this.s(24);
+    const btn=this.add.graphics().setDepth(152);
+    const drawB=(hv)=>{btn.clear();btn.fillStyle(0xe0a82e,hv?1:0.92);btn.fillRoundedRect(cx-btnW/2,btnY,btnW,btnH,this.s(9));};
+    drawB(false);
+    const bt=this.add.text(cx,btnY+btnH/2,de?'Stadt gründen →':'Found my city →',{fontFamily:CityTheme.body,fontSize:this.s(18),color:'#173b40',fontStyle:'700'}).setOrigin(0.5).setDepth(153);
+    const hit=this.add.rectangle(cx,btnY+btnH/2,btnW,btnH,0xffffff,0).setDepth(154).setInteractive({useHandCursor:true});
+    els.push(btn,bt,hit);
+    let done=false;
+    const submit=()=>{
+      if(done)return; done=true;
+      const name=(input.node.value||'').trim().slice(0,28);
+      if(name){ this.cityName=name; window.cityName=name; }
+      if(this.hud&&this.hud.cityText) this.hud.cityText.setText(this.cityName);
+      els.forEach(e=>{try{e.destroy();}catch(err){}});
+      this._playCoin&&this._playCoin();
+      this._introLevelTitleShown=false; this._startLevel(1);
+    };
+    hit.on('pointerover',()=>drawB(true)); hit.on('pointerout',()=>drawB(false));
+    hit.on('pointerdown',submit);
+    input.addListener('keydown'); input.on('keydown',ev=>{if(ev.key==='Enter')submit();});
   }
 
   _startLevel(n, skipTutorial) {
@@ -314,6 +341,7 @@ class GameScene extends Phaser.Scene {
   _onLevel1Choice(d,v) {
     this._clearSiteMarkers(); this._clearPersistentMessage();
     this.districts.forEach(x=>x.setSelectable(false));
+    this._coinSource=d;
     ScoringEngine.recordDecision(1,v,{districtId:d.id});
     d.receiveResource(2); this._shake(240,0.004); this._updateStats(5,10,-5);
     this._addLandmark(d,'🏗', this._tr('level1.builtHere', 'Built first here'), d.accentColor);
@@ -500,7 +528,7 @@ class GameScene extends Phaser.Scene {
     if(this.currentLevel!==3 || this._level3Resolved)return;
     if(!this._level3PlacedCubes)this._level3PlacedCubes=new Set();
     if(!cube||this._level3PlacedCubes.has(cube))return;
-    this._level3PlacedCubes.add(cube);
+    this._level3PlacedCubes.add(cube); this._coinSource=district;
     this.cubeDropped=this._level3PlacedCubes.size;
     this._shake(160,0.003);
     ScoringEngine.recordDecision(3,'allocate',{districtId:district.id,value});
@@ -987,67 +1015,45 @@ class GameScene extends Phaser.Scene {
   }
 
   _showConsequence(text,onContinue,opts){
-    const readMs=Math.max(1760,Math.min(3200,1040+String(text||'').length*16));
-    opts = Object.assign({auto:true,autoDelay:readMs},opts||{});
+    opts=opts||{};
+    const allowRetry = opts.auto===false;
     this._clearWorldBtn();
     this._clearConsequence(); this._clearDecisionPanel();
     const cx=this._cx();
-    const pw=Math.min(this.s(720),this._availW()), ph=this.s(104), px=cx-pw/2, py=this.H-this.s(186);
-
+    const pw=Math.min(this.s(720),this._availW());
+    const t=this.add.text(cx,0,text,{
+      fontFamily:CityTheme.body,fontSize:this.s(18),color:'#173b40',
+      align:'center',wordWrap:{width:pw-this.s(64)},lineSpacing:this.s(7)}).setOrigin(0.5,0);
+    const btnW=this.s(200), btnH=this.s(46), pad=this.s(26);
+    const ph=pad+t.height+this.s(20)+btnH+pad;
+    const px=cx-pw/2, py=Math.max(this._msgY(), this.H-ph-this.s(40));
+    t.y=py+pad;
     const dim=this.add.graphics();
-    dim.fillStyle(0x173b40, 0.12);
-    dim.fillRect(0, 0, this.W, this.H);
-    dim.fillStyle(0x173b40, 0.22);
-    dim.fillRect(0, py-this.s(26), this.W, this.H-(py-this.s(26)));
-
+    dim.fillStyle(0x173b40, 0.18); dim.fillRect(0, 0, this.W, this.H);
     const bg=this.add.graphics();
-    bg.fillStyle(0xfffbf1,0.95); bg.fillRoundedRect(px,py,pw,ph,this.s(12));
-    bg.lineStyle(1,0x296b72,0.55); bg.strokeRoundedRect(px,py,pw,ph,this.s(12));
-    bg.lineStyle(this.s(4),0x296b72,0.8); bg.lineBetween(px,py+this.s(10),px,py+ph-this.s(10));
-    const t=this.add.text(cx,py+ph/2,text,{
-      fontFamily:CityTheme.heading,fontSize:this.s(17),color:'#173b40',
-      align:'center',wordWrap:{width:pw-this.s(56)},lineSpacing:this.s(6)}).setOrigin(0.5);
-
-    const elements=[dim,bg,t];
-
-    if(!opts.auto){
-      const rw=this.s(120), rh=this.s(30);
-      const rx=px+pw-rw-this.s(12), ry=py+ph+this.s(10);
-      const rg=this.add.graphics();
-      const rTxt=this.add.text(rx+rw/2, ry+rh/2, this._tr('game.retry','↺ Retry level'),{
-        fontFamily:CityTheme.body,fontSize:this.s(12),color:'#55777a'}).setOrigin(0.5);
-      const drawR=(hv)=>{ rg.clear();
-        rg.fillStyle(0x0b1725,hv?1:0.85); rg.fillRoundedRect(rx,ry,rw,rh,this.s(7));
-        rg.lineStyle(1,hv?0x8aa4c0:0x2c4767,1); rg.strokeRoundedRect(rx,ry,rw,rh,this.s(7));
-        rTxt.setColor(hv?'#c8d8ea':'#55777a'); };
-      drawR(false);
-      const rHit=this.add.rectangle(rx+rw/2,ry+rh/2,rw,rh,0xffffff,0).setInteractive({useHandCursor:true});
-      rHit.on('pointerover',()=>drawR(true)); rHit.on('pointerout',()=>drawR(false));
-      rHit.on('pointerdown',()=>this._retryLevel());
-      elements.push(rg,rTxt,rHit);
+    bg.fillStyle(0xfffbf1,0.99); bg.fillRoundedRect(px,py,pw,ph,this.s(14));
+    bg.lineStyle(1.5,0xe0a82e,0.7); bg.strokeRoundedRect(px,py,pw,ph,this.s(14));
+    bg.fillStyle(0xe0a82e,0.95); bg.fillRect(px+this.s(8),py,pw-this.s(16),this.s(3));
+    const by=py+ph-pad-btnH, bx=cx-btnW/2;
+    const btn=this.add.graphics();
+    const drawB=(hv)=>{btn.clear();btn.fillStyle(0xe0a82e,hv?1:0.92);btn.fillRoundedRect(bx,by,btnW,btnH,this.s(9));};
+    drawB(false);
+    const bt=this.add.text(cx,by+btnH/2,this._tr('game.continue','Continue →'),{fontFamily:CityTheme.body,fontSize:this.s(18),color:'#173b40',fontStyle:'700'}).setOrigin(0.5);
+    const hit=this.add.rectangle(cx,by+btnH/2,btnW,btnH,0xffffff,0).setInteractive({useHandCursor:true});
+    const elements=[dim,bg,t,btn,bt,hit];
+    let done=false;
+    hit.on('pointerover',()=>drawB(true)); hit.on('pointerout',()=>drawB(false));
+    hit.on('pointerdown',()=>{ if(done)return; done=true; this._clearConsequence(); if(onContinue) onContinue(); });
+    if(allowRetry){
+      const rTxt=this.add.text(px+pw-this.s(16), by+btnH/2, this._tr('game.retry','↺ Retry level'),{
+        fontFamily:CityTheme.body,fontSize:this.s(14),color:'#296b72',fontStyle:'600'}).setOrigin(1,0.5).setInteractive({useHandCursor:true});
+      rTxt.on('pointerdown',()=>this._retryLevel());
+      elements.push(rTxt);
     }
-
     this.consequencePanel=this.add.container(0,0).setDepth(62);
     this.consequencePanel.add(elements);
     this.consequencePanel.setAlpha(0);
-    this.tweens.add({targets:this.consequencePanel,alpha:1,duration:520});
-
-    if(opts.auto){
-      let done=false;
-      const go=()=>{ if(done) return; done=true; this.input.off('pointerdown',skip);
-        if(this.worldBtnTimer){ this.worldBtnTimer.remove(false); this.worldBtnTimer=null; }
-        if(onContinue) onContinue(); };
-      const panel=this.consequencePanel;
-      const skip=()=>{ if(this.consequencePanel===panel) go(); else this.input.off('pointerdown',skip); };
-      this.time.delayedCall(560,()=>{ if(!done) this.input.on('pointerdown',skip); });
-      this.worldBtnTimer = this.time.delayedCall(opts.autoDelay||2600, go);
-      return;
-    }
-
-    this.worldBtnTimer = this.time.delayedCall(1100,()=>{
-      this.worldBtnTimer=null;
-      this.worldBtn=new WorldButton(this,cx,this.H-this.s(262),this._tr('game.continue','Continue →'),()=>{this.worldBtn=null;this._clearConsequence();if(onContinue)onContinue();});
-    });
+    this.tweens.add({targets:this.consequencePanel,alpha:1,duration:420});
   }
   _clearConsequence(){ if(this.consequencePanel){this.tweens.killTweensOf(this.consequencePanel);this.consequencePanel.destroy();this.consequencePanel=null;} }
 
@@ -1112,6 +1118,7 @@ class GameScene extends Phaser.Scene {
     this.cityStats.resources=Math.max(5,Math.min(100,this.cityStats.resources+r));
     this.statsPanel.updateStats(this.cityStats.happiness,this.cityStats.development,this.cityStats.resources);
     this.hud.advanceYear(2);
+    if(r){ const d=this._coinSource; this._flyCoins(d?d.cx:this._cx(), d?d.cy:this.H*0.55, Math.min(5,Math.max(2,Math.round(Math.abs(r)/3))), r<0); }
   }
 
   update(time,delta){
@@ -1170,27 +1177,23 @@ class GameScene extends Phaser.Scene {
     const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
     wind.connect(wf); wf.connect(wg); wg.connect(bus);
     wind.start(); lfo.start(); lfo2.start(); nodes.push(wind, lfo, lfo2);
-    // 2) warm, hopeful pad (D major add9), softly detuned and filtered
-    const padF = ctx.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 900;
-    const padG = ctx.createGain(); padG.gain.value = 0.022; padF.connect(padG); padG.connect(bus);
-    [146.83, 220.0, 293.66, 369.99, 329.63].forEach((f, i) => {
-      [-4, 4].forEach(det => {
-        const o = ctx.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle';
-        o.frequency.value = f; o.detune.value = det;
-        const g = ctx.createGain(); g.gain.value = i < 2 ? 0.8 : 0.35;
-        const tr = ctx.createOscillator(); tr.frequency.value = 0.05 + i * 0.023;
-        const trG = ctx.createGain(); trG.gain.value = 0.3; tr.connect(trG); trG.connect(g.gain);
-        o.connect(g); g.connect(padF); o.start(); tr.start(); nodes.push(o, tr);
-      });
-    });
     this._ambientNode = { bus, nodes };
-    // 3) life: occasional birdsong by day, a distant tram bell now and then
+    // 2) city life: one sound at a time, spaced randomly, like a real street.
     const schedule = () => {
       if (!this._ambientNode) return;
-      this._ambientTimer = this.time.delayedCall(4000 + Math.random() * 7000, () => {
-        if (!this._ambientNode || this._muted) return;
+      this._ambientTimer = this.time.delayedCall(3500 + Math.random() * 6500, () => {
+        if (!this._ambientNode || this._muted) { schedule(); return; }
         const night = (this.nightStrength || 0) > 0.55;
-        if (!night && Math.random() < 0.7) this._birdChirp(); else this._tramBell();
+        const pool = night
+          ? [['crickets',4],['carPass',2],['trainHorn',1],['murmur',1]]
+          : [['birds',4],['carPass',3],['murmur',2],['trainHorn',1],['carHorn',1],['tramBell',1]];
+        let r = Math.random() * pool.reduce((s,p)=>s+p[1],0), pick = pool[0][0];
+        for (const [k,w] of pool) { if ((r -= w) <= 0) { pick = k; break; } }
+        try {
+          ({birds:()=>this._birdChirp(), crickets:()=>this._crickets(), carPass:()=>this._carPass(),
+            murmur:()=>this._murmur(), trainHorn:()=>this._trainHorn(), carHorn:()=>this._carHorn(),
+            tramBell:()=>this._tramBell()})[pick]();
+        } catch(e) {}
         schedule();
       });
     };
@@ -1198,23 +1201,123 @@ class GameScene extends Phaser.Scene {
   }
 
   _birdChirp() {
-    const ctx = this._audioCtx, t0 = ctx.currentTime, n = 2 + Math.floor(Math.random() * 3), base = 2600 + Math.random() * 1400;
+    const ctx = this._audioCtx, t0 = ctx.currentTime, n = 3 + Math.floor(Math.random() * 4), base = 2800 + Math.random() * 1600;
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const out = pan || this._ambientNode.bus; if (pan) { pan.pan.value = Math.random()*1.6-0.8; pan.connect(this._ambientNode.bus); }
     for (let i = 0; i < n; i++) {
-      const t = t0 + i * (0.11 + Math.random() * 0.05);
+      const t = t0 + i * (0.09 + Math.random() * 0.08);
       const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
-      o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.45, t + 0.06);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.025, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.09);
-      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.1);
+      const f = base * (0.9 + Math.random() * 0.25);
+      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random()<.5?1.5:0.7), t + 0.07);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.02, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.1);
     }
+  }
+
+  _crickets() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime;
+    for (let i = 0; i < 18; i++) {
+      const t = t0 + i * 0.07 + (i % 6 === 5 ? 0.3 : 0);
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 4300;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.006, t + 0.01); g.gain.linearRampToValueAtTime(0, t + 0.04);
+      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.05);
+    }
+  }
+
+  // A car driving past: filtered noise swelling and panning across.
+  _carPass() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 2.6 + Math.random() * 1.5;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, true);
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(700, t + d/2); f.frequency.linearRampToValueAtTime(240, t + d);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
+    let last = g;
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); const dir = Math.random()<.5?-1:1; p.pan.setValueAtTime(-0.8*dir, t); p.pan.linearRampToValueAtTime(0.8*dir, t + d); g.connect(p); last = p; }
+    src.connect(f); f.connect(g); last.connect(this._ambientNode.bus); src.start(t); src.stop(t + d);
+  }
+
+  _carHorn() {
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400; f.connect(this._ambientNode.bus);
+    [[0, 0.16], [0.24, 0.12]].forEach(([s, dur]) => {
+      [415, 523].forEach(fr => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = fr;
+        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(0.012, t+s+0.02); g.gain.setValueAtTime(0.012, t+s+dur); g.gain.linearRampToValueAtTime(0, t+s+dur+0.04);
+        o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.06);
+      });
+    });
+  }
+
+  // Distant two-tone European train horn plus a soft rail rumble.
+  _trainHorn() {
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900; f.connect(this._ambientNode.bus);
+    [[0, 330, 0.9], [1.0, 262, 1.3]].forEach(([s, fr, dur]) => {
+      [1, 1.5, 2].forEach((m, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = fr * m;
+        const v = 0.016 / (i + 1);
+        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(v, t+s+0.12); g.gain.setValueAtTime(v, t+s+dur-0.2); g.gain.linearRampToValueAtTime(0, t+s+dur);
+        o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.05);
+      });
+    });
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(5, true);
+    const rf = ctx.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 180;
+    const rg = ctx.createGain(); rg.gain.setValueAtTime(0, t); rg.gain.linearRampToValueAtTime(0.2, t + 2); rg.gain.linearRampToValueAtTime(0, t + 5);
+    src.connect(rf); rf.connect(rg); rg.connect(this._ambientNode.bus); src.start(t); src.stop(t + 5);
+  }
+
+  // Far-off people talking: band-passed noise with syllable-like bursts.
+  _murmur() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime, d = 3.5;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, false);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 1.6;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
+    for (let x = 0; x < d; x += 0.16 + Math.random() * 0.12) {
+      g.gain.linearRampToValueAtTime(0.012 + Math.random() * 0.02, t0 + x + 0.05);
+      g.gain.linearRampToValueAtTime(0.003, t0 + x + 0.14);
+      bp.frequency.setValueAtTime(380 + Math.random() * 420, t0 + x);
+    }
+    g.gain.linearRampToValueAtTime(0, t0 + d);
+    src.connect(bp); bp.connect(g); g.connect(this._ambientNode.bus); src.start(t0); src.stop(t0 + d);
   }
 
   _tramBell() {
     const ctx = this._audioCtx, t = ctx.currentTime;
     [1, 2.76, 5.4].forEach((m, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 660 * m;
-      g.gain.setValueAtTime(0.018 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
+      g.gain.setValueAtTime(0.014 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
       o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 1.7);
     });
+  }
+
+  // Coin "clink" when funds land on the side panel.
+  _playCoin() {
+    if (!this._audioCtx || this._muted) return;
+    const t = this._audioCtx.currentTime;
+    this._tone(1760, t, 0.18, 0.05, 'triangle', 0.004);
+    this._tone(2637, t + 0.05, 0.22, 0.035, 'sine', 0.004);
+  }
+
+  // Gold coins arc from a point in the city to the Funds row of the side panel.
+  _flyCoins(fromX, fromY, n, reverse) {
+    if (this.reducedMotion) return;
+    const sp = this.statsPanel;
+    const tx = this.isCompact ? this.s(40) : (this.PANEL || 0) * 0.5;
+    const ty = sp && sp.fundsY ? sp.fundsY : this.s(200);
+    n = n || 3;
+    for (let i = 0; i < n; i++) {
+      const c = this.add.graphics().setDepth(95);
+      c.fillStyle(0x9b6c12, 1); c.fillCircle(0, 0, this.s(9));
+      c.fillStyle(0xf4c64e, 1); c.fillCircle(0, 0, this.s(7.5));
+      c.fillStyle(0xfff1b8, 1); c.fillCircle(-this.s(2), -this.s(2), this.s(2.5));
+      const sx = reverse ? tx : fromX, sy = reverse ? ty : fromY, ex = reverse ? fromX : tx, ey = reverse ? fromY : ty;
+      c.setPosition(sx, sy);
+      const mid = { x: (sx+ex)/2, y: Math.min(sy, ey) - this.s(120) };
+      const prog = { p: 0 };
+      this.tweens.add({ targets: prog, p: 1, delay: i * 140, duration: 900, ease: 'Sine.easeInOut',
+        onUpdate: () => { const p = prog.p, q = 1 - p;
+          c.x = q*q*sx + 2*q*p*mid.x + p*p*ex; c.y = q*q*sy + 2*q*p*mid.y + p*p*ey; },
+        onComplete: () => { c.destroy(); if (i === n-1 || i === 0) this._playCoin(); } });
+    }
   }
 
   _stopAmbient() {
