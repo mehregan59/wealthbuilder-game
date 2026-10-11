@@ -23,3 +23,4 @@
 - [x] Enlarge the three starting questions, move Level 3 instructions into the empty corner, show failed-drop guidance, widen results, and make pension details toggle closed.
 
 - [x] Fit decision and report borders to wrapped text; separate opposing trains onto dual tracks; reveal Level 10 forecast outcomes individually.
+- [x] Unified card style, click-to-continue messages, shorter intake, in-city naming, city sounds, flying coins.

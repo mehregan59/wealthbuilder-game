@@ -60,11 +60,11 @@ class PlayerSetup extends Phaser.Scene {
     this._buildSection(compact?150:180,
       this._tr('ui.playerSetup.ageLabel','Your age group'),
       'age', ageOptions, compact?3:5);
-    this._buildSection(compact?320:380,
+    this._buildSection(compact?280:330,
       this._tr('ui.playerSetup.experienceLabel','Previous investment experience'),
       'experience', expOptions, 3);
-    this._buildContinueBtn(compact?440:540);
-    this._buildSkipLink(compact?520:620);
+    this._buildContinueBtn(compact?400:480);
+    this._buildSkipLink(compact?475:560);
   }
 
   _buildSkipLink(y) {
