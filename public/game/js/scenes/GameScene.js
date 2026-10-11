@@ -1170,27 +1170,23 @@ class GameScene extends Phaser.Scene {
     const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
     wind.connect(wf); wf.connect(wg); wg.connect(bus);
     wind.start(); lfo.start(); lfo2.start(); nodes.push(wind, lfo, lfo2);
-    // 2) warm, hopeful pad (D major add9), softly detuned and filtered
-    const padF = ctx.createBiquadFilter(); padF.type = 'lowpass'; padF.frequency.value = 900;
-    const padG = ctx.createGain(); padG.gain.value = 0.022; padF.connect(padG); padG.connect(bus);
-    [146.83, 220.0, 293.66, 369.99, 329.63].forEach((f, i) => {
-      [-4, 4].forEach(det => {
-        const o = ctx.createOscillator(); o.type = i < 2 ? 'sine' : 'triangle';
-        o.frequency.value = f; o.detune.value = det;
-        const g = ctx.createGain(); g.gain.value = i < 2 ? 0.8 : 0.35;
-        const tr = ctx.createOscillator(); tr.frequency.value = 0.05 + i * 0.023;
-        const trG = ctx.createGain(); trG.gain.value = 0.3; tr.connect(trG); trG.connect(g.gain);
-        o.connect(g); g.connect(padF); o.start(); tr.start(); nodes.push(o, tr);
-      });
-    });
     this._ambientNode = { bus, nodes };
-    // 3) life: occasional birdsong by day, a distant tram bell now and then
+    // 2) city life: one sound at a time, spaced randomly, like a real street.
     const schedule = () => {
       if (!this._ambientNode) return;
-      this._ambientTimer = this.time.delayedCall(4000 + Math.random() * 7000, () => {
-        if (!this._ambientNode || this._muted) return;
+      this._ambientTimer = this.time.delayedCall(3500 + Math.random() * 6500, () => {
+        if (!this._ambientNode || this._muted) { schedule(); return; }
         const night = (this.nightStrength || 0) > 0.55;
-        if (!night && Math.random() < 0.7) this._birdChirp(); else this._tramBell();
+        const pool = night
+          ? [['crickets',4],['carPass',2],['trainHorn',1],['murmur',1]]
+          : [['birds',4],['carPass',3],['murmur',2],['trainHorn',1],['carHorn',1],['tramBell',1]];
+        let r = Math.random() * pool.reduce((s,p)=>s+p[1],0), pick = pool[0][0];
+        for (const [k,w] of pool) { if ((r -= w) <= 0) { pick = k; break; } }
+        try {
+          ({birds:()=>this._birdChirp(), crickets:()=>this._crickets(), carPass:()=>this._carPass(),
+            murmur:()=>this._murmur(), trainHorn:()=>this._trainHorn(), carHorn:()=>this._carHorn(),
+            tramBell:()=>this._tramBell()})[pick]();
+        } catch(e) {}
         schedule();
       });
     };
@@ -1198,23 +1194,123 @@ class GameScene extends Phaser.Scene {
   }
 
   _birdChirp() {
-    const ctx = this._audioCtx, t0 = ctx.currentTime, n = 2 + Math.floor(Math.random() * 3), base = 2600 + Math.random() * 1400;
+    const ctx = this._audioCtx, t0 = ctx.currentTime, n = 3 + Math.floor(Math.random() * 4), base = 2800 + Math.random() * 1600;
+    const pan = ctx.createStereoPanner ? ctx.createStereoPanner() : null;
+    const out = pan || this._ambientNode.bus; if (pan) { pan.pan.value = Math.random()*1.6-0.8; pan.connect(this._ambientNode.bus); }
     for (let i = 0; i < n; i++) {
-      const t = t0 + i * (0.11 + Math.random() * 0.05);
+      const t = t0 + i * (0.09 + Math.random() * 0.08);
       const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
-      o.frequency.setValueAtTime(base, t); o.frequency.exponentialRampToValueAtTime(base * 1.45, t + 0.06);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.025, t + 0.015); g.gain.exponentialRampToValueAtTime(0.0008, t + 0.09);
-      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.1);
+      const f = base * (0.9 + Math.random() * 0.25);
+      o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random()<.5?1.5:0.7), t + 0.07);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.02, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
+      o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.1);
     }
+  }
+
+  _crickets() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime;
+    for (let i = 0; i < 18; i++) {
+      const t = t0 + i * 0.07 + (i % 6 === 5 ? 0.3 : 0);
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 4300;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.006, t + 0.01); g.gain.linearRampToValueAtTime(0, t + 0.04);
+      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 0.05);
+    }
+  }
+
+  // A car driving past: filtered noise swelling and panning across.
+  _carPass() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 2.6 + Math.random() * 1.5;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, true);
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(700, t + d/2); f.frequency.linearRampToValueAtTime(240, t + d);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.16, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
+    let last = g;
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); const dir = Math.random()<.5?-1:1; p.pan.setValueAtTime(-0.8*dir, t); p.pan.linearRampToValueAtTime(0.8*dir, t + d); g.connect(p); last = p; }
+    src.connect(f); f.connect(g); last.connect(this._ambientNode.bus); src.start(t); src.stop(t + d);
+  }
+
+  _carHorn() {
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 1400; f.connect(this._ambientNode.bus);
+    [[0, 0.16], [0.24, 0.12]].forEach(([s, dur]) => {
+      [415, 523].forEach(fr => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'square'; o.frequency.value = fr;
+        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(0.012, t+s+0.02); g.gain.setValueAtTime(0.012, t+s+dur); g.gain.linearRampToValueAtTime(0, t+s+dur+0.04);
+        o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.06);
+      });
+    });
+  }
+
+  // Distant two-tone European train horn plus a soft rail rumble.
+  _trainHorn() {
+    const ctx = this._audioCtx, t = ctx.currentTime;
+    const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900; f.connect(this._ambientNode.bus);
+    [[0, 330, 0.9], [1.0, 262, 1.3]].forEach(([s, fr, dur]) => {
+      [1, 1.5, 2].forEach((m, i) => {
+        const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = fr * m;
+        const v = 0.016 / (i + 1);
+        g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(v, t+s+0.12); g.gain.setValueAtTime(v, t+s+dur-0.2); g.gain.linearRampToValueAtTime(0, t+s+dur);
+        o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.05);
+      });
+    });
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(5, true);
+    const rf = ctx.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 180;
+    const rg = ctx.createGain(); rg.gain.setValueAtTime(0, t); rg.gain.linearRampToValueAtTime(0.2, t + 2); rg.gain.linearRampToValueAtTime(0, t + 5);
+    src.connect(rf); rf.connect(rg); rg.connect(this._ambientNode.bus); src.start(t); src.stop(t + 5);
+  }
+
+  // Far-off people talking: band-passed noise with syllable-like bursts.
+  _murmur() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime, d = 3.5;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, false);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 1.6;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
+    for (let x = 0; x < d; x += 0.16 + Math.random() * 0.12) {
+      g.gain.linearRampToValueAtTime(0.012 + Math.random() * 0.02, t0 + x + 0.05);
+      g.gain.linearRampToValueAtTime(0.003, t0 + x + 0.14);
+      bp.frequency.setValueAtTime(380 + Math.random() * 420, t0 + x);
+    }
+    g.gain.linearRampToValueAtTime(0, t0 + d);
+    src.connect(bp); bp.connect(g); g.connect(this._ambientNode.bus); src.start(t0); src.stop(t0 + d);
   }
 
   _tramBell() {
     const ctx = this._audioCtx, t = ctx.currentTime;
     [1, 2.76, 5.4].forEach((m, i) => {
       const o = ctx.createOscillator(), g = ctx.createGain(); o.frequency.value = 660 * m;
-      g.gain.setValueAtTime(0.018 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
+      g.gain.setValueAtTime(0.014 / (i + 1), t); g.gain.exponentialRampToValueAtTime(0.0005, t + 1.6);
       o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + 1.7);
     });
+  }
+
+  // Coin "clink" when funds land on the side panel.
+  _playCoin() {
+    if (!this._audioCtx || this._muted) return;
+    const t = this._audioCtx.currentTime;
+    this._tone(1760, t, 0.18, 0.05, 'triangle', 0.004);
+    this._tone(2637, t + 0.05, 0.22, 0.035, 'sine', 0.004);
+  }
+
+  // Gold coins arc from a point in the city to the Funds row of the side panel.
+  _flyCoins(fromX, fromY, n, reverse) {
+    if (this.reducedMotion) return;
+    const sp = this.statsPanel;
+    const tx = this.isCompact ? this.s(40) : (this.PANEL || 0) * 0.5;
+    const ty = sp && sp.fundsY ? sp.fundsY : this.s(200);
+    n = n || 3;
+    for (let i = 0; i < n; i++) {
+      const c = this.add.graphics().setDepth(95);
+      c.fillStyle(0x9b6c12, 1); c.fillCircle(0, 0, this.s(9));
+      c.fillStyle(0xf4c64e, 1); c.fillCircle(0, 0, this.s(7.5));
+      c.fillStyle(0xfff1b8, 1); c.fillCircle(-this.s(2), -this.s(2), this.s(2.5));
+      const sx = reverse ? tx : fromX, sy = reverse ? ty : fromY, ex = reverse ? fromX : tx, ey = reverse ? fromY : ty;
+      c.setPosition(sx, sy);
+      const mid = { x: (sx+ex)/2, y: Math.min(sy, ey) - this.s(120) };
+      const prog = { p: 0 };
+      this.tweens.add({ targets: prog, p: 1, delay: i * 140, duration: 900, ease: 'Sine.easeInOut',
+        onUpdate: () => { const p = prog.p, q = 1 - p;
+          c.x = q*q*sx + 2*q*p*mid.x + p*p*ex; c.y = q*q*sy + 2*q*p*mid.y + p*p*ey; },
+        onComplete: () => { c.destroy(); if (i === n-1 || i === 0) this._playCoin(); } });
+    }
   }
 
   _stopAmbient() {
