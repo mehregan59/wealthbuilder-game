@@ -1247,7 +1247,7 @@ class GameScene extends Phaser.Scene {
     });
   }
 
-  // Distant two-tone European train horn plus a soft rail rumble.
+  // Distant two-tone European train horn (no rumble bed).
   _trainHorn() {
     const ctx = this._audioCtx, t = ctx.currentTime;
     const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = 900; f.connect(this._ambientNode.bus);
@@ -1259,10 +1259,6 @@ class GameScene extends Phaser.Scene {
         o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.05);
       });
     });
-    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(5, true);
-    const rf = ctx.createBiquadFilter(); rf.type = 'lowpass'; rf.frequency.value = 180;
-    const rg = ctx.createGain(); rg.gain.setValueAtTime(0, t); rg.gain.linearRampToValueAtTime(0.5, t + 2); rg.gain.linearRampToValueAtTime(0, t + 5);
-    src.connect(rf); rf.connect(rg); rg.connect(this._ambientNode.bus); src.start(t); src.stop(t + 5);
   }
 
   // Far-off people talking: band-passed noise with syllable-like bursts.
