@@ -88,7 +88,7 @@ const TRANSLATIONS = {
       playerSetup: {
         title: "Tell us about your city",
         subtitle: "This helps personalize your experience. It never changes the game.",
-        disclosure: "Note: this session observes your decision patterns and explains them to you in the final results.",
+        disclosure: "Nothing is saved: your answers stay in this browser tab and disappear when you close the game. Your decision patterns are explained to you in the final results.",
         ageLabel: "Your age group",
         employmentLabel: "Your employment situation",
         experienceLabel: "Previous investment experience",
@@ -220,7 +220,7 @@ const TRANSLATIONS = {
       playerSetup: {
         title: "Erzähl uns von deiner Stadt",
         subtitle: "Dies hilft, dein Erlebnis zu personalisieren. Es ändert nie das Spiel.",
-        disclosure: "Hinweis: Das Spiel beobachtet deine Entscheidungsmuster und erklärt sie dir am Ende in den Ergebnissen.",
+        disclosure: "Nichts wird gespeichert: Deine Antworten bleiben in diesem Browser-Tab und verschwinden beim Schließen des Spiels. Deine Entscheidungsmuster werden dir am Ende erklärt.",
         ageLabel: "Deine Altersgruppe",
         employmentLabel: "Deine Beschäftigungssituation",
         experienceLabel: "Frühere Anlageerfahrung",
