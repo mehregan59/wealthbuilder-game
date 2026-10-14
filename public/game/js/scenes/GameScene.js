@@ -8,7 +8,9 @@ class GameScene extends Phaser.Scene {
     this.S = this.isCompact
       ? Math.max(0.54, Math.min(0.72, this.W / 620))
       : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
-    this.PANEL = this.isCompact ? 0 : Math.round(Math.min(286, Math.max(244, this.W * 0.18)));
+    // Browser zoom = text/card size only; the city still fills the window.
+    this.S = Math.max(0.5, Math.min(2.4, this.S * (window.WS_textScale || 1)));
+    this.PANEL = this.isCompact ? 0 : Math.round(Math.min(this.W * 0.34, Math.min(286, Math.max(244, this.W * 0.18)) * (window.WS_textScale || 1)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       (window.cityName = ['Lindenfeld','Auenstadt','Sonnenberg','Rheinhafen','Wiesental','Neuhafen'][Math.floor(Math.random()*6)]);
 

@@ -33,17 +33,13 @@
     .feature svg{width:28px;height:28px;margin-bottom:1rem;color:var(--primary)}
     .feature h2{margin:0;font:700 1.25rem "Space Grotesk",sans-serif}
     .feature p{margin:.5rem 0 0;line-height:1.6;color:var(--muted)}
-    #zoom-pill{position:fixed;left:8px;top:50%;transform:translateY(-50%);flex-direction:column;z-index:50;display:none;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(0,0,0,.2)}
-    #zoom-pill button{width:40px;height:40px;border:0;border-radius:999px;background:transparent;color:#173f43;font-weight:700;font-size:1.1rem;cursor:pointer}
-    #zoom-pill button:hover{background:rgba(23,63,67,.1)}
-    body.playing #zoom-pill{display:flex}
-    #pinch-tip{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:50;display:none;max-width:90vw;padding:8px 14px;border-radius:10px;background:rgba(15,40,44,.92);color:#fff;font-size:14px;text-align:center}
+        #pinch-tip{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:50;display:none;max-width:90vw;padding:8px 14px;border-radius:10px;background:rgba(15,40,44,.92);color:#fff;font-size:14px;text-align:center}
 
     /* ── Game canvas ── */
     #game canvas{touch-action:pinch-zoom!important}
-    /* Fixed CSS size (set by JS) so browser zoom really enlarges/shrinks the game like a normal page. */
+    /* The game always fills the window; browser zoom only changes text/card size inside it. */
     #game{display:none;width:100vw;height:100dvh;overflow:hidden;background:#a7d8de;margin:0 auto}
-    body.playing{overflow:auto;background:#a7d8de}
+    body.playing{overflow:hidden;background:#a7d8de}
     body.playing #landing{display:none}
     body.playing #game{display:block}
 
@@ -97,11 +93,6 @@
   </main>
 
   <div id="game" aria-label="WealthSim game"></div>
-  <div id="zoom-pill" role="group" aria-label="Game zoom">
-    <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
-    <button type="button" id="zoom-reset" aria-label="Reset zoom">↺</button>
-    <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
-  </div>
   <div id="pinch-tip" role="status">Two fingers = zoom only. Use one finger to play.</div>
 
   <!-- i18n must load first -->
@@ -208,23 +199,22 @@
       var startButton = document.getElementById('start-game');
       var gameRoot = document.getElementById('game');
 
-      // Size = physical window / DPR at load. Browser zoom changes DPR, so the
-      // game really shrinks/enlarges; a real resize changes physical size.
-      var baseDpr = window.devicePixelRatio || 1, userZoom = 1;
+      // Game always fills the window. Browser zoom (DPR change vs load) only
+      // changes the in-game text/card scale; the canvas never shrinks or scrolls.
+      var baseDpr = window.devicePixelRatio || 1;
+      window.WS_textScale = 1;
       function applySize() {
-        var d = window.devicePixelRatio || 1;
-        var w = Math.round(window.innerWidth * d / baseDpr * userZoom);
-        var h = Math.round(window.innerHeight * d / baseDpr * userZoom);
-        gameRoot.style.width = w + 'px';
-        gameRoot.style.height = h + 'px';
+        gameRoot.style.width = '100vw';
+        gameRoot.style.height = '100dvh';
+        var ts = Math.max(0.7, Math.min(1.8, (window.devicePixelRatio || 1) / baseDpr));
+        if (Math.abs(ts - window.WS_textScale) > 0.02) {
+          window.WS_textScale = ts;
+          window.dispatchEvent(new Event('wealthsim:textscale'));
+        }
         if (window.WS_game && window.WS_game.scale) window.WS_game.scale.refresh();
       }
       var measure = function () {};
       window.addEventListener('resize', function () { if (document.body.classList.contains('playing')) applySize(); });
-      function setZoom(z) { userZoom = Math.max(0.6, Math.min(2, Math.round(z * 10) / 10)); applySize(); }
-      document.getElementById('zoom-in').addEventListener('click', function () { setZoom(userZoom + 0.2); });
-      document.getElementById('zoom-out').addEventListener('click', function () { setZoom(userZoom - 0.2); });
-      document.getElementById('zoom-reset').addEventListener('click', function () { setZoom(1); });
 
       // Touch shield: a single touch reaches the game after a short hold-off so a
       // second finger can still turn it into a pinch. Multi-touch never reaches

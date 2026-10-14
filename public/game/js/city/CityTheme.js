@@ -49,7 +49,7 @@ const CityTheme = {
   // scales up on big monitors and down on phones, so nothing is cut off.
   fitScene(scene, dw, dh) {
     const sw=scene.scale.width, sh=scene.scale.height;
-    const z=Math.max(0.42, Math.min(1.9, sw/(dw||1100), sh/(dh||640)));
+    const z=Math.max(0.42, Math.min(1.9, sw/(dw||1100), sh/(dh||640))) * (window.WS_textScale||1);
     scene.W=sw/z; scene.H=sh/z; scene.S=1;
     const cam=scene.cameras.main; cam.setZoom(z); cam.centerOn(scene.W/2, scene.H/2);
     const onResize=(size)=>{
@@ -58,7 +58,9 @@ const CityTheme = {
       }
     };
     scene.scale.on('resize', onResize);
-    scene.events.once('shutdown', ()=>scene.scale.off('resize', onResize));
+    const onText=()=>{ scene.scale.off('resize', onResize); window.removeEventListener('wealthsim:textscale', onText); scene.scene.restart(); };
+    window.addEventListener('wealthsim:textscale', onText);
+    scene.events.once('shutdown', ()=>{ scene.scale.off('resize', onResize); window.removeEventListener('wealthsim:textscale', onText); });
     return z;
   },
 
