@@ -100,8 +100,9 @@
 
     /* ── Game canvas ── */
     #game canvas{touch-action:pinch-zoom!important}
-    #game{display:none;width:100vw;height:100dvh;overflow:hidden;background:#a7d8de}
-    body.playing{overflow:hidden}
+    /* Fixed CSS size (set by JS) so browser zoom really enlarges/shrinks the game like a normal page. */
+    #game{display:none;width:100vw;height:100dvh;overflow:hidden;background:#a7d8de;margin:0 auto}
+    body.playing{overflow:auto;background:#a7d8de}
     body.playing #landing{display:none}
     body.playing #game{display:block}
 
@@ -130,7 +131,7 @@
     </div>
 
     <section class="hero">
-      <img class="hero-image" src="assets/city-panorama.jpg" alt="A connected modern eco city" />
+      <img class="hero-image" src="assets/wealthsim-eco-city.jpg" alt="A connected modern eco city" />
       <div class="hero-shade"></div>
       <div class="hero-copy">
         <p class="eyebrow" data-i18n="opening.tagline">Behavioral retirement education</p>
