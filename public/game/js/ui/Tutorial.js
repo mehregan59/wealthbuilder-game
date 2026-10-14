@@ -31,7 +31,11 @@ class Tutorial {
       9:{t:'Projekt-Check',     b:'Die Stadt muss Projekte verkaufen. Lies Kaufpreis und heutigen Wert und tippe unten auf das Projekt, das verkauft wird.'},
       10:{t:'Planungsb\u00fcro',  b:'Beantworte einige Prognosen f\u00fcr das n\u00e4chste Jahr und gib an, wie sicher du bist. Danach siehst du, wie gut deine Sicherheit zur Wirklichkeit passte.'}
     };
-    return (de?DE:EN)[level] || null;
+    const c = (de?DE:EN)[level] || null;
+    if (c && [2,5,6,7,8].indexOf(level) >= 0) c.b += de
+      ? '\n\nBehalte die Nachrichtenzeile oben im Blick: Manche Meldungen enthalten wichtige Hinweise, andere sind nur Rauschen. Was z\u00e4hlt, entscheidest du.'
+      : '\n\nKeep an eye on the news ticker at the top: some headlines carry important information, others are just noise. Judging which is up to you.';
+    return c;
   }
 
   // Multi-page welcome briefing shown before the onboarding questions.
@@ -49,13 +53,13 @@ class Tutorial {
       {t:'Willkommen',
        b:'Dir wurde gerade eine wachsende Stadt \u00fcbergeben \u2014 nicht die Stadt, in der du lebst, sondern eine neue, die vollst\u00e4ndig durch deine Entscheidungen hier entsteht.\n\nJeder Stadtteil, jede Baustelle, jede Wahl geh\u00f6rt dir.'},
       {t:'Bevor es losgeht',
-       b:'Links siehst du immer den Zustand deiner Stadt: Zufriedenheit, Wachstum und Mittel.\n\nEs gibt keinen Countdown \u2014 nimm dir die Zeit, die du brauchst. Bleib bis zum letzten Kapitel dabei: am Ende wartet ein Blick auf die Stadt, die du gebaut hast.'}
+       b:'Links siehst du immer den Zustand deiner Stadt: Zufriedenheit, Wachstum und Mittel.\n\nEs gibt keinen Countdown und Schnelligkeit wird nie belohnt \u2014 nimm dir die Zeit, die du brauchst. Deine Bedenkzeit dient nur dazu, eine \u00fcberlegte Wahl von einem Reflex zu unterscheiden.\n\nNichts wird gespeichert: Deine Antworten bleiben in diesem Browser-Tab und sind beim Schlie\u00dfen weg. Bleib bis zum letzten Kapitel dabei: am Ende wartet ein Blick auf die Stadt, die du gebaut hast.'}
     ];
     return [
       {t:'Welcome',
        b:'You\u2019ve just been handed a growing city \u2014 not the city you live in, but a new one, built entirely through the choices you make here.\n\nEvery district, every building site, every decision belongs to you.'},
       {t:'Before you start',
-       b:'The panel on the left always shows the state of your city: happiness, growth and funds.\n\nThere is no countdown \u2014 take whatever time you need. Stay with it through the final chapter: there\u2019s a look back at the city you built waiting at the end.'}
+       b:'The panel on the left always shows the state of your city: happiness, growth and funds.\n\nThere is no countdown and speed is never rewarded \u2014 take whatever time you need. How long you think is noted only to tell a considered choice from a reflex.\n\nNothing is saved: your answers stay in this browser tab and are gone when you close the game. Stay with it through the final chapter: there\u2019s a look back at the city you built waiting at the end.'}
     ];
   }
 
