@@ -1170,9 +1170,9 @@ class GameScene extends Phaser.Scene {
     // 1) distant city hum + breeze: brown noise, low-passed, slowly breathing
     const wind = ctx.createBufferSource(); wind.buffer = this._noiseBuffer(6, true); wind.loop = true;
     const wf = ctx.createBiquadFilter(); wf.type = 'lowpass'; wf.frequency.value = 520; wf.Q.value = 0.4;
-    const wg = ctx.createGain(); wg.gain.value = 0.05;
+    const wg = ctx.createGain(); wg.gain.value = 0.03;
     const lfo = ctx.createOscillator(); lfo.frequency.value = 0.07;
-    const lfoG = ctx.createGain(); lfoG.gain.value = 0.05; lfo.connect(lfoG); lfoG.connect(wg.gain);
+    const lfoG = ctx.createGain(); lfoG.gain.value = 0.025; lfo.connect(lfoG); lfoG.connect(wg.gain);
     const lfo2 = ctx.createOscillator(); lfo2.frequency.value = 0.045;
     const lfo2G = ctx.createGain(); lfo2G.gain.value = 260; lfo2.connect(lfo2G); lfo2G.connect(wf.frequency);
     wind.connect(wf); wf.connect(wg); wg.connect(bus);
@@ -1181,23 +1181,82 @@ class GameScene extends Phaser.Scene {
     // 2) city life: one sound at a time, spaced randomly, like a real street.
     const schedule = () => {
       if (!this._ambientNode) return;
-      this._ambientTimer = this.time.delayedCall(1200 + Math.random() * 3000, () => {
+      // Spaced 5–11 s apart so only one city sound plays at a time.
+      this._ambientTimer = this.time.delayedCall(5000 + Math.random() * 6000, () => {
         if (!this._ambientNode || this._muted) { schedule(); return; }
         const night = (this.nightStrength || 0) > 0.55;
-        const pool = night
-          ? [['crickets',4],['carPass',2],['trainHorn',1],['murmur',1]]
-          : [['birds',4],['carPass',3],['murmur',2],['trainHorn',1],['carHorn',1],['tramBell',1]];
+        const lvl = this.currentLevel || 0;
+        // Calm levels lean on nature; tense levels (2 dip, 4 burst pipe,
+        // 5 boom, 7 headlines, 8 storm) let the real city break through:
+        // horns, engines, industrial hum and the odd siren.
+        const tense = [2,4,5,7,8].indexOf(lvl) >= 0;
+        let pool = night
+          ? [['crickets',4],['breeze',3],['water',2],['murmur',1],['carPass',1]]
+          : [['birds',6],['breeze',3],['water',2],['murmur',2],['tramBell',1],['carPass',1],['trainHorn',0.5]];
+        if (tense) pool = pool.concat([['carHorn',2],['engine',2],['industrial',1.5]]);
+        if (lvl === 4 || lvl === 8) pool.push(['siren',1.2]);
         let r = Math.random() * pool.reduce((s,p)=>s+p[1],0), pick = pool[0][0];
         for (const [k,w] of pool) { if ((r -= w) <= 0) { pick = k; break; } }
         try {
           ({birds:()=>this._birdChirp(), crickets:()=>this._crickets(), carPass:()=>this._carPass(),
             murmur:()=>this._murmur(), trainHorn:()=>this._trainHorn(), carHorn:()=>this._carHorn(),
-            tramBell:()=>this._tramBell()})[pick]();
+            tramBell:()=>this._tramBell(), breeze:()=>this._breeze(), water:()=>this._water(),
+            engine:()=>this._engineBuzz(), industrial:()=>this._industrialHum(), siren:()=>this._siren()})[pick]();
+          // Birds often answer each other on calm daytime levels.
+          if (pick === 'birds' && !tense && Math.random() < 0.5) this.time.delayedCall(700 + Math.random()*900, () => { if (this._ambientNode && !this._muted) this._birdChirp(); });
         } catch(e) {}
         schedule();
       });
     };
     schedule();
+  }
+
+  // Soft rustle of leaves in the wind.
+  _breeze() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 4 + Math.random() * 2;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, false);
+    const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 500; bp.Q.value = 0.7;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.025, t + d*0.4); g.gain.linearRampToValueAtTime(0, t + d);
+    src.connect(bp); bp.connect(g); g.connect(this._ambientNode.bus); src.start(t); src.stop(t + d);
+  }
+  // Gentle river lapping near the waterfront.
+  _water() {
+    const ctx = this._audioCtx, t0 = ctx.currentTime, d = 3.5;
+    const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, true);
+    const lp = ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 700;
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
+    for (let x = 0; x < d - 0.6; x += 0.6 + Math.random() * 0.4) { g.gain.linearRampToValueAtTime(0.09, t0 + x + 0.25); g.gain.linearRampToValueAtTime(0.02, t0 + x + 0.6); }
+    g.gain.linearRampToValueAtTime(0, t0 + d);
+    src.connect(lp); lp.connect(g); g.connect(this._ambientNode.bus); src.start(t0); src.stop(t0 + d);
+  }
+  // A motorbike or delivery van revving past — slightly gritty.
+  _engineBuzz() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 2.2;
+    const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = 'sawtooth'; o.frequency.setValueAtTime(70, t); o.frequency.linearRampToValueAtTime(130, t + d*0.5); o.frequency.linearRampToValueAtTime(85, t + d);
+    lp.type = 'lowpass'; lp.frequency.value = 600;
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.03, t + d*0.5); g.gain.linearRampToValueAtTime(0, t + d);
+    let last = g;
+    if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); p.pan.setValueAtTime(-0.7, t); p.pan.linearRampToValueAtTime(0.7, t + d); g.connect(p); last = p; }
+    o.connect(lp); lp.connect(g); last.connect(this._ambientNode.bus); o.start(t); o.stop(t + d + 0.05);
+  }
+  // Low factory hum from the Energy / Technology quarters.
+  _industrialHum() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 5;
+    [100, 150].forEach((fr, i) => {
+      const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'triangle'; o.frequency.value = fr;
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.018 / (i+1), t + 1.5); g.gain.setValueAtTime(0.018 / (i+1), t + d - 1.5); g.gain.linearRampToValueAtTime(0, t + d);
+      o.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + d + 0.05);
+    });
+  }
+  // A distant emergency siren that fades away.
+  _siren() {
+    const ctx = this._audioCtx, t = ctx.currentTime, d = 4;
+    const o = ctx.createOscillator(), g = ctx.createGain(), lp = ctx.createBiquadFilter();
+    o.type = 'triangle'; lp.type = 'lowpass'; lp.frequency.value = 1500;
+    for (let x = 0; x < d; x += 0.8) { o.frequency.setValueAtTime(700, t + x); o.frequency.linearRampToValueAtTime(950, t + x + 0.4); o.frequency.linearRampToValueAtTime(700, t + x + 0.8); }
+    g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.022, t + 0.8); g.gain.linearRampToValueAtTime(0, t + d);
+    o.connect(lp); lp.connect(g); g.connect(this._ambientNode.bus); o.start(t); o.stop(t + d + 0.05);
   }
 
   _birdChirp() {
@@ -1209,7 +1268,7 @@ class GameScene extends Phaser.Scene {
       const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sine';
       const f = base * (0.9 + Math.random() * 0.25);
       o.frequency.setValueAtTime(f, t); o.frequency.exponentialRampToValueAtTime(f * (Math.random()<.5?1.5:0.7), t + 0.07);
-      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.06, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
+      g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.045, t + 0.012); g.gain.exponentialRampToValueAtTime(0.0006, t + 0.085);
       o.connect(g); g.connect(out); o.start(t); o.stop(t + 0.1);
     }
   }
@@ -1229,7 +1288,7 @@ class GameScene extends Phaser.Scene {
     const ctx = this._audioCtx, t = ctx.currentTime, d = 2.6 + Math.random() * 1.5;
     const src = ctx.createBufferSource(); src.buffer = this._noiseBuffer(d, true);
     const f = ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.setValueAtTime(260, t); f.frequency.linearRampToValueAtTime(700, t + d/2); f.frequency.linearRampToValueAtTime(240, t + d);
-    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.5, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
+    const g = ctx.createGain(); g.gain.setValueAtTime(0, t); g.gain.linearRampToValueAtTime(0.28, t + d/2); g.gain.linearRampToValueAtTime(0, t + d);
     let last = g;
     if (ctx.createStereoPanner) { const p = ctx.createStereoPanner(); const dir = Math.random()<.5?-1:1; p.pan.setValueAtTime(-0.8*dir, t); p.pan.linearRampToValueAtTime(0.8*dir, t + d); g.connect(p); last = p; }
     src.connect(f); f.connect(g); last.connect(this._ambientNode.bus); src.start(t); src.stop(t + d);
@@ -1254,7 +1313,7 @@ class GameScene extends Phaser.Scene {
     [[0, 330, 0.9], [1.0, 262, 1.3]].forEach(([s, fr, dur]) => {
       [1, 1.5, 2].forEach((m, i) => {
         const o = ctx.createOscillator(), g = ctx.createGain(); o.type = 'sawtooth'; o.frequency.value = fr * m;
-        const v = 0.05 / (i + 1);
+        const v = 0.025 / (i + 1);
         g.gain.setValueAtTime(0, t+s); g.gain.linearRampToValueAtTime(v, t+s+0.12); g.gain.setValueAtTime(v, t+s+dur-0.2); g.gain.linearRampToValueAtTime(0, t+s+dur);
         o.connect(g); g.connect(f); o.start(t+s); o.stop(t+s+dur+0.05);
       });
@@ -1268,7 +1327,7 @@ class GameScene extends Phaser.Scene {
     const bp = ctx.createBiquadFilter(); bp.type = 'bandpass'; bp.frequency.value = 520; bp.Q.value = 1.6;
     const g = ctx.createGain(); g.gain.setValueAtTime(0, t0);
     for (let x = 0; x < d; x += 0.16 + Math.random() * 0.12) {
-      g.gain.linearRampToValueAtTime(0.05 + Math.random() * 0.06, t0 + x + 0.05);
+      g.gain.linearRampToValueAtTime(0.03 + Math.random() * 0.03, t0 + x + 0.05);
       g.gain.linearRampToValueAtTime(0.01, t0 + x + 0.14);
       bp.frequency.setValueAtTime(380 + Math.random() * 420, t0 + x);
     }
