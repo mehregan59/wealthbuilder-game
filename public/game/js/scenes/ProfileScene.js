@@ -8,7 +8,7 @@ class ProfileScene extends Phaser.Scene {
 
   create(data) {
     this.W = this.scale.width; this.H = this.scale.height;
-    this.S = Math.max(0.78, Math.min(1.05, this.H / 860, this.W / 1280));
+    this.S = Math.max(0.5, Math.min(1.7, this.H / 700, this.W / 1150));
     this.stats = (data && data.stats) || { happiness:50, development:50, resources:50 };
     this.scores  = this._computeScores();
     this.persona = this._assignPersona(this.scores);

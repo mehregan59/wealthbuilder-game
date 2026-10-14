@@ -17,6 +17,14 @@ class Boot extends Phaser.Scene {
     this.load.on('complete', () => { text.destroy(); bar.destroy(); progress.destroy(); });
   }
   create() {
+    // After minimize/tab switch, reset the frame clock so animations resume
+    // at normal speed instead of crawling until the next level.
+    if (!window.__wsVisFix) {
+      window.__wsVisFix = true;
+      const reset = () => { try { const g = window.WS_game || this.game; if (g && g.loop) { g.loop.resetDelta(); } } catch (e) {} };
+      document.addEventListener('visibilitychange', () => { if (!document.hidden) reset(); });
+      window.addEventListener('focus', reset);
+    }
     this.scene.start('PlayerSetup');
   }
 }

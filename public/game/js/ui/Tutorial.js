@@ -94,7 +94,7 @@ class Tutorial {
 
   _render(titleTxt, bodyTxt, page, pages, btnLabel, onClose, centred, showSkipLink) {
     this.hide();
-    const W=this.scene.scale.width, H=this.scene.scale.height;
+    const W=this.scene.W||this.scene.scale.width, H=this.scene.H||this.scene.scale.height;
     const panelL=this.scene.PANEL||0;
     const cx = centred ? W/2 : panelL+(W-panelL)/2;
     const bw = Math.min(this.s(centred?918:620), W-(centred?this.s(80):panelL+this.s(70)));
@@ -138,7 +138,7 @@ class Tutorial {
       const de=(typeof currentLang!=='undefined'&&currentLang==='de');
       const skipTxt=this.scene.add.text(bx+bw-this.s(14), by+this.s(14),
         de?'Anleitungen ausblenden \u2715':'Skip guides \u2715', {
-        fontFamily:CityTheme.body, fontSize:this.s(11), color:'#55777a'
+        fontFamily:CityTheme.body, fontSize:this.s(14), color:'#296b72', fontStyle:'700'
       }).setOrigin(1,0).setDepth(133).setInteractive({useHandCursor:true});
       skipTxt.on('pointerover',()=>skipTxt.setColor('#296b72'));
       skipTxt.on('pointerout', ()=>skipTxt.setColor('#55777a'));

@@ -10,7 +10,7 @@ const CityTheme = {
   body: 'DM Sans, Arial, sans-serif',
 
   drawBackdrop(scene, options) {
-    const W=scene.scale.width,H=scene.scale.height,o=options||{};
+    const W=scene.W||scene.scale.width,H=scene.H||scene.scale.height,o=options||{};
     const g=scene.add.graphics().setDepth(o.depth===undefined?-20:o.depth);
     g.fillStyle(this.colors.sky,1); g.fillRect(0,0,W,H);
     g.fillStyle(0xd9eef0,0.72); g.fillRect(0,H*0.34,W,H*0.16);
@@ -36,13 +36,30 @@ const CityTheme = {
 
   // One solid paper card behind pre-game content so text never sits on scenery.
   contentCard(scene) {
-    const W=scene.scale.width,H=scene.scale.height,m=W<700?10:24;
+    const W=scene.W||scene.scale.width,H=scene.H||scene.scale.height,m=W<700?10:24;
     const w=Math.min(1260,W-m*2),x=(W-w)/2,y=m,h=H-m*2;
     const g=scene.add.graphics().setDepth(-1);
     g.fillStyle(this.colors.paper,0.97); g.fillRoundedRect(x,y,w,h,16);
     g.lineStyle(1.5,this.colors.gold,0.7); g.strokeRoundedRect(x,y,w,h,16);
     g.fillStyle(this.colors.gold,0.95); g.fillRect(x+10,y,w-20,4);
     return g;
+  },
+
+  // Fit a pre-game scene designed for ~1100x640 to any screen: everything
+  // scales up on big monitors and down on phones, so nothing is cut off.
+  fitScene(scene, dw, dh) {
+    const sw=scene.scale.width, sh=scene.scale.height;
+    const z=Math.max(0.42, Math.min(1.9, sw/(dw||1100), sh/(dh||640)));
+    scene.W=sw/z; scene.H=sh/z; scene.S=1;
+    const cam=scene.cameras.main; cam.setZoom(z); cam.centerOn(scene.W/2, scene.H/2);
+    const onResize=(size)=>{
+      if(Math.abs(size.width-sw)/sw>0.12 || Math.abs(size.height-sh)/sh>0.18){
+        scene.scale.off('resize', onResize); scene.scene.restart();
+      }
+    };
+    scene.scale.on('resize', onResize);
+    scene.events.once('shutdown', ()=>scene.scale.off('resize', onResize));
+    return z;
   },
 
   panel(g,x,y,w,h,accent) {

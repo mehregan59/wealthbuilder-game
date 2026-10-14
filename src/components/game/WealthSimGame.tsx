@@ -126,6 +126,7 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
           },
           render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
           dom: { createContainer: true },
+          fps: { smoothStep: false, min: 10, panicMax: 0 },
           // Scene classes are top-level `class` declarations in classic
           // scripts: they live in global lexical scope, not on window.
           scene: new Function(

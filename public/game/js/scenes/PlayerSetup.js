@@ -2,7 +2,7 @@ class PlayerSetup extends Phaser.Scene {
   constructor() { super({ key: 'PlayerSetup' }); }
 
   create() {
-    this.W = this.scale.width; this.H = this.scale.height;
+    CityTheme.fitScene(this, 1100, 640);
     this.selections = { age:null, employment:'other', experience:null };
     this._sectionCards = {};
     this._continueBtnY = 560;
@@ -36,10 +36,10 @@ class PlayerSetup extends Phaser.Scene {
       {fontFamily:CityTheme.heading,fontSize:compact?28:40,color:'#000000'}).setOrigin(0.5);
     this.add.text(cx,compact?92:112,
       this._tr('ui.playerSetup.subtitle','This helps personalize your experience. It never changes the game.'),
-      {fontFamily:CityTheme.body,fontSize:compact?14:19,color:'#2b4d50',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+      {fontFamily:CityTheme.body,fontSize:compact?14:22,color:'#2b4d50',align:'center',wordWrap:{width:this.W-140}}).setOrigin(0.5);
     this.add.text(cx,compact?118:142,
       this._tr('ui.playerSetup.disclosure','Nothing is saved: your answers stay in this browser tab and disappear when you close the game. Your decision patterns are explained to you in the final results.'),
-      {fontFamily:CityTheme.body,fontSize:compact?11:15,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
+      {fontFamily:CityTheme.body,fontSize:compact?11:18,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-140}}).setOrigin(0.5);
 
     const ageOptions = [
       {label:'18–27',value:'18-27'},{label:'28–37',value:'28-37'},
@@ -70,7 +70,7 @@ class PlayerSetup extends Phaser.Scene {
   _buildSkipLink(y) {
     const lbl = this._tr('ui.playerSetup.skip','Skip and start building →');
     const t=this.add.text(this.W/2,y,lbl,
-      {fontFamily:CityTheme.body,fontSize:15,color:'#2b4d50'}).setOrigin(0.5).setInteractive({useHandCursor:true});
+      {fontFamily:CityTheme.body,fontSize:19,color:'#2b4d50'}).setOrigin(0.5).setInteractive({useHandCursor:true});
     t.on('pointerover',()=>t.setColor('#173b40'));
     t.on('pointerout',()=>t.setColor('#2b4d50'));
     t.on('pointerdown',()=>{ this._skipped=true; this._goNext(); });

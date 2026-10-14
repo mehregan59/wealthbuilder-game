@@ -2,8 +2,7 @@ class StartingQuestions extends Phaser.Scene {
   constructor() { super({ key: 'StartingQuestions' }); }
 
   create() {
-    this.W=this.scale.width; this.H=this.scale.height;
-    this.S=1;
+    CityTheme.fitScene(this, 1100, 640);
     this.currentQ=0; this.answers=[]; this.questionElements=[];
     this.tutorial=new Tutorial(this);
     // Use i18n translations for all languages; fall back to English if key missing

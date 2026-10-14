@@ -2,8 +2,7 @@ class RetirementContext extends Phaser.Scene {
   constructor() { super({ key: 'RetirementContext' }); }
 
   create() {
-    this.W = this.scale.width;
-    this.H = this.scale.height;
+    CityTheme.fitScene(this, 1100, 640);
     this._yearsFromAge = this._deriveYears();
     this.selections = { saule: [], buildexp: (window.playerInfo&&window.playerInfo.experience)||'none', years: this._yearsFromAge.value };
     this._sectionCards = {};
