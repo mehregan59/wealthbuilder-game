@@ -64,6 +64,7 @@ function Loading() {
 
 function Index() {
   const [playing, setPlaying] = useState(false);
+  const [interactive, setInteractive] = useState(false);
   const [language, setLanguage] = useState<"en" | "de">("en");
   const copy = HOME_COPY[language];
 
@@ -72,6 +73,7 @@ function Index() {
   }, [language]);
 
   useEffect(() => {
+    setInteractive(true);
     const timer = window.setTimeout(() => {
       void import("@/components/game/WealthSimGame").then(({ preloadGame }) => preloadGame()).catch(() => {});
     }, 150);
@@ -104,7 +106,7 @@ function Index() {
             <p className="font-heading text-sm font-bold uppercase text-primary-foreground/80">{copy.tagline}</p>
             <h1 className="mt-4 max-w-4xl font-heading text-5xl font-bold leading-[1.02] text-primary-foreground md:text-7xl">WealthSim</h1>
             <p className="mt-5 max-w-2xl text-lg leading-8 text-primary-foreground/90 md:text-xl">{copy.intro}</p>
-            <Button onClick={() => setPlaying(true)} size="lg" variant="secondary" className="mt-8 h-14 gap-3 px-7 font-heading text-base font-bold shadow-lg transition-transform hover:scale-[1.02]">
+            <Button disabled={!interactive} onClick={() => setPlaying(true)} size="lg" variant="secondary" className="mt-8 h-14 gap-3 px-7 font-heading text-base font-bold shadow-lg transition-transform hover:scale-[1.02]">
               {copy.start} <ArrowRight className="size-5" />
             </Button>
           </div>
