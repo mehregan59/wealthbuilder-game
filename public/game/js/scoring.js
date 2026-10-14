@@ -15,6 +15,7 @@ const ScoringEngine = {
     this.startingAnswers = [];
     this.decisionTimes = [];
     this.levelStartTime = null;
+    if (typeof window !== 'undefined') window.__wsWire = {};
   },
 
   startTimer() {
@@ -23,7 +24,9 @@ const ScoringEngine = {
 
   recordDecision(level, value, extra = {}) {
     const elapsed = this.levelStartTime ? Date.now() - this.levelStartTime : null;
-    this.decisions.push({ level, value, elapsed, ...extra });
+    // Tag decisions made while a MARKET WIRE headline was on the ticker.
+    const wire = (typeof window !== 'undefined' && window.__wsWire && window.__wsWire[level]) || null;
+    this.decisions.push({ level, value, elapsed, ...(wire ? { news: true, headline: wire } : {}), ...extra });
   },
 
   recordStartingAnswer(questionIndex, value) {

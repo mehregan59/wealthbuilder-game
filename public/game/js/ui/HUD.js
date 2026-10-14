@@ -28,11 +28,11 @@ class HUD {
     this.container.add(this.titleText);
     if (W < 700) this.titleText.setVisible(false);
 
-    this.yearText = this.scene.add.text(W - this.s(20), H/2, 'Year 2024', {
+    this.horizon = HUD.horizon();
+    this.yearText = this.scene.add.text(W - this.s(20), H/2, this._yearLabel(2024, W), {
       fontFamily:CityTheme.body, fontSize:this.s(13), color:'#55777a'
     }).setOrigin(1,0.5);
     this.container.add(this.yearText);
-    if (W < 700) this.yearText.setText(String(this.year));
 
     // City name, sitting right next to the year rather than as a separate
     // element elsewhere on screen.
@@ -53,6 +53,84 @@ class HUD {
 
   updateStats(){ /* stats live in StatsPanel only */ }
 
+  // ── City news ticker: slow right-to-left headlines in the empty middle of
+  //    the top bar. items: [{text, wire}] — wire items get an amber badge.
+  //    Hover/tap pauses it so the player can read at their own pace.
+  startTicker(items) {
+    this.stopTicker();
+    if (!items || !items.length) return;
+    const sc = this.scene, H = this.s(44), W = sc.scale.width;
+    const left = (this.titleText.visible ? this.titleText.x + Math.max(this.titleText.width, this.s(120)) : this.levelText.x + this.levelText.width) + this.s(18);
+    const rightEdge = this.cityText && this.cityText.visible ? this.cityText.x - this.cityText.width : this.yearText.x - this.yearText.width;
+    const right = rightEdge - this.s(22);
+    if (right - left < this.s(120)) return;
+    const bg = sc.add.graphics();
+    bg.fillStyle(0x102c30, 1); bg.fillRoundedRect(left, this.s(7), right - left, H - this.s(14), this.s(8));
+    bg.lineStyle(1, 0xe0a82e, 0.7); bg.strokeRoundedRect(left, this.s(7), right - left, H - this.s(14), this.s(8));
+    const strip = sc.add.container(right, H / 2);
+    let x = 0;
+    const de = (typeof currentLang !== 'undefined' && currentLang === 'de');
+    items.concat(items).forEach(it => {
+      if (it.wire) {
+        const b = sc.add.text(x, 0, de ? '\u26a1 MARKTMELDUNG' : '\u26a1 MARKET WIRE', {
+          fontFamily: CityTheme.heading, fontSize: this.s(13), color: '#102c30', backgroundColor: '#f4c64e',
+          fontStyle: '700', padding: { x: this.s(6), y: this.s(2) } }).setOrigin(0, 0.5);
+        strip.add(b); x += b.width + this.s(8);
+      }
+      const t = sc.add.text(x, 0, it.text, { fontFamily: CityTheme.body, fontSize: this.s(15),
+        color: it.wire ? '#ffe3a3' : '#e9f4f1', fontStyle: it.wire ? '700' : '400' }).setOrigin(0, 0.5);
+      strip.add(t); x += t.width;
+      const dot = sc.add.text(x, 0, '   \u2022   ', { fontFamily: CityTheme.body, fontSize: this.s(15), color: '#7ca5a1' }).setOrigin(0, 0.5);
+      strip.add(dot); x += dot.width;
+    });
+    const loopW = x / 2;
+    const mg = sc.make.graphics({ add: false });
+    mg.fillStyle(0xffffff); mg.fillRect(left + this.s(4), 0, right - left - this.s(8), H);
+    strip.setMask(mg.createGeometryMask());
+    const hit = sc.add.rectangle((left + right) / 2, H / 2, right - left, H, 0xffffff, 0.001).setInteractive({ useHandCursor: true });
+    let paused = false;
+    hit.on('pointerover', () => paused = true); hit.on('pointerout', () => paused = false);
+    hit.on('pointerdown', () => paused = !paused);
+    this.container.add([bg, strip, hit]);
+    const speed = this.s(42); // px per second — slow enough to read
+    const startX = right;
+    const tick = (time, delta) => {
+      if (paused || !strip.active) return;
+      strip.x -= speed * delta / 1000;
+      if (strip.x < left - loopW) strip.x += loopW;
+    };
+    sc.events.on('update', tick);
+    this._ticker = { bg, strip, hit, mg, tick };
+    strip.x = startX;
+  }
+
+  stopTicker() {
+    const t = this._ticker; if (!t) return;
+    this.scene.events.off('update', t.tick);
+    [t.bg, t.strip, t.hit, t.mg].forEach(o => { try { o.destroy(); } catch (e) {} });
+    this._ticker = null;
+  }
+
+  // Region of the ticker, used by the Level 1 tour spotlight.
+  tickerRect() {
+    const H = this.s(44), W = this.scene.scale.width;
+    return { x: W * 0.22, y: 0, w: W * 0.5, h: H };
+  }
+
+  // Years from the middle of the chosen age band to 67 (statutory retirement age).
+  static horizon() {
+    const a = (typeof window !== 'undefined' && window.playerInfo && window.playerInfo.age) || null;
+    if (!a) return null;
+    const m = String(a).match(/(\d+)\D+(\d+)/); if (!m) return null;
+    return Math.max(2, 67 - Math.round((+m[1] + +m[2]) / 2));
+  }
+  _yearLabel(y, W) {
+    const de = (typeof currentLang !== 'undefined' && currentLang === 'de');
+    const yrs = this.horizon !== null && this.horizon !== undefined ? Math.max(0, this.horizon - (y - 2024)) : null;
+    if (W < 700) return String(y);
+    return (de ? 'Jahr ' : 'Year ') + y + (yrs !== null ? (de ? '  \u00b7  ~' + yrs + ' J. bis zur Rente' : '  \u00b7  ~' + yrs + ' yrs to retirement') : '');
+  }
+
   setLevel(n, name) {
     this.levelText.setText('LEVEL ' + n);
     this.titleText.setText(name || '');
@@ -60,7 +138,7 @@ class HUD {
 
   advanceYear(y) {
     this.year += (y || 1);
-    this.yearText.setText(this.scene.scale.width < 700 ? String(this.year) : 'Year ' + this.year);
+    this.yearText.setText(this._yearLabel(this.year, this.scene.scale.width));
   }
 
   showMessage(text, dur) {
