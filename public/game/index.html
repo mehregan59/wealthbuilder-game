@@ -221,7 +221,10 @@
             if (inCity) { var k = gs.height / h; g.scale.setGameSize(Math.round(w * k), gs.height); }
             else g.scale.setGameSize(w, h);
           }
-          g.scale.refresh();
+          // Re-read the window size first; otherwise Phaser keeps the old size
+          // after browser zoom and the canvas spills off the top/left edges.
+          g.scale.getParentBounds(); g.scale.refresh();
+          setTimeout(function () { if (window.WS_game) { window.WS_game.scale.getParentBounds(); window.WS_game.scale.refresh(); } }, 120);
         }
         window.WS_updateTextScale();
       }
