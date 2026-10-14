@@ -94,7 +94,7 @@ class Tutorial {
 
   _render(titleTxt, bodyTxt, page, pages, btnLabel, onClose, centred, showSkipLink) {
     this.hide();
-    const W=this.scene.scale.width, H=this.scene.scale.height;
+    const W=this.scene.W||this.scene.scale.width, H=this.scene.H||this.scene.scale.height;
     const panelL=this.scene.PANEL||0;
     const cx = centred ? W/2 : panelL+(W-panelL)/2;
     const bw = Math.min(this.s(centred?918:620), W-(centred?this.s(80):panelL+this.s(70)));

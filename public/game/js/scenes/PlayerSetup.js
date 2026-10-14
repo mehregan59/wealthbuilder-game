@@ -2,7 +2,7 @@ class PlayerSetup extends Phaser.Scene {
   constructor() { super({ key: 'PlayerSetup' }); }
 
   create() {
-    this.W = this.scale.width; this.H = this.scale.height;
+    CityTheme.fitScene(this, 1100, 640);
     this.selections = { age:null, employment:'other', experience:null };
     this._sectionCards = {};
     this._continueBtnY = 560;
