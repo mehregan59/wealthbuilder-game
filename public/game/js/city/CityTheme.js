@@ -49,7 +49,10 @@ const CityTheme = {
   // scales up on big monitors and down on phones, so nothing is cut off.
   fitScene(scene, dw, dh) {
     const sw=scene.scale.width, sh=scene.scale.height;
-    const z=Math.max(0.42, Math.min(1.9, sw/(dw||1100), sh/(dh||640))) * (window.WS_textScale||1);
+    const base=Math.max(0.42, Math.min(1.9, sw/(dw||1100), sh/(dh||640)));
+    const ts=window.WS_textScale||1;
+    // Zoom in enlarges cards only as far as they still fit the window height.
+    const z=ts>1 ? Math.max(base, Math.min(base*ts, sh/((dh||640)*0.95))) : base*ts;
     scene.W=sw/z; scene.H=sh/z; scene.S=1;
     const cam=scene.cameras.main; cam.setZoom(z); cam.centerOn(scene.W/2, scene.H/2);
     const onResize=(size)=>{
