@@ -24,4 +24,4 @@
 
 - [x] Fit decision and report borders to wrapped text; separate opposing trains onto dual tracks; reveal Level 10 forecast outcomes individually.
 - [x] Unified card style, click-to-continue messages, shorter intake, in-city naming, city sounds, flying coins.
-- [ ] Nine-point update: four-district text, skip tour, age horizon, privacy note, deliberation note, contextual audio, news ticker with scoring, smooth L6 ship, L10 unified reveal.
+- [x] Nine-point update: four-district text, skip tour, age horizon, privacy note, deliberation note, contextual audio, news ticker with scoring, smooth L6 ship, L10 unified reveal.

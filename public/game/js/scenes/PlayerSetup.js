@@ -38,7 +38,7 @@ class PlayerSetup extends Phaser.Scene {
       this._tr('ui.playerSetup.subtitle','This helps personalize your experience. It never changes the game.'),
       {fontFamily:CityTheme.body,fontSize:compact?14:19,color:'#2b4d50',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
     this.add.text(cx,compact?118:142,
-      this._tr('ui.playerSetup.disclosure','Note: this session observes your decision patterns and explains them to you in the final results.'),
+      this._tr('ui.playerSetup.disclosure','Nothing is saved: your answers stay in this browser tab and disappear when you close the game. Your decision patterns are explained to you in the final results.'),
       {fontFamily:CityTheme.body,fontSize:compact?11:15,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-36}}).setOrigin(0.5);
 
     const ageOptions = [

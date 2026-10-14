@@ -214,8 +214,20 @@ class RoadNetwork {
     }
     const pts=v.path;
     if(!v.arrived || v.exiting){
-      v.t+=v.sp*(delta/16);
-      while(v.t>=1){ v.t-=1; v.i++; }
+      // Constant speed in pixels, so long and short river stretches feel the same.
+      const sp=v.ship?this.s(1.6):null;
+      if(sp){
+        let step=sp*(delta/16);
+        while(step>0 && v.i<pts.length-1){
+          const a=pts[v.i], c=pts[Math.min(v.i+1,pts.length-1)];
+          const L=Math.max(1,Math.hypot(c.x-a.x,c.y-a.y));
+          const left=(1-v.t)*L;
+          if(step<left){ v.t+=step/L; step=0; } else { step-=left; v.t=0; v.i++; }
+        }
+      } else {
+        v.t+=v.sp*(delta/16);
+        while(v.t>=1){ v.t-=1; v.i++; }
+      }
       if(v.i>=pts.length-1){
         if(v.exiting){ this.visitor=null; if(v.onExit) v.onExit(); return; }
         v.arrived=true; v.i=pts.length-2; v.t=1;

@@ -222,3 +222,24 @@ describe('complete gameplay flow regressions', () => {
     expect(scene).toContain('onComplete:()=>this._toProfile()');
   });
 });
+
+describe("market wire news", () => {
+  it("level 2: holding through the reassuring wire lowers loss aversion by 5", () => {
+    expect(A.computeScores([{ level: 2, value: "continue", phase: "dip", news: true }], []).lossAversion).toBe(25);
+  });
+  it("no wire on screen -> no adjustment", () => {
+    expect(A.computeScores([{ level: 2, value: "continue", phase: "dip" }], []).lossAversion).toBe(30);
+  });
+  it("level 5: going all in despite the bubble warning raises FOMO by 5", () => {
+    expect(A.computeScores([{ level: 5, value: "all_in", news: true }], []).greedFomo).toBe(100);
+    expect(A.computeScores([{ level: 5, value: "hold", news: true }], []).greedFomo).toBe(21);
+  });
+  it("level 6: researching with the wire adds 5, skipping research loses 5", () => {
+    expect(A.computeScores([{ level: 6, value: "research", news: true }, { level: 6, value: "accept", news: true }], []).learning).toBe(90);
+    expect(A.computeScores([{ level: 6, value: "accept", news: true }], []).learning).toBe(55);
+  });
+  it("level 7 and 8 wire adjustments", () => {
+    expect(A.computeScores([{ level: 7, value: "sell", news: true, elapsed: 9000 }], []).reactionToNoise).toBe(95);
+    expect(A.computeScores([{ level: 8, value: "sell_all", news: true }], []).resilience).toBe(9);
+  });
+});

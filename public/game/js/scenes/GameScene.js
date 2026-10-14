@@ -859,12 +859,12 @@ class GameScene extends Phaser.Scene {
 
   _level10Ask() {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    const F=Assessment.FORECASTS,i=this._fcIndex;
+    const F=Assessment.FORECASTS.concat([Assessment.PRACTICE]),i=this._fcIndex;
     if(i>=F.length)return this._level10Reveal();
     this._showPersistentMessage((de?'Prognose ':'Forecast ')+(i+1)+' '+(de?'von':'of')+' '+F.length+':\n'+F[i].q);
     this._showDecisionPanel(this._forecastOptions(),(v)=>{
       const f=this._parseForecast(v);
-      ScoringEngine.recordDecision(10,v,{phase:'forecast',id:F[i].id,pick:f.pick,conf:f.conf,outcome:F[i].outcome});
+      ScoringEngine.recordDecision(10,v,{phase:i<Assessment.FORECASTS.length?'forecast':'practice',id:F[i].id,pick:f.pick,conf:f.conf,outcome:F[i].outcome});
       this._forecasts.push(Object.assign({outcome:F[i].outcome},f));
       this._clearPersistentMessage();
       this._fcIndex++;
@@ -874,8 +874,9 @@ class GameScene extends Phaser.Scene {
 
   _level10Reveal(index=0) {
     const de=(typeof currentLang!=='undefined'&&currentLang==='de');
-    if(index<Assessment.FORECASTS.length){
-      const q=Assessment.FORECASTS[index],f=this._forecasts[index];
+    const ALL=Assessment.FORECASTS.concat([Assessment.PRACTICE]);
+    if(index<ALL.length){
+      const q=ALL[index],f=this._forecasts[index];
       const unsure=f.pick===null,correct=f.pick===q.outcome;
       const verdict=unsure?(de?'Keine feste Prognose':'No firm prediction'):
         correct?(de?'✓ Deine Prognose traf ein':'✓ Your prediction matched the outcome'):
@@ -885,27 +886,30 @@ class GameScene extends Phaser.Scene {
         'Das Wohnviertel gewann an Wert.',
         'Die Energiekosten fielen nicht um mehr als 10 %.',
         'Technologie übertraf Verkehr nicht.',
-        'Die Zufriedenheit stieg bis zum Jahresende.'
+        'Die Zufriedenheit stieg bis zum Jahresende.',
+        'Das Verkehrsviertel holte seine Verluste innerhalb von zwei Jahren auf.'
       ]:[
         'Housing gained value.',
         'Energy costs did not fall by more than 10%.',
         'Technology did not outperform transport.',
-        'Citizen happiness finished the year higher.'
+        'Citizen happiness finished the year higher.',
+        'The transport district recovered its losses within two years.'
       ];
-      this._reportModal((de?'Ergebnis ':'Outcome ')+(index+1)+' / 4',
+      this._reportModal((de?'Ergebnis ':'Outcome ')+(index+1)+' / '+ALL.length,
         q.q+'\n\n'+(de?'Deine Antwort: ':'Your answer: ')+(unsure?'50 / 50':answer(f.pick))+
         ' · '+f.conf+'% '+(de?'sicher':'confident')+'\n\n'+events[index]+'\n'+verdict+
         '\n\n'+(de?'Ein einzelnes Ergebnis macht eine Entscheidung nicht gut oder schlecht.':'One outcome does not make a decision good or bad.'),
         ()=>this._level10Reveal(index+1));
       return;
     }
-    const r=Assessment.forecastResult(this._forecasts);
+    const r=Assessment.forecastResult(this._forecasts.slice(0,Assessment.FORECASTS.length));
     this.hud.advanceYear(1);
     const summary=(de?'Durchschnittliche Sicherheit: ':'Average confidence: ')+Math.round(r.avgConf*100)+'%\n'+
       (de?'Trefferquote: ':'Accuracy: ')+Math.round(r.hitRate*100)+'%'+
       (r.gap>.1?(de?'\n\nDu warst sicherer, als du richtig lagst.':'\n\nYou were more confident than you were right.'):r.gap<-.1?(de?'\n\nDu lagst öfter richtig, als du erwartet hast.':'\n\nYou were right more often than you expected.'):(de?'\n\nDeine Sicherheit passte gut zu deiner Trefferquote.':'\n\nYour confidence matched your accuracy closely.'))+
       (de?'\n\nVier Prognosen beschreiben diese Sitzung, nicht deine Persönlichkeit.':'\n\nFour forecasts describe this session, not your personality.');
-    this._reportModal(de?'Deine vier Prognosen':'Your four forecasts',summary,()=>this._level10Practice());
+    this._updateStats(2,4,0);
+    this._reportModal(de?'Deine Prognosen':'Your forecasts',summary,()=>this._finish());
   }
 
   _level10Practice() {
@@ -1526,6 +1530,9 @@ class GameScene extends Phaser.Scene {
       { r: { x: 0, y: 0, w: W, h: hudH },
         t: de ? 'Die Kopfleiste' : 'The top bar',
         b: de ? 'Hier stehen Stadtname, aktuelles Jahr und Level. Sie ändern sich, während deine Stadt wächst.' : 'City name, current year and level live here. They update as your city grows.' },
+      { r: this.hud.tickerRect ? this.hud.tickerRect() : { x: W*0.22, y: 0, w: W*0.5, h: hudH },
+        t: de ? 'Die Nachrichtenzeile' : 'The news ticker',
+        b: de ? 'Hier laufen Schlagzeilen durch. Manche enthalten wichtige Hinweise für deine Entscheidungen, andere sind nur Alltag oder Rauschen \u2014 du musst selbst einschätzen, was zählt. Zum Anhalten darauf zeigen oder tippen.' : 'Headlines scroll here. Some carry important information for your decisions, others are just everyday news or noise \u2014 you have to judge what matters. Point at it or tap to pause.' },
       { r: { x: P + this.s(10), y: cityTop, w: W - P - this.s(20), h: cityBottom - cityTop },
         t: de ? 'Deine vier Stadtteile' : 'Your four districts',
         b: de ? 'Wohnen, Verkehr, Technologie und Energie. Jedes Viertel wächst anders — das kurze Schild über dem Namen verrät, wie.' : 'Housing, Transport, Technology and Energy. Each grows differently — the short sign above each name tells you how.' },
@@ -1544,7 +1551,10 @@ class GameScene extends Phaser.Scene {
     const body = this.add.text(0, 0, '', { fontFamily: CityTheme.body, fontSize: this.s(16), color: '#2a5a60', lineSpacing: this.s(5) }).setOrigin(0, 0);
     const hint = this.add.text(0, 0, '', { fontFamily: CityTheme.body, fontSize: this.s(13), color: '#9b6c12', fontStyle: '700' }).setOrigin(0, 0);
     const hit = this.add.rectangle(W / 2, H / 2, W, H, 0xffffff, 0.001).setInteractive();
-    layer.add([dim, ring, card, title, body, hint, hit]);
+    const skip = this.add.text(W - this.s(20), H - this.s(20), de ? 'Tour überspringen \u2715' : 'Skip tour \u2715', {
+      fontFamily: CityTheme.body, fontSize: this.s(15), color: '#173b40', fontStyle: '700', backgroundColor: '#fffbf1',
+      padding: { x: this.s(12), y: this.s(8) } }).setOrigin(1, 1).setInteractive({ useHandCursor: true });
+    layer.add([dim, ring, card, title, body, hint, hit, skip]);
     const cur = { x: W / 2, y: H / 2, w: 10, h: 10 };
     let idx = -1, tw = null, finished = false;
 
@@ -1587,6 +1597,7 @@ class GameScene extends Phaser.Scene {
       placeCard(s.r);
     };
     let ready = 0;
+    skip.on('pointerdown', (p, x, y, ev) => { if (ev && ev.stopPropagation) ev.stopPropagation(); finish(); });
     hit.on('pointerdown', () => { if (this.time.now - ready < 350) return; ready = this.time.now; next(); });
     next();
   }
