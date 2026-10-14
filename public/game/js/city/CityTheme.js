@@ -57,7 +57,7 @@ const CityTheme = {
     const cam=scene.cameras.main; cam.setZoom(z); cam.centerOn(scene.W/2, scene.H/2);
     const onResize=(size)=>{
       if(Math.abs(size.width-sw)/sw>0.01 || Math.abs(size.height-sh)/sh>0.01){
-        scene.scale.off('resize', onResize); scene.scene.restart();
+        scene.scale.off('resize', onResize); setTimeout(()=>{ if(scene.sys && scene.sys.isActive()) scene.scene.restart(); }, 60);
       }
     };
     scene.scale.on('resize', onResize);
