@@ -100,8 +100,9 @@
 
     /* ── Game canvas ── */
     #game canvas{touch-action:pinch-zoom!important}
-    #game{display:none;width:100vw;height:100dvh;overflow:hidden;background:#a7d8de}
-    body.playing{overflow:hidden}
+    /* Fixed CSS size (set by JS) so browser zoom really enlarges/shrinks the game like a normal page. */
+    #game{display:none;width:100vw;height:100dvh;overflow:hidden;background:#a7d8de;margin:0 auto}
+    body.playing{overflow:auto;background:#a7d8de}
     body.playing #landing{display:none}
     body.playing #game{display:block}
 
@@ -130,7 +131,7 @@
     </div>
 
     <section class="hero">
-      <img class="hero-image" src="assets/city-panorama.jpg" alt="A connected modern eco city" />
+      <img class="hero-image" src="assets/wealthsim-eco-city.jpg" alt="A connected modern eco city" />
       <div class="hero-shade"></div>
       <div class="hero-copy">
         <p class="eyebrow" data-i18n="opening.tagline">Behavioral retirement education</p>
@@ -276,9 +277,43 @@
       var startButton = document.getElementById('start-game');
       var gameRoot = document.getElementById('game');
 
+      // Browser zoom (Ctrl +/-) changes devicePixelRatio but not the physical window.
+      // Keep the game at the CSS size measured at 100% so zooming in enlarges it
+      // (page scrolls) and zooming out shrinks it — like any normal web page.
+      // A real window resize/rotation (DPR unchanged) re-measures the size.
+      var baseDpr = window.devicePixelRatio || 1, baseW = 0, baseH = 0;
+      function measure() {
+        var vv = window.visualViewport;
+        var scale = vv ? vv.scale : 1; // ignore mobile pinch state
+        baseW = Math.round(window.innerWidth * scale);
+        baseH = Math.round(window.innerHeight * scale);
+        baseDpr = window.devicePixelRatio || 1;
+      }
+      function applySize() {
+        gameRoot.style.width = baseW + 'px';
+        gameRoot.style.height = Math.round(baseH) + 'px';
+        if (window.WS_game && window.WS_game.scale) window.WS_game.scale.refresh();
+      }
+      var lastDpr = window.devicePixelRatio || 1;
+      window.addEventListener('resize', function () {
+        var d = window.devicePixelRatio || 1;
+        var pinched = window.visualViewport && window.visualViewport.scale > 1.01;
+        if (Math.abs(d - lastDpr) < 0.001 && !pinched) measure(); // real resize, not zoom
+        lastDpr = d;
+        applySize();
+      });
+      // Two-finger gestures go to the browser (pinch zoom); Phaser only sees single touches.
+      ['touchstart', 'touchmove'].forEach(function (type) {
+        window.addEventListener(type, function (e) {
+          if (e.touches && e.touches.length > 1) e.stopImmediatePropagation();
+        }, { capture: true, passive: true });
+      });
+
       function startGame() {
         document.body.classList.add('playing');
         window.scrollTo(0, 0);
+        measure();
+        applySize();
         if (window.WS_game) return;
         window.playerInfo = {};
         window.retirementContext = {};
