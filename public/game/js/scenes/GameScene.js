@@ -9,7 +9,13 @@ class GameScene extends Phaser.Scene {
       ? Math.max(0.54, Math.min(0.72, this.W / 620))
       : Math.max(0.85, Math.min(1.35, Math.min(this.H / 720, this.W / 1080)));
     // Browser zoom = text/card size only; the city still fills the window.
+    this._baseS = this.S;
     this.S = Math.max(0.5, Math.min(2.4, this.S * (window.WS_textScale || 1)));
+    // Live text size: new cards, questions and tooltips use the new scale at once,
+    // without restarting the level (progress is kept).
+    const onText = () => { this.S = Math.max(0.5, Math.min(2.4, this._baseS * (window.WS_textScale || 1))); if (this._onTextScale) this._onTextScale(); };
+    window.addEventListener('wealthsim:textscale', onText);
+    this.events.once('shutdown', () => window.removeEventListener('wealthsim:textscale', onText));
     this.PANEL = this.isCompact ? 0 : Math.round(Math.min(this.W * 0.34, Math.min(286, Math.max(244, this.W * 0.18)) * (window.WS_textScale || 1)));
     this.cityName = (window.cityName && String(window.cityName).trim()) ||
       (window.cityName = ['Lindenfeld','Auenstadt','Sonnenberg','Rheinhafen','Wiesental','Neuhafen'][Math.floor(Math.random()*6)]);

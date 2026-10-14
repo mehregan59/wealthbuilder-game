@@ -159,7 +159,13 @@
     window.playerInfo = window.playerInfo || {};
     window.retirementContext = window.retirementContext || {};
     window.WS_TEXT_RES = 2;
-    window.WS_setTextRes = function (r) { window.WS_TEXT_RES = r; if (window.WS_game) window.WS_game.scene.getScenes(true).forEach(function (sc) { sc.scene.restart(); }); };
+    // Text size = browser zoom ratio x in-game choice (100/125/150%). Never resizes the city.
+    window.WS_userText = 1; window.WS_zoomRatio = 1; window.WS_textScale = 1;
+    window.WS_updateTextScale = function () {
+      var ts = Math.max(0.7, Math.min(2.2, window.WS_zoomRatio * window.WS_userText));
+      if (Math.abs(ts - window.WS_textScale) > 0.02) { window.WS_textScale = ts; window.dispatchEvent(new Event('wealthsim:textscale')); }
+    };
+    window.WS_setUserText = function (u) { window.WS_userText = u; window.WS_updateTextScale(); };
   </script>
   <script>window.WS_ASSET_BASE="assets/";</script>
   <script src="https://cdn.jsdelivr.net/npm/phaser@3.60.0/dist/phaser.min.js"></script>
@@ -202,17 +208,24 @@
       // Game always fills the window. Browser zoom (DPR change vs load) only
       // changes the in-game text/card scale; the canvas never shrinks or scrolls.
       var baseDpr = window.devicePixelRatio || 1;
-      window.WS_textScale = 1;
       function applySize() {
         gameRoot.style.width = '100vw';
         gameRoot.style.height = '100dvh';
-        var ts = Math.max(0.7, Math.min(1.8, (window.devicePixelRatio || 1) / baseDpr));
-        if (Math.abs(ts - window.WS_textScale) > 0.02) {
-          window.WS_textScale = ts;
-          window.dispatchEvent(new Event('wealthsim:textscale'));
+        window.WS_zoomRatio = (window.devicePixelRatio || 1) / baseDpr;
+        var g = window.WS_game;
+        if (g && g.scale) {
+          // Keep the internal size matching the window shape so it never letterboxes.
+          var w = Math.round(gameRoot.clientWidth * startDpr), h = Math.round(gameRoot.clientHeight * startDpr);
+          var gs = g.scale.gameSize, inCity = g.scene.isActive('GameScene') || g.scene.isActive('ProfileScene');
+          if (Math.abs(w / h - gs.width / gs.height) > 0.01) {
+            if (inCity) { var k = gs.height / h; g.scale.setGameSize(Math.round(w * k), gs.height); }
+            else g.scale.setGameSize(w, h);
+          }
+          g.scale.refresh();
         }
-        if (window.WS_game && window.WS_game.scale) window.WS_game.scale.refresh();
+        window.WS_updateTextScale();
       }
+      var startDpr = 1;
       var measure = function () {};
       window.addEventListener('resize', function () { if (document.body.classList.contains('playing')) applySize(); });
 
@@ -274,7 +287,7 @@
         if (window.WS_game) return;
         window.playerInfo = {};
         window.retirementContext = {};
-        var DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2.5));
+        var DPR = Math.max(1, Math.min(window.devicePixelRatio || 1, 2.5)); startDpr = DPR;
         window.WS_game = new Phaser.Game({
           type: Phaser.AUTO,
           backgroundColor: '#a7d8de',
