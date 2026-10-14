@@ -24,6 +24,23 @@ const Assessment = {
     // Level 4 burst pipe: adjusts RESILIENCE only — never patience.
     repairResil: { repair_now: 8, defer: -8 }
   },
+  // MARKET WIRE: when a decision was made while the level's wire headline
+  // was on the ticker (d.news === true), heeding its signal nudges the trait
+  // the level measures. Positive = higher trait score.
+  NEWS_WIRE: {
+    2: { trait: 'loss', map: { cancel: 5, wait: 2, continue: -5, invest_more: -2 } },
+    5: { trait: 'greed', map: { all_in: 5, increase: 3, hold: -5, reduce: -5 } },
+    6: { trait: 'learn', researched: 5, notResearched: -5 },
+    7: { trait: 'noise', map: { sell: 5, reduce: 3, hold: -5, invest_more: 0 } },
+    8: { trait: 'resil', map: { hold: 5, rebalance: 5, opportunistic: 3, safe_haven: -3, sell_all: -5 } }
+  },
+  newsDelta(D, level) {
+    const W = this.NEWS_WIRE[level]; if (!W) return 0;
+    const d = (D || []).filter(x => x.level === level && x.value !== 'research' && x.phase !== 'repair' && x.phase !== 'news').pop();
+    if (!d || d.news !== true) return 0;
+    if (level === 6) return (D.some(x => x.level === 6 && x.value === 'research') ? W.researched : W.notResearched);
+    return W.map[d.value] || 0;
+  },
   // Level 7: deciding under loud headlines in under this many ms = reflex.
   FAST_MS: 3000,
   FAST_PENALTY: 10,
@@ -88,9 +105,9 @@ const Assessment = {
     const blend = (game, map, ans) => { if (game === null) return null; const st = map[ans]; return st === undefined ? game : Math.round(game * 0.9 + st * 0.1); };
 
     const risk = blend(pick(M.risk, 1), M.riskStated, A[0]);
-    const loss = blend(pick(M.loss, 2, d => !d.phase || d.phase === 'dip'), M.lossStated, A[2]);
+    let loss = blend(pick(M.loss, 2, d => !d.phase || d.phase === 'dip'), M.lossStated, A[2]);
     const pat = blend(pick(M.patience, 4), M.patienceStated, A[1]);
-    const greed = pick(M.greed, 5);
+    let greed = pick(M.greed, 5);
     let resil = pick(M.resilience, 8);
     const rep = D.filter(d => d.level === 4 && d.phase === 'repair').pop();
     if (resil !== null && rep && M.repairResil[rep.value] !== undefined) resil = Math.max(0, Math.min(100, resil + M.repairResil[rep.value]));
@@ -118,6 +135,13 @@ const Assessment = {
     const pfc = this.forecastResult(D.filter(d => d.level === 10 && d.phase === 'practice'));
     const overconfidence = fc ? (pfc ? Math.round(fc.overconfidence * (1 - this.PRACTICE_WEIGHT) + pfc.overconfidence * this.PRACTICE_WEIGHT) : fc.overconfidence) : null;
 
+    const clamp = v => Math.max(0, Math.min(100, v));
+    const nd = n => this.newsDelta(D, n);
+    if (loss !== null) loss = clamp(loss + nd(2));
+    if (greed !== null) greed = clamp(greed + nd(5));
+    if (learn !== null) learn = clamp(learn + nd(6));
+    if (noise !== null) noise = clamp(noise + nd(7));
+    if (resil !== null) resil = clamp(resil + nd(8));
     const all = [risk, loss, pat, divers, greed, noise, learn, resil, disposition, overconfidence];
     return {
       riskPreference: risk, lossAversion: loss, patience: pat, diversification: divers,
@@ -196,6 +220,9 @@ const Assessment = {
     const pr = last(10, d => d.phase === 'practice');
     add('Overconfidence', fc ? 'Level 10: average confidence ' + Math.round(fc.avgConf * 100) + '%, correct ' + fc.hits + ' of ' + fc.n + ' (' + Math.round(fc.hitRate * 100) + '%).' + (pr ? ' Practice round confidence: ' + pr.conf + '%.' : '') : null,
       'Confidence above your hit rate raises this. The practice round counts 10%, the four forecasts 90%. This shows this session only, not a trait.');
+    const wired = D.filter(d => d.news === true && this.NEWS_WIRE[d.level] && d.value !== 'research' && d.phase !== 'news' && d.phase !== 'repair');
+    if (wired.length) add('Market wire', 'You decided with a MARKET WIRE headline on screen in ' + wired.length + ' level' + (wired.length > 1 ? 's' : '') + ' (' + wired.map(d => d.level).join(', ') + ').',
+      'Each wire carried a quiet signal (a temporary dip, a bubble warning, a review advised, a noisy headline, historical recovery). Choices that heeded it moved the related trait by up to ±5; the headline wording was random, its meaning was the same every game.');
     return rows;
   },
 
