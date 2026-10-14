@@ -8,95 +8,36 @@
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet" />
   <style>
-    :root{--ink:#173f43;--paper:#f4f6ef;--accent:#e0a82e;--line:rgba(23,63,67,.18);--white:#fff}
+    :root{--bg:oklch(0.93 0.045 190);--fg:oklch(0.35 0.07 190);--card:oklch(0.98 0.022 86);--primary:oklch(0.48 0.08 190);--pfg:oklch(0.98 0.022 86);--muted:oklch(0.554 0.046 257.417);--border:oklch(0.929 0.013 255.508)}
     *{box-sizing:border-box}
-    html,body{margin:0;height:100%;background:var(--paper);color:var(--ink);font-family:"DM Sans",sans-serif}
+    html,body{margin:0;min-height:100%;background:var(--bg);color:var(--fg);font-family:"DM Sans",sans-serif}
     body{overflow:auto}
     button{font:inherit}
-
-    /* ── RTL support ── */
-    html[dir="rtl"] .hero-copy{text-align:right}
-    html[dir="rtl"] .feature{border-top:none;border-right:3px solid var(--accent);padding-top:0;padding-right:1.1rem}
-    html[dir="rtl"] .landing-header{flex-direction:row-reverse}
-
-    /* ── Landing ── */
-    #landing{min-height:100dvh;background:var(--paper)}
-
-    /* ── Landing header bar with lang switcher ── */
-    .landing-header{
-      position:relative;
-      display:flex;
-      align-items:center;
-      justify-content:space-between;
-      padding:.9rem 2rem;
-      background:rgba(15,47,50,.96);
-      border-bottom:1px solid rgba(255,255,255,.1);
-      z-index:10;
-    }
-    .landing-header-logo{
-      font:700 1.15rem "Space Grotesk",sans-serif;
-      color:#81c784;
-      letter-spacing:.04em;
-    }
-    .lang-switcher{display:flex;gap:.4rem;flex-wrap:wrap;}
-    .lang-btn{
-      padding:.3rem .65rem;
-      border-radius:6px;
-      border:1.5px solid #388e3c;
-      background:transparent;
-      color:#81c784;
-      font-size:.8rem;
-      font-weight:600;
-      cursor:pointer;
-      transition:background .18s,color .18s,border-color .18s;
-      letter-spacing:.04em;
-    }
-    .lang-btn:hover,.lang-btn:focus-visible{background:#1b5e20;border-color:#66bb6a;color:#e8f5e9;outline:none;}
-    .lang-btn.active{background:#2e7d32;border-color:#81c784;color:#e8f5e9;}
-
-    /* ── Hero ── */
-    .hero{position:relative;display:flex;min-height:82dvh;align-items:flex-end;overflow:hidden;border-bottom:1px solid var(--line)}
+    #landing{min-height:100dvh;background:var(--bg)}
+    .hero{position:relative;display:flex;min-height:92dvh;align-items:flex-end;overflow:hidden;border-bottom:1px solid var(--border)}
     .hero-image{position:absolute;inset:0;width:100%;height:100%;object-fit:cover}
-    .hero-shade{position:absolute;inset:0;background:linear-gradient(0deg,rgba(15,47,50,.94) 0%,rgba(15,47,50,.42) 48%,rgba(15,47,50,.06) 100%)}
-    .hero-copy{position:relative;width:min(1180px,100%);margin:0 auto;padding:6rem 2rem 4rem;color:var(--white)}
-    .eyebrow{margin:0;font:700 .8rem "Space Grotesk",sans-serif;text-transform:uppercase;letter-spacing:.16em;opacity:.84}
-    h1{margin:.8rem 0 0;font:700 clamp(3rem,7vw,5.8rem)/.95 "Space Grotesk",sans-serif;letter-spacing:0}
-    .intro{max-width:660px;margin:1.2rem 0 0;font-size:clamp(1rem,1.8vw,1.2rem);line-height:1.65}
-    #start-game{display:inline-flex;align-items:center;gap:.75rem;margin-top:1.8rem;padding:1rem 1.35rem;border:0;border-radius:6px;background:var(--accent);color:#173236;font-weight:700;cursor:pointer;box-shadow:0 12px 30px rgba(0,0,0,.22);transition:transform .18s ease,filter .18s ease}
-    #start-game:hover{transform:translateY(-2px);filter:brightness(1.05)}
-    #start-game:focus-visible{outline:3px solid var(--white);outline-offset:4px}
-    .arrow{font-size:1.35rem;line-height:1}
-
-    /* ── Features grid ── */
-    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:2.5rem;width:min(1180px,100%);margin:0 auto;padding:3rem 2rem 3.5rem}
-    .feature{border-top:3px solid var(--accent);padding-top:1.1rem}
-    .feature h2{margin:0;font:700 1.2rem "Space Grotesk",sans-serif;letter-spacing:0}
-    .feature p{margin:.65rem 0 0;line-height:1.6;color:#48676a}
-
-    /* ── About / Guide section ── */
-    .about-section{
-      width:min(1180px,100%);
-      margin:0 auto 3rem;
-      padding:0 2rem;
-    }
-    .about-card{
-      background:rgba(23,63,67,.06);
-      border:1px solid rgba(23,63,67,.18);
-      border-radius:14px;
-      padding:2rem 2.2rem;
-    }
-    .about-card h2{
-      margin:0 0 1rem;
-      font:700 1.25rem "Space Grotesk",sans-serif;
-      color:var(--ink);
-    }
-    .about-card p{
-      margin:0 0 .85rem;
-      line-height:1.75;
-      color:#48676a;
-      font-size:.97rem;
-    }
-    .about-card p:last-child{margin-bottom:0}
+    .hero-shade{position:absolute;inset:0;background:linear-gradient(to top,color-mix(in oklch,var(--fg) 90%,transparent),color-mix(in oklch,var(--fg) 35%,transparent) 50%,transparent)}
+    .lang-switcher{position:absolute;right:1.5rem;top:1.5rem;z-index:10;display:flex;gap:.5rem;padding:.5rem;border-radius:.5rem;background:var(--card);box-shadow:0 10px 25px rgba(0,0,0,.18)}
+    .lang-btn{height:2.25rem;padding:0 1rem;border:0;border-radius:.375rem;background:transparent;color:var(--fg);font-weight:600;font-size:.875rem;cursor:pointer}
+    .lang-btn:hover{background:color-mix(in oklch,var(--primary) 12%,transparent)}
+    .lang-btn.active{background:var(--primary);color:var(--pfg)}
+    .hero-copy{position:relative;width:100%;max-width:80rem;margin:0 auto;padding:7rem 2.5rem 4rem;color:var(--pfg)}
+    .eyebrow{margin:0;font:700 .875rem "Space Grotesk",sans-serif;text-transform:uppercase;opacity:.8}
+    h1{margin:1rem 0 0;font:700 4.5rem/1.02 "Space Grotesk",sans-serif}
+    .intro{max-width:42rem;margin:1.25rem 0 0;font-size:1.25rem;line-height:2rem;opacity:.9}
+    #start-game{display:inline-flex;align-items:center;gap:.75rem;margin-top:2rem;height:3.5rem;padding:0 1.75rem;border:0;border-radius:.375rem;background:oklch(0.968 0.007 247.896);color:oklch(0.208 0.042 265.755);font:700 1rem "Space Grotesk",sans-serif;cursor:pointer;box-shadow:0 10px 25px rgba(0,0,0,.2);transition:transform .18s}
+    #start-game:hover{transform:scale(1.02)}
+    #start-game:focus-visible{outline:3px solid var(--pfg);outline-offset:4px}
+    .arrow{font-size:1.3rem;line-height:1}
+    .features{display:grid;grid-template-columns:repeat(3,1fr);gap:2rem;max-width:80rem;margin:0 auto;padding:3rem 2.5rem}
+    .feature svg{width:28px;height:28px;margin-bottom:1rem;color:var(--primary)}
+    .feature h2{margin:0;font:700 1.25rem "Space Grotesk",sans-serif}
+    .feature p{margin:.5rem 0 0;line-height:1.6;color:var(--muted)}
+    #zoom-pill{position:fixed;left:8px;top:50%;transform:translateY(-50%);flex-direction:column;z-index:50;display:none;gap:4px;padding:4px;border-radius:999px;background:rgba(255,255,255,.92);box-shadow:0 4px 14px rgba(0,0,0,.2)}
+    #zoom-pill button{width:40px;height:40px;border:0;border-radius:999px;background:transparent;color:#173f43;font-weight:700;font-size:1.1rem;cursor:pointer}
+    #zoom-pill button:hover{background:rgba(23,63,67,.1)}
+    body.playing #zoom-pill{display:flex}
+    #pinch-tip{position:fixed;left:50%;top:10px;transform:translateX(-50%);z-index:50;display:none;max-width:90vw;padding:8px 14px;border-radius:10px;background:rgba(15,40,44,.92);color:#fff;font-size:14px;text-align:center}
 
     /* ── Game canvas ── */
     #game canvas{touch-action:pinch-zoom!important}
@@ -106,12 +47,11 @@
     body.playing #landing{display:none}
     body.playing #game{display:block}
 
-    @media(max-width:720px){
-      .hero{min-height:72dvh}
-      .hero-copy{padding:4rem 1.25rem 3rem}
-      .features{grid-template-columns:1fr;gap:2rem;padding:2rem 1.25rem 2.5rem}
-      .about-section{padding:0 1.25rem}
-      .landing-header{padding:.75rem 1.25rem}
+    @media(max-width:767px){
+      .hero-copy{padding:6rem 1.5rem 3rem}
+      h1{font-size:3rem}
+      .intro{font-size:1.125rem;line-height:1.75rem}
+      .features{grid-template-columns:1fr;padding:3rem 1.5rem}
     }
     @media(prefers-reduced-motion:reduce){#start-game{transition:none}}
   </style>
@@ -121,18 +61,13 @@
   <!-- ── Landing page (visible immediately) ── -->
   <main id="landing">
 
-    <!-- Header bar with logo + language switcher -->
-    <div class="landing-header">
-      <span class="landing-header-logo">🏙 WealthSim</span>
-      <div class="lang-switcher" role="group" aria-label="Language selection">
-        <button class="lang-btn active" id="btn-en" lang="en" data-lang="en">EN</button>
-        <button class="lang-btn" id="btn-de" lang="de" data-lang="de">DE</button>
-      </div>
-    </div>
-
     <section class="hero">
       <img class="hero-image" src="assets/wealthsim-eco-city.jpg" alt="A connected modern eco city" />
       <div class="hero-shade"></div>
+      <div class="lang-switcher" role="group" aria-label="Language selection">
+        <button class="lang-btn active" id="btn-en" lang="en" data-lang="en" aria-label="English">EN</button>
+        <button class="lang-btn" id="btn-de" lang="de" data-lang="de" aria-label="Deutsch">DE</button>
+      </div>
       <div class="hero-copy">
         <p class="eyebrow" data-i18n="opening.tagline">Behavioral retirement education</p>
         <h1>WealthSim</h1>
@@ -146,32 +81,28 @@
 
     <section class="features" aria-label="About WealthSim">
       <article class="feature">
-        <h2 data-i18n="landing.feature1.title">Ten city chapters</h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6 22V4a2 2 0 0 1 2-2h8a2 2 0 0 1 2 2v18Z"/><path d="M6 12H4a2 2 0 0 0-2 2v6a2 2 0 0 0 2 2h2"/><path d="M18 9h2a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2h-2"/><path d="M10 6h4M10 10h4M10 14h4M10 18h4"/></svg><h2 data-i18n="landing.feature1.title">Ten city chapters</h2>
         <p data-i18n="landing.feature1.desc">Make choices as your districts grow, react, and face changing events.</p>
       </article>
       <article class="feature">
-        <h2 data-i18n="landing.feature2.title">See your patterns</h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 3v16a2 2 0 0 0 2 2h16"/><path d="m19 9-5 5-4-4-3 3"/></svg><h2 data-i18n="landing.feature2.title">See your patterns</h2>
         <p data-i18n="landing.feature2.desc">Your final profile explains how recorded decisions shaped the result.</p>
       </article>
       <article class="feature">
-        <h2 data-i18n="landing.feature3.title">Education, not advice</h2>
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/></svg><h2 data-i18n="landing.feature3.title">Education, not advice</h2>
         <p data-i18n="landing.feature3.desc">Learn within Germany's three-pillar retirement context without product recommendations.</p>
       </article>
-    </section>
-
-    <!-- About / Guide section -->
-    <section class="about-section" aria-label="Guide and About">
-      <div class="about-card">
-        <h2 data-i18n="info.about.title">ℹ️ About WealthSim</h2>
-        <p data-i18n="info.about.p1">WealthSim is an interactive simulation that teaches behavioral finance by putting you in the role of a city mayor. Over eight levels, you face realistic economic dilemmas — from housing crises and infrastructure investments to market crashes and technology bets.</p>
-        <p data-i18n="info.about.p2">Each decision is designed to surface a specific cognitive bias: loss aversion, present bias, overconfidence, anchoring, and more. After completing the game, you receive a personalized financial personality profile.</p>
-        <p data-i18n="info.about.p3">The game takes approximately 15–20 minutes to complete. There are no correct answers — only your instincts, and what they reveal about how you think about risk, time, and value.</p>
-      </div>
     </section>
 
   </main>
 
   <div id="game" aria-label="WealthSim game"></div>
+  <div id="zoom-pill" role="group" aria-label="Game zoom">
+    <button type="button" id="zoom-out" aria-label="Zoom out">−</button>
+    <button type="button" id="zoom-reset" aria-label="Reset zoom">↺</button>
+    <button type="button" id="zoom-in" aria-label="Zoom in">+</button>
+  </div>
+  <div id="pinch-tip" role="status">Two fingers = zoom only. Use one finger to play.</div>
 
   <!-- i18n must load first -->
   <script src="js/i18n.js"></script>
@@ -277,36 +208,72 @@
       var startButton = document.getElementById('start-game');
       var gameRoot = document.getElementById('game');
 
-      // Browser zoom (Ctrl +/-) changes devicePixelRatio but not the physical window.
-      // Keep the game at the CSS size measured at 100% so zooming in enlarges it
-      // (page scrolls) and zooming out shrinks it — like any normal web page.
-      // A real window resize/rotation (DPR unchanged) re-measures the size.
-      var baseDpr = window.devicePixelRatio || 1, baseW = 0, baseH = 0;
-      function measure() {
-        var vv = window.visualViewport;
-        var scale = vv ? vv.scale : 1; // ignore mobile pinch state
-        baseW = Math.round(window.innerWidth * scale);
-        baseH = Math.round(window.innerHeight * scale);
-        baseDpr = window.devicePixelRatio || 1;
-      }
+      // Size = physical window / DPR at load. Browser zoom changes DPR, so the
+      // game really shrinks/enlarges; a real resize changes physical size.
+      var baseDpr = window.devicePixelRatio || 1, userZoom = 1;
       function applySize() {
-        gameRoot.style.width = baseW + 'px';
-        gameRoot.style.height = Math.round(baseH) + 'px';
+        var d = window.devicePixelRatio || 1;
+        var w = Math.round(window.innerWidth * d / baseDpr * userZoom);
+        var h = Math.round(window.innerHeight * d / baseDpr * userZoom);
+        gameRoot.style.width = w + 'px';
+        gameRoot.style.height = h + 'px';
         if (window.WS_game && window.WS_game.scale) window.WS_game.scale.refresh();
       }
-      var lastDpr = window.devicePixelRatio || 1;
-      window.addEventListener('resize', function () {
-        var d = window.devicePixelRatio || 1;
-        var pinched = window.visualViewport && window.visualViewport.scale > 1.01;
-        if (Math.abs(d - lastDpr) < 0.001 && !pinched) measure(); // real resize, not zoom
-        lastDpr = d;
-        applySize();
-      });
-      // Two-finger gestures go to the browser (pinch zoom); Phaser only sees single touches.
-      ['touchstart', 'touchmove'].forEach(function (type) {
+      var measure = function () {};
+      window.addEventListener('resize', function () { if (document.body.classList.contains('playing')) applySize(); });
+      function setZoom(z) { userZoom = Math.max(0.6, Math.min(2, Math.round(z * 10) / 10)); applySize(); }
+      document.getElementById('zoom-in').addEventListener('click', function () { setZoom(userZoom + 0.2); });
+      document.getElementById('zoom-out').addEventListener('click', function () { setZoom(userZoom - 0.2); });
+      document.getElementById('zoom-reset').addEventListener('click', function () { setZoom(1); });
+
+      // Touch shield: a single touch reaches the game after a short hold-off so a
+      // second finger can still turn it into a pinch. Multi-touch never reaches
+      // the game (no accidental selection) and a cooldown swallows emulated clicks.
+      var pending = null, timer = 0, blocking = false, coolUntil = 0, tip = document.getElementById('pinch-tip'), tipTimer = 0;
+      function onCanvas(e) { return window.WS_game && e.target === window.WS_game.canvas; }
+      function touchMgr() { return window.WS_game && window.WS_game.input && window.WS_game.input.touch; }
+      function flush() {
+        clearTimeout(timer);
+        var ev = pending; pending = null;
+        var t = touchMgr();
+        if (ev && t && t.onTouchStart) t.onTouchStart(ev);
+      }
+      function resetPointers() {
+        var m = window.WS_game && window.WS_game.input;
+        if (m && m.pointers) m.pointers.forEach(function (p) { if (p.reset) p.reset(); });
+      }
+      function showTip() {
+        tip.style.display = 'block'; clearTimeout(tipTimer);
+        tipTimer = setTimeout(function () { tip.style.display = 'none'; }, 2200);
+      }
+      window.addEventListener('touchstart', function (e) {
+        if (!document.body.classList.contains('playing')) return;
+        if (e.touches.length > 1 || blocking) {
+          if (!blocking) { blocking = true; clearTimeout(timer); pending = null; resetPointers(); showTip(); }
+          e.stopImmediatePropagation(); return;
+        }
+        if (!onCanvas(e)) return;
+        e.stopImmediatePropagation();
+        pending = e; clearTimeout(timer); timer = setTimeout(flush, 110);
+      }, { capture: true, passive: true });
+      window.addEventListener('touchmove', function (e) {
+        if (blocking || e.touches.length > 1) { e.stopImmediatePropagation(); return; }
+        if (pending) flush();
+      }, { capture: true, passive: true });
+      ['touchend', 'touchcancel'].forEach(function (type) {
         window.addEventListener(type, function (e) {
-          if (e.touches && e.touches.length > 1) e.stopImmediatePropagation();
+          if (blocking) {
+            e.stopImmediatePropagation();
+            if (e.touches.length === 0) { blocking = false; coolUntil = Date.now() + 400; resetPointers(); }
+            return;
+          }
+          if (pending) flush();
         }, { capture: true, passive: true });
+      });
+      ['mousedown', 'mouseup', 'click', 'pointerdown', 'pointerup'].forEach(function (type) {
+        window.addEventListener(type, function (e) {
+          if ((blocking || Date.now() < coolUntil) && onCanvas(e)) { e.stopImmediatePropagation(); e.preventDefault(); }
+        }, { capture: true });
       });
 
       function startGame() {
