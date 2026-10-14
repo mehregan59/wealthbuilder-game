@@ -291,7 +291,7 @@
       }
       function applySize() {
         var z = (window.devicePixelRatio || 1) / baseDpr;
-        gameRoot.style.width = Math.round(baseW / z * z) + 'px';
+        gameRoot.style.width = baseW + 'px';
         gameRoot.style.height = Math.round(baseH) + 'px';
         if (window.WS_game && window.WS_game.scale) window.WS_game.scale.refresh();
       }
