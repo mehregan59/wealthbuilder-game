@@ -13,7 +13,22 @@ class GameScene extends Phaser.Scene {
     this.S = Math.max(0.5, Math.min(2.4, this.S * (window.WS_textScale || 1)));
     // Live text size: new cards, questions and tooltips use the new scale at once,
     // without restarting the level (progress is kept).
-    const onText = () => { this.S = Math.max(0.5, Math.min(2.4, this._baseS * (window.WS_textScale || 1))); if (this._onTextScale) this._onTextScale(); };
+    const onText = () => {
+      const oldS = this.S;
+      this.S = Math.max(0.5, Math.min(2.4, this._baseS * (window.WS_textScale || 1)));
+      const r = this.S / oldS;
+      if (Math.abs(r - 1) < 0.01) return;
+      // Resize every text already on screen right away (cards, HUD, panel, labels),
+      // so A / A+ / A++ and browser zoom work mid-level without losing progress.
+      const walk = (list) => list.forEach((o) => {
+        if (o.type === 'Text' && o.style) {
+          const fs = parseFloat(o.style.fontSize) || 14;
+          o.setFontSize(Math.max(8, Math.round(fs * r)));
+        } else if (o.list) walk(o.list);
+      });
+      walk(this.children.list);
+      if (this._onTextScale) this._onTextScale();
+    };
     window.addEventListener('wealthsim:textscale', onText);
     this.events.once('shutdown', () => window.removeEventListener('wealthsim:textscale', onText));
     this.PANEL = this.isCompact ? 0 : Math.round(Math.min(this.W * 0.34, Math.min(286, Math.max(244, this.W * 0.18)) * (window.WS_textScale || 1)));
