@@ -34,12 +34,12 @@ class PlayerSetup extends Phaser.Scene {
     this.add.text(cx,compact?55:62,
       this._tr('ui.playerSetup.title','Tell us about your city'),
       {fontFamily:CityTheme.heading,fontSize:compact?28:40,color:'#000000'}).setOrigin(0.5);
-    this.add.text(cx,compact?92:112,
+    const subT=this.add.text(cx,compact?80:94,
       this._tr('ui.playerSetup.subtitle','This helps personalize your experience. It never changes the game.'),
-      {fontFamily:CityTheme.body,fontSize:compact?14:22,color:'#2b4d50',align:'center',wordWrap:{width:this.W-140}}).setOrigin(0.5);
-    this.add.text(cx,compact?118:142,
+      {fontFamily:CityTheme.body,fontSize:compact?14:22,color:'#2b4d50',align:'center',wordWrap:{width:this.W-90}}).setOrigin(0.5,0);
+    this.add.text(cx,subT.y+subT.height+4,
       this._tr('ui.playerSetup.disclosure','Nothing is saved: your answers stay in this browser tab and disappear when you close the game. Your decision patterns are explained to you in the final results.'),
-      {fontFamily:CityTheme.body,fontSize:compact?11:18,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-140}}).setOrigin(0.5);
+      {fontFamily:CityTheme.body,fontSize:compact?11:16,color:'#2b4d50',fontStyle:'italic',align:'center',wordWrap:{width:this.W-90}}).setOrigin(0.5,0);
 
     const ageOptions = [
       {label:'18–27',value:'18-27'},{label:'28–37',value:'28-37'},
