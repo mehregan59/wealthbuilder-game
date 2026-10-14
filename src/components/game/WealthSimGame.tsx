@@ -51,7 +51,7 @@ function loadScript(src: string) {
   return pending;
 }
 
-let preloadPromise: Promise<typeof import("phaser")["default"]> | null = null;
+let preloadPromise: Promise<typeof import("phaser")> | null = null;
 export function preloadGame() {
   preloadPromise ??= import("phaser").then(async ({ default: Phaser }) => {
     (window as any).Phaser = Phaser;
