@@ -232,7 +232,7 @@ class GameScene extends Phaser.Scene {
     this.hud.setLevel(n,this._levelName(n));
     this._startNews(n);
     if(this.ambient)this.ambient.setSimulationLevel(n);
-    const run = () => this.time.delayedCall(460, fn.bind(this));
+    const run = () => this.time.delayedCall(60, fn.bind(this));
     let proceedCalled = false;
     const proceed = () => {
       if (proceedCalled) return; // guard against Tutorial auto-close firing after user already clicked
@@ -250,8 +250,8 @@ class GameScene extends Phaser.Scene {
     else {
       const titleAlreadyShown = n===1 && this._introLevelTitleShown;
       if(titleAlreadyShown)this._introLevelTitleShown=false;
-      if(!titleAlreadyShown)this.hud.showLevelTitle(n,this._levelName(n));
-      this.time.delayedCall(titleAlreadyShown?228:911, ()=> this.tutorial.show(n, proceed));
+      if(!titleAlreadyShown)this.hud.showLevelTitle(n,this._levelName(n),2460);
+      this.time.delayedCall(titleAlreadyShown?120:320, ()=> this.tutorial.show(n, proceed));
     }
   }
 
@@ -1198,6 +1198,7 @@ class GameScene extends Phaser.Scene {
   }
 
   update(time,delta){
+    delta=Math.min(Math.max(delta||16,0),50);
     const nightStrength=this.ambient.getNightStrength();
     const night=nightStrength>.55;
     this.nightStrength=nightStrength;

@@ -92,11 +92,11 @@ class HUD {
     hit.on('pointerover', () => paused = true); hit.on('pointerout', () => paused = false);
     hit.on('pointerdown', () => paused = !paused);
     this.container.add([bg, strip, hit]);
-    const speed = this.s(42); // px per second — slow enough to read
+    const speed = this.s(50.4); // px per second — slow enough to read
     const startX = right;
     const tick = (time, delta) => {
       if (paused || !strip.active) return;
-      strip.x -= speed * delta / 1000;
+      strip.x -= speed * Math.min(Math.max(delta,0),50) / 1000;
       if (strip.x < left - loopW) strip.x += loopW;
     };
     sc.events.on('update', tick);
@@ -151,7 +151,7 @@ class HUD {
     this.scene.tweens.add({targets:m,alpha:1,duration:720,hold:dur?dur*.8:3200,yoyo:true,onComplete:()=>m.destroy()});
   }
 
-  showLevelTitle(n, title) {
+  showLevelTitle(n, title, holdMs) {
     const W = this.scene.scale.width, H = this.scene.scale.height;
     const ov = this.scene.add.graphics().setDepth(80);
     ov.fillStyle(0xfffbf1, 0.72); ov.fillRect(0, H/2-this.s(64), W, this.s(128));
@@ -164,7 +164,7 @@ class HUD {
     }).setOrigin(0.5).setDepth(81).setAlpha(0);
     ov.setAlpha(0);
     this.scene.tweens.add({
-      targets:[ov,lbl,ttl], alpha:1, duration:271, hold:598, yoyo:true,
+      targets:[ov,lbl,ttl], alpha:1, duration:271, hold:(holdMs||598), yoyo:true,
       onComplete:()=>{ ov.destroy(); lbl.destroy(); ttl.destroy(); }
     });
   }
