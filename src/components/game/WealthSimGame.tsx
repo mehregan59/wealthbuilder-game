@@ -81,6 +81,12 @@ function installGlobals() {
 // The Phaser instance is kept at module scope so React StrictMode's
 // double-invoked effects (and fast refresh) don't tear the game down.
 let gameInstance: any = null;
+const renderDpr = () => Math.max(1, Math.min(window.devicePixelRatio || 1, 2.5));
+// Let players pinch with two fingers to enlarge the page while single taps still play.
+function allowPinch(game: any) {
+  const c = game?.canvas as HTMLCanvasElement | undefined;
+  if (c) c.style.touchAction = "pinch-zoom";
+}
 let destroyTimer: ReturnType<typeof setTimeout> | null = null;
 let initPromise: Promise<void> | null = null;
 
@@ -117,7 +123,7 @@ export default function WealthSimGame({ onExit, language = "en" }: { onExit?: ()
         w.currentLang = language;
 
         // Crisp text: give every Text object its own resolution.
-        w.WS_TEXT_RES = Math.max(2, Math.min(window.devicePixelRatio || 1, 3));
+        w.WS_TEXT_RES = 2;
         const F = Phaser.GameObjects.GameObjectFactory.prototype as any;
         if (!F.__wsPatched) {
           const orig = F.text;
@@ -143,8 +149,9 @@ export default function WealthSimGame({ onExit, language = "en" }: { onExit?: ()
             mode: Phaser.Scale.FIT,
             autoCenter: Phaser.Scale.CENTER_BOTH,
             parent: containerRef.current,
-            width: containerRef.current.clientWidth,
-            height: containerRef.current.clientHeight,
+            // Render at device pixel density so phone text is sharp; FIT scales it to the screen.
+            width: Math.round(containerRef.current.clientWidth * renderDpr()),
+            height: Math.round(containerRef.current.clientHeight * renderDpr()),
           },
           render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
           dom: { createContainer: true },
@@ -157,6 +164,7 @@ export default function WealthSimGame({ onExit, language = "en" }: { onExit?: ()
           audio: { disableWebAudio: false },
         });
         w.WS_game = gameInstance;
+        allowPinch(gameInstance);
         setReady(true);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));

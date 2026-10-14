@@ -256,6 +256,15 @@ class ProfileScene extends Phaser.Scene {
       this.input.on('wheel',(pointer,objects,dx,dy)=>{
         this.cameras.main.scrollY=Phaser.Math.Clamp(this.cameras.main.scrollY+dy*.55,0,maxScroll);
       });
+      // Phones and tablets: drag with one finger to scroll the report.
+      let lastY=null;
+      this.input.on('pointerdown',p=>{lastY=p.y;});
+      this.input.on('pointerup',()=>{lastY=null;});
+      this.input.on('pointermove',p=>{
+        if(lastY===null||!p.isDown) return;
+        this.cameras.main.scrollY=Phaser.Math.Clamp(this.cameras.main.scrollY-(p.y-lastY),0,maxScroll);
+        lastY=p.y;
+      });
     }
 
     this._detailsButton(de);
