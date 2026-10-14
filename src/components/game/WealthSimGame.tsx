@@ -30,20 +30,40 @@ const SCRIPTS = [
   "scenes/ProfileScene",
 ].map((p) => `/game/js/${p}.js`);
 
+const scriptLoads = new Map<string, Promise<void>>();
 function loadScript(src: string) {
-  return new Promise<void>((resolve, reject) => {
-    const existing = document.querySelector<HTMLScriptElement>(
-      `script[data-ws="${src}"]`,
-    );
-    if (existing) return resolve();
+  const existing = scriptLoads.get(src);
+  if (existing) return existing;
+  const pending = new Promise<void>((resolve, reject) => {
     const el = document.createElement("script");
     el.src = src;
     el.async = false;
     el.dataset["ws"] = src;
     el.onload = () => resolve();
-    el.onerror = () => reject(new Error(`Failed to load ${src}`));
+    el.onerror = () => {
+      scriptLoads.delete(src);
+      el.remove();
+      reject(new Error(`Failed to load ${src}`));
+    };
     document.head.appendChild(el);
   });
+  scriptLoads.set(src, pending);
+  return pending;
+}
+
+let preloadPromise: Promise<typeof import("phaser")["default"]> | null = null;
+export function preloadGame() {
+  preloadPromise ??= import("phaser").then(async ({ default: Phaser }) => {
+    (window as any).Phaser = Phaser;
+    installGlobals();
+    // async=false preserves classic-script execution order while downloads overlap.
+    await Promise.all(SCRIPTS.map(loadScript));
+    return Phaser;
+  }).catch((error) => {
+    preloadPromise = null;
+    throw error;
+  });
+  return preloadPromise;
 }
 
 // Globals the classic game scripts expect (mirrors the original index.html).
@@ -64,9 +84,10 @@ let gameInstance: any = null;
 let destroyTimer: ReturnType<typeof setTimeout> | null = null;
 let initPromise: Promise<void> | null = null;
 
-export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
+export default function WealthSimGame({ onExit, language = "en" }: { onExit?: () => void; language?: "en" | "de" }) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [error, setError] = useState<string | null>(null);
+  const [ready, setReady] = useState(false);
 
   useEffect(() => {
     let cancelled = false;
@@ -82,16 +103,18 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
       const domRoot = gameInstance.domContainer as HTMLElement | undefined;
       if (canvas && canvas.parentElement !== parent) parent.appendChild(canvas);
       if (domRoot && domRoot.parentElement !== parent) parent.appendChild(domRoot);
-      gameInstance.scale?.resize(parent.clientWidth, parent.clientHeight);
       gameInstance.scale?.refresh();
+      setReady(true);
     };
 
     const init = async () => {
       try {
-        const Phaser = (await import("phaser")).default;
+        const Phaser = await preloadGame();
         const w = window as any;
         w.Phaser = Phaser;
         installGlobals();
+        w.setLang(language);
+        w.currentLang = language;
 
         // Crisp text: give every Text object its own resolution.
         w.WS_TEXT_RES = Math.max(2, Math.min(window.devicePixelRatio || 1, 3));
@@ -111,18 +134,17 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
           scenes.forEach((sc: any) => sc.scene.restart());
         };
 
-        for (const src of SCRIPTS) await loadScript(src);
-        if (!containerRef.current || gameInstance) return;
+        if (cancelled || !containerRef.current || gameInstance) return;
 
         gameInstance = new Phaser.Game({
           type: Phaser.AUTO,
           backgroundColor: "#a7d8de",
           scale: {
-            mode: Phaser.Scale.RESIZE,
-            autoCenter: Phaser.Scale.NO_CENTER,
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
             parent: containerRef.current,
-            width: "100%",
-            height: "100%",
+            width: containerRef.current.clientWidth,
+            height: containerRef.current.clientHeight,
           },
           render: { antialias: true, antialiasGL: true, pixelArt: false, roundPixels: false },
           dom: { createContainer: true },
@@ -135,6 +157,7 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
           audio: { disableWebAudio: false },
         });
         w.WS_game = gameInstance;
+        setReady(true);
       } catch (e) {
         setError(e instanceof Error ? e.message : String(e));
       }
@@ -149,11 +172,11 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
       });
     }
 
-    // Keep the canvas matched to its container on any layout change.
+    // Scale the complete scene instead of resizing its coordinate system:
+    // zoom must not detach cards, hit areas, or districts from their artwork.
     const ro = new ResizeObserver(() => {
       const el = containerRef.current;
       if (el && gameInstance?.scale) {
-        gameInstance.scale.resize(el.clientWidth, el.clientHeight);
         gameInstance.scale.refresh();
       }
     });
@@ -188,6 +211,12 @@ export default function WealthSimGame({ onExit }: { onExit?: () => void }) {
   return (
     <div className="relative h-dvh w-full overflow-hidden bg-background">
       <div ref={containerRef} className="h-full w-full" />
+      {!ready && !error && (
+        <div role="status" className="absolute inset-0 flex flex-col items-center justify-center gap-3 bg-background text-foreground">
+          <span className="font-heading text-3xl font-bold">WealthSim</span>
+          <p>{language === "de" ? "Deine Stadt wird vorbereitet…" : "Preparing your city…"}</p>
+        </div>
+      )}
       {error && (
         <p className="absolute inset-x-0 top-1/2 text-center text-sm text-destructive">
           {error}
