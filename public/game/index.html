@@ -231,7 +231,7 @@
       // the game (no accidental selection) and a cooldown swallows emulated clicks.
       var pending = null, timer = 0, blocking = false, coolUntil = 0, tip = document.getElementById('pinch-tip'), tipTimer = 0;
       function onCanvas(e) { return window.WS_game && e.target === window.WS_game.canvas; }
-      function touchMgr() { return window.WS_game && window.WS_game.input && window.WS_game.input.manager && window.WS_game.input.manager.touch; }
+      function touchMgr() { return window.WS_game && window.WS_game.input && window.WS_game.input.touch; }
       function flush() {
         clearTimeout(timer);
         var ev = pending; pending = null;
@@ -239,7 +239,7 @@
         if (ev && t && t.onTouchStart) t.onTouchStart(ev);
       }
       function resetPointers() {
-        var m = window.WS_game && window.WS_game.input && window.WS_game.input.manager;
+        var m = window.WS_game && window.WS_game.input;
         if (m && m.pointers) m.pointers.forEach(function (p) { if (p.reset) p.reset(); });
       }
       function showTip() {
