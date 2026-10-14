@@ -182,7 +182,8 @@ class StatsPanel {
     }).setOrigin(0,0.5);
     this.container.add(cLbl);
 
-    [{l:'A',v:2},{l:'A+',v:3},{l:'A++',v:4}].forEach((o,i)=>{
+    const tsDraws=[];
+    [{l:'A',v:1},{l:'A+',v:1.25},{l:'A++',v:1.5}].forEach((o,i)=>{
       const bw=this.s(36), bh=this.s(26);
       const bx = px+pad + i*(bw+this.s(6)), by = cy + this.s(14);
       const g = this.scene.add.graphics();
@@ -191,19 +192,19 @@ class StatsPanel {
       }).setOrigin(0.5);
       const draw=(hov)=>{
         g.clear();
-        const on = Math.round(window.WS_TEXT_RES) === o.v;
+        const on = Math.abs((window.WS_userText||1) - o.v) < 0.01;
         g.fillStyle(on?0xe0a82e:0xdce9df, on?0.92:1);
         g.fillRoundedRect(bx,by,bw,bh,this.s(5));
         g.lineStyle(1, on?0xe0a82e:0x7ca5a1, 1);
         g.strokeRoundedRect(bx,by,bw,bh,this.s(5));
         txt.setColor(on?'#173b40':(hov?'#c8d8ea':'#6b8fb0'));
       };
-      draw(false);
+      draw(false); tsDraws.push(draw);
       const hit = this.scene.add.rectangle(bx+bw/2,by+bh/2,bw,bh,0xffffff,0)
         .setInteractive({useHandCursor:true}).setDepth(59);
       hit.on('pointerover',()=>draw(true));
       hit.on('pointerout', ()=>draw(false));
-      hit.on('pointerdown',()=>{ if (window.WS_setTextRes) window.WS_setTextRes(o.v); });
+      hit.on('pointerdown',()=>{ if (window.WS_setUserText) window.WS_setUserText(o.v); tsDraws.forEach(d=>d(false)); });
       this.container.add([g,txt,hit]);
     });
 
