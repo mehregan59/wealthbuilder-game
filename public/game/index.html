@@ -218,8 +218,8 @@
           var w = Math.round(gameRoot.clientWidth * startDpr), h = Math.round(gameRoot.clientHeight * startDpr);
           var gs = g.scale.gameSize, inCity = g.scene.isActive('GameScene') || g.scene.isActive('ProfileScene');
           if (Math.abs(w / h - gs.width / gs.height) > 0.01) {
-            if (inCity) { var k = gs.height / h; g.scale.resize(Math.round(w * k), gs.height); }
-            else g.scale.resize(w, h);
+            if (inCity) { var k = gs.height / h; g.scale.setGameSize(Math.round(w * k), gs.height); }
+            else g.scale.setGameSize(w, h);
           }
           g.scale.refresh();
         }
