@@ -12,6 +12,6 @@
 - Keep Phaser as WealthSim's rendering engine; visual quality comes from modular layered city assets, avoiding a risky rewrite of tested gameplay.
 - Centralize game palette and typography in `CityTheme`; the embedded app and standalone build must load identical city modules.
 - The Lovable site root redirects to `public/game/index.html`; the standalone landing + game is the single source of truth so the Lovable and GitHub Pages links always show identical content.
-- Size the game container as physical window / load-time DPR (times in-game zoom) so browser zoom visibly scales it; single touches reach Phaser after a ~110ms hold-off and multi-touch plus a 400ms cooldown never reach it, so pinching can't select options.
+- The game canvas always fills the window; browser zoom only sets `window.WS_textScale` (DPR / load DPR), which scales text/cards via `CityTheme.fitScene` and `GameScene.S`, so zoom never shrinks the city or adds scrollbars. Single touches reach Phaser after a ~110ms hold-off and multi-touch plus a 400ms cooldown never reach it, so pinching can't select options.
 - Tie the city day/night phase to level progression while retaining continuous ambient motion, so visual time follows the simulation.
 - Track historical district investment separately from current visual capacity, so losses can visibly remove assets without rewriting recorded decisions.
