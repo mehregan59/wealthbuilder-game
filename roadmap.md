@@ -1,6 +1,6 @@
 # Roadmap
 
-- [ ] Improve Start loading, restore landing languages, and preserve game layout when browser zoom changes.
+- [x] Improve Start loading, restore landing languages, and preserve game layout when browser zoom changes.
 
 - [x] Fix city panel, graph, messages, traffic, night readability, labels, tooltips, and connected-city presentation.
 - [x] Restore and clarify the six-block Level 3 allocation flow.
