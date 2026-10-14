@@ -230,6 +230,7 @@ class GameScene extends Phaser.Scene {
     const map={1:this._level1,2:this._level2,3:this._level3,4:this._level4,5:this._level5,6:this._level6,7:this._level7,8:this._level8,9:this._level9,10:this._level10};
     const fn=map[n]; if(!fn)return;
     this.hud.setLevel(n,this._levelName(n));
+    this._startNews(n);
     if(this.ambient)this.ambient.setSimulationLevel(n);
     const run = () => this.time.delayedCall(460, fn.bind(this));
     let proceedCalled = false;
@@ -252,6 +253,77 @@ class GameScene extends Phaser.Scene {
       if(!titleAlreadyShown)this.hud.showLevelTitle(n,this._levelName(n));
       this.time.delayedCall(titleAlreadyShown?228:911, ()=> this.tutorial.show(n, proceed));
     }
+  }
+
+  // ══ City news ticker ══
+  // Every level shows ordinary civic headlines (never scored). Levels 2, 5,
+  // 6, 7 and 8 also carry one MARKET WIRE headline, picked at random from a
+  // pool whose items all mean the same thing — so each run reads differently
+  // but carries the same signal. The player is never told which headline
+  // matters; Assessment.NEWS_WIRE scores whether the choice heeded it.
+  _startNews(n) {
+    const de=(typeof currentLang!=='undefined'&&currentLang==='de');
+    const pick=a=>a[Math.floor(Math.random()*a.length)];
+    const civic=de?[
+      'Fahrradweg an der Uferpromenade erreicht Phase 2 — hohe Zustimmung der Bürger.',
+      'Solargenossenschaft meldet Rekordertrag an den südlichen Hängen.',
+      'Stadtbibliothek eröffnet digitales Archiv zur Stadtgeschichte.',
+      'Neue E-Straßenbahn absolviert erste Fahrt über den Boulevard.',
+      'Wochenmarkt am Altstadtplatz verlängert die Öffnungszeiten.',
+      'Gemeinschaftsgärten auf Dächern im Technologieviertel blühen auf.',
+      'Fußballverein der Stadt gewinnt das Regionalderby 2:1.',
+      'Wetter: mild, leichter Westwind, am Abend klar.'
+    ]:[
+      'River promenade bicycle expansion reaches Phase 2 with high citizen approval.',
+      'Municipal solar cooperative reports record output across the southern hills.',
+      'City library opens a digital archive of local history.',
+      'New electric tram completes its first run along the central boulevard.',
+      'Old Town farmers’ market extends its opening hours.',
+      'Rooftop community gardens bloom across the Technology Quarter.',
+      'City football club wins the regional derby 2–1.',
+      'Weather: mild, light westerly wind, clear skies this evening.'
+    ];
+    const wire=(de?{
+      2:['Tech-Index fällt 14 % wegen kurzfristiger Lieferengpässe — die Grundlagen bleiben solide.',
+         'Analysten: Hardware-Korrektur ist vorübergehend, Auftragsbücher unverändert voll.',
+         'Experten erwarten Erholung der Technologiewerte, sobald Lieferketten wieder laufen.'],
+      5:['Finanzaufsicht warnt Privatanleger davor, überhitzten Technologiewerten hinterherzulaufen.',
+         'Bewertungen im Technologiesektor auf 10-Jahres-Hoch — Ökonomen sehen Blasenrisiko.',
+         'Prominente Investoren feiern den Boom; Pensionsfonds bleiben breit gestreut.'],
+      6:['Nachbarstadt bietet Infrastrukturpakt an — Fachleute raten zu unabhängiger Prüfung.',
+         'Städtebund: Gemeinsame Projekte nur nach vollständiger Vertragsprüfung.',
+         'Bericht: Langfristige Zuverlässigkeit der Nachbarstadt ist noch unbestätigt.'],
+      7:['Reißerische Schlagzeilen lösen Kursschwankungen aus — Wirtschaftsrat mahnt langen Atem.',
+         'Kommentatoren sagen Wende voraus; institutionelle Pensionsfonds halten Kurs.',
+         'Faktencheck: Die Warnungen stammen aus Städten mit ganz anderen Bedingungen.'],
+      8:['Konjunktursturm erfasst den Kontinent — breite Märkte haben sich historisch langfristig erholt.',
+         'Zentralbank aktiviert Stabilitätsreserve; Grundversorgung der Städte gesichert.',
+         'Historie: Wer in früheren Krisen am Plan festhielt, stand später meist besser da.']
+    }:{
+      2:['Tech index slips 14% on a short-term supply snag — fundamentals remain sound.',
+         'Analysts call the hardware correction temporary; order books are still full.',
+         'Experts expect tech values to recover once supply chains clear.'],
+      5:['Regulators warn retail investors against chasing overheated tech valuations.',
+         'Tech valuations hit a 10-year peak — economists flag bubble risk.',
+         'Celebrity investors cheer the boom; pension funds stay broadly diversified.'],
+      6:['Neighbouring city proposes infrastructure pact — specialists advise an independent review.',
+         'City association: joint projects only after full review of the terms.',
+         'Report: the neighbour’s long-term reliability is still unconfirmed.'],
+      7:['Sensational headlines spark volatility — economic council urges a long horizon.',
+         'Commentators predict a sudden shift; institutional pension funds hold course.',
+         'Fact check: the warnings come from cities in very different circumstances.'],
+      8:['Economic storm hits the continent — broad markets have historically recovered over time.',
+         'Central bank activates stability reserve; essential city services secured.',
+         'History: cities that kept their plan through past storms usually fared better later.']
+    })[n];
+    const items=[];
+    const shuffled=civic.slice().sort(()=>Math.random()-0.5);
+    if(wire){
+      const text=pick(wire);
+      window.__wsWire=window.__wsWire||{}; window.__wsWire[n]=text;
+      items.push({text,wire:true}, {text:shuffled[0]}, {text:shuffled[1]});
+    } else items.push({text:shuffled[0]},{text:shuffled[1]},{text:shuffled[2]});
+    if(this.hud&&this.hud.startTicker)this.hud.startTicker(items);
   }
 
   _retryLevel() {
