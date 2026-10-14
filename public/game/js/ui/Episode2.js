@@ -243,7 +243,7 @@
   // Staging/preview-only shortcut: jump straight to the check-in or any level with a chosen route.
   function devMenu() {
     var h = location.hostname, q = location.search;
-    if (!(/preview|localhost|127\.0\.0\.1/.test(h) || /[?&]ep2dev/.test(q)) || document.getElementById('ep2-dev')) return;
+    if (/money-master-world\.lovable\.app$/.test(h) || document.getElementById('ep2-dev')) return;
     var d = el('<div id="ep2-dev"><button type="button">Episode 2 preview</button><div class="menu">' +
       '<select aria-label="Route"><option value="C">Route: cautious</option><option value="F">Route: fast reactor</option><option value="S" selected>Route: steady</option></select>' +
       '<button data-s="FB">Feedback check-in (10)</button><button data-s="L1">Level 1 · Altersvorsorgedepot</button><button data-s="L2">Level 2 · Three pillars</button><button data-s="L3">Level 3 · Costs</button></div></div>');
