@@ -230,7 +230,7 @@ class ProfileScene extends Phaser.Scene {
     const btnTx=this.add.text(cx-bW/2-gap/2,bY+bH/2,de?'Zur Startseite':'Back to home',{
       fontFamily:CityTheme.heading,fontSize:this.s(18),color:'#173b40',fontStyle:'700'
     }).setOrigin(0.5).setDepth(110).setAlpha(0).setScrollFactor(0);
-    const ctaLabel=this._ctaLabel(de);
+    const ctaLabel=de?'Feedback & Episode 2 →':'Feedback & Episode 2 →';
     const ctaTx=this.add.text(0,0,ctaLabel,{
       fontFamily:CityTheme.body,fontSize:this.s(13),color:'#296b72',fontStyle:'600'
     }).setOrigin(0.5).setDepth(110).setAlpha(0).setScrollFactor(0);
@@ -246,7 +246,7 @@ class ProfileScene extends Phaser.Scene {
     const hit=this.add.rectangle(cx-bW/2-gap/2,footerScreenY+bH/2,bW,bH,0xffffff,0).setDepth(111).setScrollFactor(0).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); WealthSimHome(this); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,footerScreenY+bH/2,ctaW,bH,0xffffff,0).setDepth(111).setScrollFactor(0).setInteractive({useHandCursor:true});
-    ctaHit.on('pointerdown',()=>this._showTip(ctaLabel,this._ctaBody(de),ctaX+ctaW/2,footerScreenY));
+    ctaHit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:episode2',{detail:{lang:de?'de':'en'}})); if(window.WS_game){ window.WS_game.destroy(true); window.WS_game=null; } });
 
     // When content is taller than the available view, scroll only the report;
     // the footer actions remain fixed at the bottom edge.
