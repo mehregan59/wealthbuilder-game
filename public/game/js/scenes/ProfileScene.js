@@ -246,7 +246,7 @@ class ProfileScene extends Phaser.Scene {
     const hit=this.add.rectangle(cx-bW/2-gap/2,footerScreenY+bH/2,bW,bH,0xffffff,0).setDepth(111).setScrollFactor(0).setInteractive({useHandCursor:true});
     hit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); WealthSimHome(this); });
     const ctaHit=this.add.rectangle(ctaX+ctaW/2,footerScreenY+bH/2,ctaW,bH,0xffffff,0).setDepth(111).setScrollFactor(0).setInteractive({useHandCursor:true});
-    ctaHit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:episode2',{detail:{lang:de?'de':'en'}})); if(window.WS_game){ window.WS_game.destroy(true); window.WS_game=null; } });
+    ctaHit.on('pointerdown',()=>{ if(typeof ScoringEngine!=='undefined') ScoringEngine.reset(); window.dispatchEvent(new CustomEvent('wealthsim:episode2',{detail:{lang:de?'de':'en'}})); setTimeout(()=>{ if(window.WS_game){ window.WS_game.destroy(true); window.WS_game=null; } },0); });
 
     // When content is taller than the available view, scroll only the report;
     // the footer actions remain fixed at the bottom edge.
